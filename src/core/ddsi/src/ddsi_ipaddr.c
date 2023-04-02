@@ -12,92 +12,141 @@
 #include <assert.h>
 #include <string.h>
 
+#include "dds/ddsi/ddsi_domaingv.h"
+#include "dds/ddsrt/bits.h"
 #include "dds/ddsrt/endian.h"
 #include "dds/ddsrt/heap.h"
 #include "dds/ddsrt/log.h"
-#include "dds/ddsrt/bits.h"
 #include "dds/ddsrt/sockets.h"
 #include "dds/ddsrt/string.h"
-#include "dds/ddsi/ddsi_domaingv.h"
 #include "ddsi__ipaddr.h"
 #include "ddsi__tran.h"
 
-int ddsi_ipaddr_compare (const struct sockaddr *const sa1, const struct sockaddr *const sa2)
-{
-  int eq;
-  size_t sz;
+/**
+ * @brief 比较两个IP地址 (Compare two IP addresses)
+ *
+ * @param[in] sa1 第一个IP地址的sockaddr结构指针 (Pointer to the sockaddr structure of the first IP
+ * address)
+ * @param[in] sa2 第二个IP地址的sockaddr结构指针 (Pointer to the sockaddr structure of the second IP
+ * address)
+ *
+ * @return 返回0表示两个IP地址相等，非0表示不等 (Return 0 if the two IP addresses are equal,
+ * non-zero if they are not equal)
+ */
+int ddsi_ipaddr_compare(const struct sockaddr *const sa1, const struct sockaddr *const sa2) {
+  int eq;     // 存储比较结果 (Store comparison result)
+  size_t sz;  // 存储地址大小 (Store address size)
 
+  // 如果两个IP地址的协议族相同 (If the protocol families of the two IP addresses are the same)
   if ((eq = sa1->sa_family - sa2->sa_family) == 0) {
-    switch(sa1->sa_family) {
+    // 根据协议族进行比较 (Compare according to the protocol family)
+    switch (sa1->sa_family) {
 #if DDSRT_HAVE_IPV6
-      case AF_INET6: {
+      case AF_INET6: {  // IPv6地址 (IPv6 address)
         struct sockaddr_in6 *sin61, *sin62;
-        sin61 = (struct sockaddr_in6 *)sa1;
-        sin62 = (struct sockaddr_in6 *)sa2;
-        sz = sizeof(sin61->sin6_addr);
-        eq = memcmp(&sin61->sin6_addr, &sin62->sin6_addr, sz);
+        sin61 = (struct sockaddr_in6 *)
+            sa1;  // 将sa1转换为sockaddr_in6结构指针 (Convert sa1 to sockaddr_in6 structure pointer)
+        sin62 = (struct sockaddr_in6 *)
+            sa2;  // 将sa2转换为sockaddr_in6结构指针 (Convert sa2 to sockaddr_in6 structure pointer)
+        sz = sizeof(sin61->sin6_addr);  // 获取IPv6地址大小 (Get the size of IPv6 address)
+        eq = memcmp(&sin61->sin6_addr, &sin62->sin6_addr,
+                    sz);  // 比较两个IPv6地址 (Compare two IPv6 addresses)
         break;
       }
 #endif
-      case AF_INET: {
+      case AF_INET: {  // IPv4地址 (IPv4 address)
         struct sockaddr_in *sin1, *sin2;
-        sin1 = (struct sockaddr_in *)sa1;
-        sin2 = (struct sockaddr_in *)sa2;
-        sz = sizeof(sin1->sin_addr);
-        eq = memcmp(&sin1->sin_addr, &sin2->sin_addr, sz);
+        sin1 = (struct sockaddr_in *)
+            sa1;  // 将sa1转换为sockaddr_in结构指针 (Convert sa1 to sockaddr_in structure pointer)
+        sin2 = (struct sockaddr_in *)
+            sa2;  // 将sa2转换为sockaddr_in结构指针 (Convert sa2 to sockaddr_in structure pointer)
+        sz = sizeof(sin1->sin_addr);  // 获取IPv4地址大小 (Get the size of IPv4 address)
+        eq = memcmp(&sin1->sin_addr, &sin2->sin_addr,
+                    sz);  // 比较两个IPv4地址 (Compare two IPv4 addresses)
         break;
       }
-      default: {
-        assert(0);
+      default: {    // 未知协议族 (Unknown protocol family)
+        assert(0);  // 断言失败，程序终止 (Assertion failure, program terminates)
       }
     }
   }
 
-  return eq;
+  return eq;  // 返回比较结果 (Return comparison result)
 }
 
-static uint32_t ipaddr_prefixlen (const struct sockaddr * const addr)
-{
+/**
+ * @brief 计算 IP 地址的前缀长度 (Calculate the prefix length of an IP address)
+ *
+ * @param[in] addr 指向 sockaddr 结构体的指针，表示 IP 地址 (Pointer to a sockaddr structure
+ * representing the IP address)
+ * @return 返回 IP 地址的前缀长度 (Returns the prefix length of the IP address)
+ */
+static uint32_t ipaddr_prefixlen(const struct sockaddr *const addr) {
+  // 初始化前缀长度为 0 (Initialize prefix length to 0)
   uint32_t prefixlen = 0;
-  switch(addr->sa_family) {
+
+  // 根据地址族进行处理 (Process according to address family)
+  switch (addr->sa_family) {
 #if DDSRT_HAVE_IPV6
+    // 如果是 IPv6 地址 (If it is an IPv6 address)
     case AF_INET6: {
+      // 将 sockaddr 结构体转换为 sockaddr_in6 结构体 (Convert sockaddr structure to sockaddr_in6
+      // structure)
       struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
+
+      // 初始化前缀长度为 0 (Initialize prefix length to 0)
       prefixlen = 0;
-      for (size_t i = 0; i < sizeof (addr6->sin6_addr.s6_addr); i++)
-      {
+
+      // 遍历 IPv6 地址的每个字节 (Iterate through each byte of the IPv6 address)
+      for (size_t i = 0; i < sizeof(addr6->sin6_addr.s6_addr); i++) {
+        // 如果当前字节为 0xff，则累加 8 到前缀长度 (If the current byte is 0xff, add 8 to the
+        // prefix length)
         if (addr6->sin6_addr.s6_addr[i] == 0xff)
           prefixlen += 8;
-        else
-        {
+        else {
+          // 如果当前字节不为 0，则累加 9 减去首个非零位的位置 (If the current byte is not 0, add 9
+          // minus the position of the first non-zero bit)
           if (addr6->sin6_addr.s6_addr[i] != 0)
-            prefixlen += 9 - ddsrt_ffs32u (addr6->sin6_addr.s6_addr[i]);
+            prefixlen += 9 - ddsrt_ffs32u(addr6->sin6_addr.s6_addr[i]);
           break;
         }
       }
       break;
     }
 #endif
+    // 如果是 IPv4 地址 (If it is an IPv4 address)
     case AF_INET: {
+      // 将 sockaddr 结构体转换为 sockaddr_in 结构体 (Convert sockaddr structure to sockaddr_in
+      // structure)
       struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
-      const uint32_t netmask_nativeendian = ddsrt_fromBE4u (addr4->sin_addr.s_addr);
-      const uint32_t x = ddsrt_ffs32u (netmask_nativeendian);
-      // 255.255.255.255 => x =  1, maximally selective
-      // 255.255.255.0   => x =  9, less selective
-      // 255.0.0.0       => x = 25, much less selective
-      // 0.0.0.0         => x =  0, illegal? in any case, by extension least selective
+
+      // 将网络字节序的掩码转换为本地字节序 (Convert network byte order mask to local byte order)
+      const uint32_t netmask_nativeendian = ddsrt_fromBE4u(addr4->sin_addr.s_addr);
+
+      // 计算掩码中首个非零位的位置 (Calculate the position of the first non-zero bit in the mask)
+      const uint32_t x = ddsrt_ffs32u(netmask_nativeendian);
+
+      // 根据首个非零位的位置计算前缀长度 (Calculate the prefix length based on the position of the
+      // first non-zero bit)
       prefixlen = (x == 0) ? 0 : 33 - x;
       break;
     }
+    // 其他情况 (Other cases)
     default: {
+      // 断言失败 (Assertion failure)
       assert(0);
     }
   }
+
+  // 返回前缀长度 (Return prefix length)
   return prefixlen;
 }
 
-enum ddsi_nearby_address_result ddsi_ipaddr_is_nearby_address (const ddsi_locator_t *loc, size_t ninterf, const struct ddsi_network_interface interf[], size_t *interf_idx)
-{
+enum ddsi_nearby_address_result ddsi_ipaddr_is_nearby_address(
+    const ddsi_locator_t *loc,
+    size_t ninterf,
+    const struct ddsi_network_interface interf[],
+    size_t *interf_idx) {
   enum ddsi_nearby_address_result default_result = DNAR_UNREACHABLE;
 
   // I'm not sure how common it is for a machine to have two network interfaces on
@@ -105,16 +154,12 @@ enum ddsi_nearby_address_result ddsi_ipaddr_is_nearby_address (const ddsi_locato
   // the address might be that of interface k but also match the subnet on
   // interface j < k.  In that case, it seems better to return SELF than LOCAL,
   // and so we first check for an exact match.
-  for (size_t i = 0; i < ninterf; i++)
-  {
-    if (interf[i].loc.kind != loc->kind)
-      continue;
+  for (size_t i = 0; i < ninterf; i++) {
+    if (interf[i].loc.kind != loc->kind) continue;
     default_result = DNAR_DISTANT;
-    if (memcmp (interf[i].loc.address, loc->address, sizeof (loc->address)) == 0 ||
-        memcmp (interf[i].extloc.address, loc->address, sizeof (loc->address)) == 0)
-    {
-      if (interf_idx)
-        *interf_idx = i;
+    if (memcmp(interf[i].loc.address, loc->address, sizeof(loc->address)) == 0 ||
+        memcmp(interf[i].extloc.address, loc->address, sizeof(loc->address)) == 0) {
+      if (interf_idx) *interf_idx = i;
       return DNAR_SELF;
     }
   }
@@ -122,22 +167,21 @@ enum ddsi_nearby_address_result ddsi_ipaddr_is_nearby_address (const ddsi_locato
   uint32_t best_prefixlen = 0;
   struct sockaddr_storage tmp;
   ddsi_ipaddr_from_loc(&tmp, loc);
-  for (size_t i = 0; i < ninterf; i++)
-  {
+  for (size_t i = 0; i < ninterf; i++) {
     struct sockaddr_storage iftmp, xiftmp, nmtmp;
-    if (interf[i].loc.kind != loc->kind)
-      continue;
+    if (interf[i].loc.kind != loc->kind) continue;
     ddsi_ipaddr_from_loc(&iftmp, &interf[i].loc);
     ddsi_ipaddr_from_loc(&xiftmp, &interf[i].extloc);
     ddsi_ipaddr_from_loc(&nmtmp, &interf[i].netmask);
-    if (ddsrt_sockaddr_insamesubnet ((struct sockaddr *) &tmp, (struct sockaddr *) &iftmp, (struct sockaddr *) &nmtmp) ||
-        ddsrt_sockaddr_insamesubnet ((struct sockaddr *) &tmp, (struct sockaddr *) &xiftmp, (struct sockaddr *) &nmtmp))
-    {
+    if (ddsrt_sockaddr_insamesubnet((struct sockaddr *)&tmp, (struct sockaddr *)&iftmp,
+                                    (struct sockaddr *)&nmtmp) ||
+        ddsrt_sockaddr_insamesubnet((struct sockaddr *)&tmp, (struct sockaddr *)&xiftmp,
+                                    (struct sockaddr *)&nmtmp)) {
       default_result = DNAR_LOCAL;
       if (interf_idx == NULL)
-        break; // not returning an interface: no need to worry about most specific match
-      const uint32_t plen = ipaddr_prefixlen ((struct sockaddr *) &nmtmp);
-      if (plen >= best_prefixlen) // >= so (illegal?) edge case of prefixlen 0 handled gracefully
+        break;  // not returning an interface: no need to worry about most specific match
+      const uint32_t plen = ipaddr_prefixlen((struct sockaddr *)&nmtmp);
+      if (plen >= best_prefixlen)  // >= so (illegal?) edge case of prefixlen 0 handled gracefully
       {
         best_prefixlen = plen;
         *interf_idx = i;
@@ -147,8 +191,9 @@ enum ddsi_nearby_address_result ddsi_ipaddr_is_nearby_address (const ddsi_locato
   return default_result;
 }
 
-enum ddsi_locator_from_string_result ddsi_ipaddr_from_string (ddsi_locator_t *loc, const char *str, int32_t kind)
-{
+enum ddsi_locator_from_string_result ddsi_ipaddr_from_string(ddsi_locator_t *loc,
+                                                             const char *str,
+                                                             int32_t kind) {
   DDSRT_WARNING_MSVC_OFF(4996);
   char copy[264];
   int af = AF_INET;
@@ -174,12 +219,10 @@ enum ddsi_locator_from_string_result ddsi_ipaddr_from_string (ddsi_locator_t *lo
   // digits and a colon, and so 262 should be enough.  (Numerical addresses
   // add a few other characters, but even so this ought to be plenty.)
   size_t cnt = ddsrt_strlcpy(copy, str, sizeof(copy));
-  if (cnt == 0 || cnt >= sizeof(copy))
-    return AFSR_INVALID;
+  if (cnt == 0 || cnt >= sizeof(copy)) return AFSR_INVALID;
   char *ipstr = copy;
   char *portstr = strrchr(copy, ':');
-  if (af == AF_INET6 && portstr != strchr(copy, ':') && ipstr[0] != '[')
-  {
+  if (af == AF_INET6 && portstr != strchr(copy, ':') && ipstr[0] != '[') {
     // IPv6 numerical addresses contain colons, so if there are multiple
     // colons, we require disambiguation by enclosing the IP part in
     // brackets and hence consider "portstr" only if the first character
@@ -190,47 +233,38 @@ enum ddsi_locator_from_string_result ddsi_ipaddr_from_string (ddsi_locator_t *lo
   if (portstr) {
     unsigned tmpport;
     int pos;
-    if (sscanf (portstr + 1, "%u%n", &tmpport, &pos) == 1 && portstr[1 + pos] == 0)
-    {
-      if (tmpport < 1 || tmpport > 65535)
-        return AFSR_INVALID;
+    if (sscanf(portstr + 1, "%u%n", &tmpport, &pos) == 1 && portstr[1 + pos] == 0) {
+      if (tmpport < 1 || tmpport > 65535) return AFSR_INVALID;
       *portstr = 0;
-      port = (uint16_t) tmpport;
-    }
-    else if (af == AF_INET)
-    {
+      port = (uint16_t)tmpport;
+    } else if (af == AF_INET) {
       // no colons in IPv4 addresses
       return AFSR_INVALID;
-    }
-    else
-    {
+    } else {
       // allow for IPv6 address embedding IPv4 ones, like ff02::ffff:239.255.0.1
       portstr = NULL;
     }
   }
 
 #if DDSRT_HAVE_IPV6
-  if (af == AF_INET6)
-  {
+  if (af == AF_INET6) {
     if (copy[0] == '[') {
       // strip brackets: last character before the port must be a ']',
       // in the absence of a port, the last character in the string.
       ipstr = copy + 1;
       if (portstr == NULL) {
-        if (copy[cnt - 1] != ']')
-          return AFSR_INVALID;
+        if (copy[cnt - 1] != ']') return AFSR_INVALID;
         copy[cnt - 1] = 0;
       } else {
-        assert (portstr > copy);
-        if (portstr[-1] != ']')
-          return AFSR_INVALID;
+        assert(portstr > copy);
+        if (portstr[-1] != ']') return AFSR_INVALID;
         portstr[-1] = 0;
       }
     }
   }
 #endif
 
-  if (ddsrt_sockaddrfromstr(af, ipstr, (struct sockaddr *) &tmpaddr) != 0) {
+  if (ddsrt_sockaddrfromstr(af, ipstr, (struct sockaddr *)&tmpaddr) != 0) {
 #if DDSRT_HAVE_DNS
     /* Not a valid IP address. User may have specified a hostname instead. */
     ddsrt_hostent_t *hent = NULL;
@@ -238,7 +272,7 @@ enum ddsi_locator_from_string_result ddsi_ipaddr_from_string (ddsi_locator_t *lo
       return AFSR_UNKNOWN;
     }
     memcpy(&tmpaddr, &hent->addrs[0], sizeof(hent->addrs[0]));
-    ddsrt_free (hent);
+    ddsrt_free(hent);
 #else
     return AFSR_INVALID;
 #endif
@@ -248,53 +282,54 @@ enum ddsi_locator_from_string_result ddsi_ipaddr_from_string (ddsi_locator_t *lo
   if (tmpaddr.ss_family != af) {
     return AFSR_MISMATCH;
   } else if (af == AF_INET) {
-    struct sockaddr_in *x = (struct sockaddr_in *) &tmpaddr;
-    x->sin_port = htons (port);
+    struct sockaddr_in *x = (struct sockaddr_in *)&tmpaddr;
+    x->sin_port = htons(port);
   } else {
 #if DDSRT_HAVE_IPV6
-    assert (af == AF_INET6);
-    struct sockaddr_in6 *x = (struct sockaddr_in6 *) &tmpaddr;
-    x->sin6_port = htons (port);
+    assert(af == AF_INET6);
+    struct sockaddr_in6 *x = (struct sockaddr_in6 *)&tmpaddr;
+    x->sin6_port = htons(port);
 #else
-    abort ();
+    abort();
 #endif
   }
-  ddsi_ipaddr_to_loc (loc, (struct sockaddr *)&tmpaddr, kind);
+  ddsi_ipaddr_to_loc(loc, (struct sockaddr *)&tmpaddr, kind);
   return AFSR_OK;
   DDSRT_WARNING_MSVC_ON(4996);
 }
 
-char *ddsi_ipaddr_to_string (char *dst, size_t sizeof_dst, const ddsi_locator_t *loc, int with_port, const struct ddsi_network_interface *interf)
-{
-  assert (sizeof_dst > 1);
+char *ddsi_ipaddr_to_string(char *dst,
+                            size_t sizeof_dst,
+                            const ddsi_locator_t *loc,
+                            int with_port,
+                            const struct ddsi_network_interface *interf) {
+  assert(sizeof_dst > 1);
   if (loc->kind == DDSI_LOCATOR_KIND_INVALID)
-    (void) snprintf (dst, sizeof_dst, "(invalid)");
-  else
-  {
+    (void)snprintf(dst, sizeof_dst, "(invalid)");
+  else {
     struct sockaddr_storage src;
     size_t pos = 0;
     int cnt = 0;
     ddsi_ipaddr_from_loc(&src, loc);
-    switch (src.ss_family)
-    {
+    switch (src.ss_family) {
       case AF_INET:
-        ddsrt_sockaddrtostr ((const struct sockaddr *) &src, dst, sizeof_dst);
-        pos = strlen (dst);
+        ddsrt_sockaddrtostr((const struct sockaddr *)&src, dst, sizeof_dst);
+        pos = strlen(dst);
         if (with_port) {
           assert(pos <= sizeof_dst);
-          cnt = snprintf (dst + pos, sizeof_dst - pos, ":%"PRIu32, loc->port);
+          cnt = snprintf(dst + pos, sizeof_dst - pos, ":%" PRIu32, loc->port);
         }
         break;
 #if DDSRT_HAVE_IPV6
       case AF_INET6:
         dst[0] = '[';
-        ddsrt_sockaddrtostr ((const struct sockaddr *) &src, dst + 1, sizeof_dst);
-        pos = strlen (dst);
+        ddsrt_sockaddrtostr((const struct sockaddr *)&src, dst + 1, sizeof_dst);
+        pos = strlen(dst);
         if (with_port) {
           assert(pos <= sizeof_dst);
-          cnt = snprintf (dst + pos, sizeof_dst - pos, "]:%"PRIu32, loc->port);
+          cnt = snprintf(dst + pos, sizeof_dst - pos, "]:%" PRIu32, loc->port);
         } else {
-          cnt = snprintf (dst + pos, sizeof_dst - pos, "]");
+          cnt = snprintf(dst + pos, sizeof_dst - pos, "]");
         }
         break;
 #endif
@@ -303,89 +338,74 @@ char *ddsi_ipaddr_to_string (char *dst, size_t sizeof_dst, const ddsi_locator_t 
         dst[0] = 0;
         break;
     }
-    if (cnt >= 0)
-      pos += (size_t) cnt;
+    if (cnt >= 0) pos += (size_t)cnt;
     if (interf && pos < sizeof_dst)
-      snprintf (dst + pos, sizeof_dst - pos, "@%"PRIu32, interf->if_index);
+      snprintf(dst + pos, sizeof_dst - pos, "@%" PRIu32, interf->if_index);
   }
   return dst;
 }
 
-void ddsi_ipaddr_to_loc (ddsi_locator_t *dst, const struct sockaddr *src, int32_t kind)
-{
+void ddsi_ipaddr_to_loc(ddsi_locator_t *dst, const struct sockaddr *src, int32_t kind) {
   dst->kind = kind;
-  switch (src->sa_family)
-  {
-    case AF_INET:
-    {
-      const struct sockaddr_in *x = (const struct sockaddr_in *) src;
-      assert (kind == DDSI_LOCATOR_KIND_UDPv4 || kind == DDSI_LOCATOR_KIND_TCPv4);
-      if (x->sin_addr.s_addr == htonl (INADDR_ANY))
-      {
+  switch (src->sa_family) {
+    case AF_INET: {
+      const struct sockaddr_in *x = (const struct sockaddr_in *)src;
+      assert(kind == DDSI_LOCATOR_KIND_UDPv4 || kind == DDSI_LOCATOR_KIND_TCPv4);
+      if (x->sin_addr.s_addr == htonl(INADDR_ANY)) {
         dst->kind = DDSI_LOCATOR_KIND_INVALID;
         dst->port = DDSI_LOCATOR_PORT_INVALID;
-        memset (dst->address, 0, sizeof (dst->address));
-      }
-      else
-      {
-        dst->port = (x->sin_port == 0) ? DDSI_LOCATOR_PORT_INVALID : ntohs (x->sin_port);
-        memset (dst->address, 0, 12);
-        memcpy (dst->address + 12, &x->sin_addr.s_addr, 4);
+        memset(dst->address, 0, sizeof(dst->address));
+      } else {
+        dst->port = (x->sin_port == 0) ? DDSI_LOCATOR_PORT_INVALID : ntohs(x->sin_port);
+        memset(dst->address, 0, 12);
+        memcpy(dst->address + 12, &x->sin_addr.s_addr, 4);
       }
       break;
     }
 #if DDSRT_HAVE_IPV6
-    case AF_INET6:
-    {
-      const struct sockaddr_in6 *x = (const struct sockaddr_in6 *) src;
-      assert (kind == DDSI_LOCATOR_KIND_UDPv6 || kind == DDSI_LOCATOR_KIND_TCPv6);
-      if (IN6_IS_ADDR_UNSPECIFIED (&x->sin6_addr))
-      {
+    case AF_INET6: {
+      const struct sockaddr_in6 *x = (const struct sockaddr_in6 *)src;
+      assert(kind == DDSI_LOCATOR_KIND_UDPv6 || kind == DDSI_LOCATOR_KIND_TCPv6);
+      if (IN6_IS_ADDR_UNSPECIFIED(&x->sin6_addr)) {
         dst->kind = DDSI_LOCATOR_KIND_INVALID;
         dst->port = DDSI_LOCATOR_PORT_INVALID;
-        memset (dst->address, 0, sizeof (dst->address));
-      }
-      else
-      {
-        dst->port = (x->sin6_port == 0) ? DDSI_LOCATOR_PORT_INVALID : ntohs (x->sin6_port);
-        memcpy (dst->address, &x->sin6_addr.s6_addr, 16);
+        memset(dst->address, 0, sizeof(dst->address));
+      } else {
+        dst->port = (x->sin6_port == 0) ? DDSI_LOCATOR_PORT_INVALID : ntohs(x->sin6_port);
+        memcpy(dst->address, &x->sin6_addr.s6_addr, 16);
       }
       break;
     }
 #endif
     default:
-      DDS_FATAL("nn_address_to_loc: family %d unsupported\n", (int) src->sa_family);
+      DDS_FATAL("nn_address_to_loc: family %d unsupported\n", (int)src->sa_family);
   }
 }
 
-void ddsi_ipaddr_from_loc (struct sockaddr_storage *dst, const ddsi_locator_t *src)
-{
-  memset (dst, 0, sizeof (*dst));
-  switch (src->kind)
-  {
+void ddsi_ipaddr_from_loc(struct sockaddr_storage *dst, const ddsi_locator_t *src) {
+  memset(dst, 0, sizeof(*dst));
+  switch (src->kind) {
     case DDSI_LOCATOR_KIND_INVALID:
-      assert (0);
+      assert(0);
       break;
     case DDSI_LOCATOR_KIND_UDPv4:
-    case DDSI_LOCATOR_KIND_TCPv4:
-    {
-      struct sockaddr_in *x = (struct sockaddr_in *) dst;
+    case DDSI_LOCATOR_KIND_TCPv4: {
+      struct sockaddr_in *x = (struct sockaddr_in *)dst;
       x->sin_family = AF_INET;
-      x->sin_port = (src->port == DDSI_LOCATOR_PORT_INVALID) ? 0 : htons ((unsigned short) src->port);
-      memcpy (&x->sin_addr.s_addr, src->address + 12, 4);
+      x->sin_port = (src->port == DDSI_LOCATOR_PORT_INVALID) ? 0 : htons((unsigned short)src->port);
+      memcpy(&x->sin_addr.s_addr, src->address + 12, 4);
       break;
     }
 #if DDSRT_HAVE_IPV6
     case DDSI_LOCATOR_KIND_UDPv6:
-    case DDSI_LOCATOR_KIND_TCPv6:
-    {
-      struct sockaddr_in6 *x = (struct sockaddr_in6 *) dst;
+    case DDSI_LOCATOR_KIND_TCPv6: {
+      struct sockaddr_in6 *x = (struct sockaddr_in6 *)dst;
       x->sin6_family = AF_INET6;
-      x->sin6_port = (src->port == DDSI_LOCATOR_PORT_INVALID) ? 0 : htons ((unsigned short) src->port);
-      memcpy (&x->sin6_addr.s6_addr, src->address, 16);
-      if (IN6_IS_ADDR_LINKLOCAL (&x->sin6_addr))
-      {
-        x->sin6_scope_id = 0;//FIXME: gv.interfaceNo;
+      x->sin6_port =
+          (src->port == DDSI_LOCATOR_PORT_INVALID) ? 0 : htons((unsigned short)src->port);
+      memcpy(&x->sin6_addr.s6_addr, src->address, 16);
+      if (IN6_IS_ADDR_LINKLOCAL(&x->sin6_addr)) {
+        x->sin6_scope_id = 0;  // FIXME: gv.interfaceNo;
       }
       break;
     }

@@ -12,11 +12,11 @@
 #ifndef DDSRT_STRING_H
 #define DDSRT_STRING_H
 
-#include "dds/export.h"
 #include "dds/ddsrt/attributes.h"
 #include "dds/ddsrt/retcode.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -29,11 +29,7 @@ extern "C" {
  * @returns Zero if @s1 and @s2 match, a negative integer if @s1 is less than
  *          @s2 or a positive integer if @s1 is greater than @s2.
  */
-DDS_EXPORT int
-ddsrt_strcasecmp(
-  const char *s1,
-  const char *s2)
-ddsrt_nonnull_all;
+DDS_EXPORT int ddsrt_strcasecmp(const char * s1, const char * s2) ddsrt_nonnull_all;
 
 /**
  * @brief Compare two strings ignoring case, but no more than @n bytes.
@@ -45,12 +41,7 @@ ddsrt_nonnull_all;
  * @returns Zero if @s1 and @s2 match, a negative integer if @s1 is less than
  *          @s2 or a positive integer if @s1 is greater than @s2.
  */
-DDS_EXPORT int
-ddsrt_strncasecmp(
-  const char *s1,
-  const char *s2,
-  size_t n)
-ddsrt_nonnull((1,2));
+DDS_EXPORT int ddsrt_strncasecmp(const char * s1, const char * s2, size_t n) ddsrt_nonnull((1, 2));
 
 /**
  * @brief Extract token from string.
@@ -64,10 +55,7 @@ ddsrt_nonnull((1,2));
  *
  * @returns The original value of @stringp.
  */
-DDS_EXPORT char *
-ddsrt_strsep(
-  char **stringp,
-  const char *delim);
+DDS_EXPORT char * ddsrt_strsep(char ** stringp, const char * delim);
 
 /**
  * @brief Duplicate block of memory.
@@ -82,12 +70,8 @@ ddsrt_strsep(
  * @returns A new block of memory that is a duplicate of the block pointed to
  *          by @ptr or NULL if not enough memory was available.
  */
-DDS_EXPORT void *
-ddsrt_memdup(
-  const void *ptr,
-  size_t len)
-ddsrt_nonnull((1))
-ddsrt_attribute_malloc;
+DDS_EXPORT void * ddsrt_memdup(const void * ptr, size_t len)
+  ddsrt_nonnull((1)) ddsrt_attribute_malloc;
 
 /**
  * @brief Duplicate string.
@@ -101,11 +85,7 @@ ddsrt_attribute_malloc;
  * @returns A new string that is a duplicate of @str or NULL if not enough
  *          memory was available.
  */
-DDS_EXPORT char *
-ddsrt_strdup(
-  const char *str)
-ddsrt_nonnull_all
-ddsrt_attribute_malloc;
+DDS_EXPORT char * ddsrt_strdup(const char * str) ddsrt_nonnull_all ddsrt_attribute_malloc;
 
 /**
  * @brief Duplicate at most @len bytes of string @str.
@@ -120,12 +100,8 @@ ddsrt_attribute_malloc;
  * @returns A new string that is a duplicate of @str up to @len bytes or NULL
  *          if not enough memory was available.
  */
-DDS_EXPORT char *
-ddsrt_strndup(
-  const char *str,
-  size_t len)
-ddsrt_nonnull((1))
-ddsrt_attribute_malloc;
+DDS_EXPORT char * ddsrt_strndup(const char * str, size_t len)
+  ddsrt_nonnull((1)) ddsrt_attribute_malloc;
 
 /**
  * @brief Copy string.
@@ -142,12 +118,8 @@ ddsrt_attribute_malloc;
  *          the number of characters that would have been copied if dest is not
  *          sufficiently large enough.
  */
-DDS_EXPORT size_t
-ddsrt_strlcpy(
-  char * __restrict dest,
-  const char * __restrict src,
-  size_t size)
-ddsrt_nonnull((1,2));
+DDS_EXPORT size_t ddsrt_strlcpy(char * __restrict dest, const char * __restrict src, size_t size)
+  ddsrt_nonnull((1, 2));
 
 /**
  * @brief Concatenate strings.
@@ -165,12 +137,8 @@ ddsrt_nonnull((1,2));
  *          the number of characters that would have been copied if dest is not
  *          sufficiently large enough.
  */
-DDS_EXPORT size_t
-ddsrt_strlcat(
-  char * __restrict dest,
-  const char * __restrict src,
-  size_t size)
-ddsrt_nonnull((1,2));
+DDS_EXPORT size_t ddsrt_strlcat(char * __restrict dest, const char * __restrict src, size_t size)
+  ddsrt_nonnull((1, 2));
 
 /**
  * @brief Replace substring of null terminated string
@@ -183,15 +151,10 @@ ddsrt_nonnull((1,2));
  * @returns Pointer to newly allocated string with max occurrences of srch replaced, or
  * NULL on allocation failure or if srch is an empty string.
  */
-DDS_EXPORT char *
-ddsrt_str_replace(
-    const char *str,
-    const char *srch,
-    const char *subst,
-    size_t max)
-ddsrt_nonnull_all;
+DDS_EXPORT char * ddsrt_str_replace(
+  const char * str, const char * srch, const char * subst, size_t max) ddsrt_nonnull_all;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

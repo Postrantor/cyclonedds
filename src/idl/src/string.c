@@ -37,24 +37,24 @@
 #include <stdlib.h>
 #include <string.h>
 #if !defined(__USE_GNU) || !defined(__APPLE__) || !defined(__FreeBSD__)
-  #define __MUSL__
+#define __MUSL__
 #endif
 
 #if defined _WIN32
-# include <locale.h>
+#include <locale.h>
 typedef _locale_t locale_t;
 #else
-# include <pthread.h>
-# include <strings.h>
-# if __APPLE__ || __FreeBSD__
-#   include <xlocale.h>
-# else
-#   include <locale.h>
-# endif
+#include <pthread.h>
+#include <strings.h>
+#if __APPLE__ || __FreeBSD__
+#include <xlocale.h>
+#else
+#include <locale.h>
+#endif
 #endif
 
-#include "idl/stream.h"
 #include "idl/heap.h"
+#include "idl/stream.h"
 #include "idl/string.h"
 
 static locale_t posix_locale(void);
@@ -100,7 +100,7 @@ int idl_isdigit(int chr, int base)
   return num != -1 && num < base ? num : -1;
 }
 
-int idl_strcasecmp(const char *s1, const char *s2)
+int idl_strcasecmp(const char * s1, const char * s2)
 {
   assert(s1);
   assert(s2);
@@ -111,7 +111,7 @@ int idl_strcasecmp(const char *s1, const char *s2)
 #endif
 }
 
-int idl_strncasecmp(const char *s1, const char *s2, size_t n)
+int idl_strncasecmp(const char * s1, const char * s2, size_t n)
 {
   assert(s1);
   assert(s2);
@@ -122,7 +122,7 @@ int idl_strncasecmp(const char *s1, const char *s2, size_t n)
 #endif
 }
 
-char *idl_strdup(const char *str)
+char * idl_strdup(const char * str)
 {
 #if _WIN32
   return _strdup(str);
@@ -131,14 +131,14 @@ char *idl_strdup(const char *str)
 #endif
 }
 
-char *idl_strndup(const char *str, size_t len)
+char * idl_strndup(const char * str, size_t len)
 {
-  char *s;
+  char * s;
   size_t n;
-  for (n=0; n < len && str[n]; n++) ;
+  for (n = 0; n < len && str[n]; n++)
+    ;
   assert(n <= len);
-  if (!(s = idl_malloc(n + 1)))
-    return NULL;
+  if (!(s = idl_malloc(n + 1))) return NULL;
   memmove(s, str, n);
   s[n] = '\0';
   return s;
@@ -155,8 +155,7 @@ size_t idl_strlcpy(char * __restrict dest, const char * __restrict src, size_t s
   srclen = strlen(src);
   if (size > 0) {
     size_t len = srclen;
-    if (size <= srclen)
-      len = size - 1;
+    if (size <= srclen) len = size - 1;
     memcpy(dest, src, len);
     dest[len] = '\0';
   }
@@ -164,15 +163,13 @@ size_t idl_strlcpy(char * __restrict dest, const char * __restrict src, size_t s
   return srclen;
 }
 
-
-int idl_vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
+int idl_vsnprintf(char * str, size_t size, const char * fmt, va_list ap)
 {
 #if _WIN32
 #if _MSC_VER
-__pragma(warning(push))
-__pragma(warning(disable: 4996))
+  __pragma(warning(push)) __pragma(warning(disable : 4996))
 #endif
-  int ret;
+    int ret;
   va_list ap2;
   /* _vsprintf_p_l supports positional parameters */
   va_copy(ap2, ap);
@@ -181,7 +178,7 @@ __pragma(warning(disable: 4996))
   va_end(ap2);
   return ret;
 #if _MSC_VER
-__pragma(warning(pop))
+  __pragma(warning(pop))
 #endif
 #elif __APPLE__ || __FreeBSD__
   return vsnprintf_l(str, size, posix_locale(), fmt, ap);
@@ -196,7 +193,7 @@ __pragma(warning(pop))
 #endif
 }
 
-int idl_snprintf(char *str, size_t size, const char *fmt, ...)
+int idl_snprintf(char * str, size_t size, const char * fmt, ...)
 {
   int ret;
   va_list ap;
@@ -207,12 +204,12 @@ int idl_snprintf(char *str, size_t size, const char *fmt, ...)
   return ret;
 }
 
-int idl_asprintf(char **strp, const char *fmt, ...)
+int idl_asprintf(char ** strp, const char * fmt, ...)
 {
   int ret;
   unsigned int len;
-  char buf[1] = { '\0' };
-  char *str = NULL;
+  char buf[1] = {'\0'};
+  char * str = NULL;
   va_list ap1, ap2;
 
   assert(strp != NULL);
@@ -238,12 +235,12 @@ int idl_asprintf(char **strp, const char *fmt, ...)
 
   return ret;
 }
-int idl_vasprintf(char **strp, const char *fmt, va_list ap)
+int idl_vasprintf(char ** strp, const char * fmt, va_list ap)
 {
   int ret;
   unsigned int len;
-  char buf[1] = { '\0' };
-  char *str = NULL;
+  char buf[1] = {'\0'};
+  char * str = NULL;
   va_list ap2;
 
   assert(strp != NULL);
@@ -268,7 +265,7 @@ int idl_vasprintf(char **strp, const char *fmt, va_list ap)
   return ret;
 }
 
-unsigned long long idl_strtoull(const char *str, char **endptr, int base)
+unsigned long long idl_strtoull(const char * str, char ** endptr, int base)
 {
   assert(str);
   assert(base >= 0 && base <= 36);
@@ -285,7 +282,7 @@ unsigned long long idl_strtoull(const char *str, char **endptr, int base)
 #endif
 }
 
-long double idl_strtold(const char *str, char **endptr)
+long double idl_strtold(const char * str, char ** endptr)
 {
   assert(str);
 #if _WIN32
@@ -299,7 +296,7 @@ long double idl_strtold(const char *str, char **endptr)
 #endif
 }
 
-char *idl_strtok_r(char *str, const char *delim, char **saveptr)
+char * idl_strtok_r(char * str, const char * delim, char ** saveptr)
 {
 #if _WIN32
   return strtok_s(str, delim, saveptr);
@@ -309,7 +306,7 @@ char *idl_strtok_r(char *str, const char *delim, char **saveptr)
 }
 
 /* requires posix_locale */
-int idl_vfprintf(FILE *fp, const char *fmt, va_list ap)
+int idl_vfprintf(FILE * fp, const char * fmt, va_list ap)
 {
   assert(fp);
   assert(fmt);
@@ -330,7 +327,7 @@ int idl_vfprintf(FILE *fp, const char *fmt, va_list ap)
 #endif
 }
 
-int idl_fprintf(FILE *fp, const char *fmt, ...)
+int idl_fprintf(FILE * fp, const char * fmt, ...)
 {
   int ret;
   va_list ap;
@@ -345,33 +342,27 @@ int idl_fprintf(FILE *fp, const char *fmt, ...)
   return ret;
 }
 
-FILE *idl_fopen(const char *pathname, const char *mode)
+FILE * idl_fopen(const char * pathname, const char * mode)
 {
 #if _MSC_VER
-  FILE *fp = NULL;
+  FILE * fp = NULL;
 
-  if (fopen_s(&fp, pathname, mode) != 0)
-    return NULL;
+  if (fopen_s(&fp, pathname, mode) != 0) return NULL;
   return fp;
 #else
   return fopen(pathname, mode);
 #endif
 }
 
-int idl_fclose(FILE *fp)
-{
-  return fclose(fp);
-}
-
+int idl_fclose(FILE * fp) { return fclose(fp); }
 
 #if defined _WIN32
 static DWORD locale = TLS_OUT_OF_INDEXES;
 
 #if defined __MINGW32__
-_Pragma("GCC diagnostic push")
-_Pragma("GCC diagnostic ignored \"-Wmissing-prototypes\"")
+_Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wmissing-prototypes\"")
 #endif
-void WINAPI idl_cdtor(PVOID handle, DWORD reason, PVOID reserved)
+  void WINAPI idl_cdtor(PVOID handle, DWORD reason, PVOID reserved)
 {
   locale_t loc;
 
@@ -380,38 +371,31 @@ void WINAPI idl_cdtor(PVOID handle, DWORD reason, PVOID reserved)
   (void)reserved;
   switch (reason) {
     case DLL_PROCESS_ATTACH:
-      if ((locale = TlsAlloc()) == TLS_OUT_OF_INDEXES)
-        goto err_alloc;
-      if (!(loc = _create_locale(LC_ALL, "C")))
-        goto err_locale;
-      if (TlsSetValue(locale, loc))
-        return;
+      if ((locale = TlsAlloc()) == TLS_OUT_OF_INDEXES) goto err_alloc;
+      if (!(loc = _create_locale(LC_ALL, "C"))) goto err_locale;
+      if (TlsSetValue(locale, loc)) return;
       _free_locale(loc);
-err_locale:
+    err_locale:
       TlsFree(locale);
-err_alloc:
+    err_alloc:
       abort();
       /* never reached */
     case DLL_THREAD_ATTACH:
       assert(locale != TLS_OUT_OF_INDEXES);
-      if (!(loc = _create_locale(LC_ALL, "C")))
-        abort();
-      if (TlsSetValue(locale, loc))
-        return;
+      if (!(loc = _create_locale(LC_ALL, "C"))) abort();
+      if (TlsSetValue(locale, loc)) return;
       _free_locale(loc);
       abort();
       break;
     case DLL_THREAD_DETACH:
       assert(locale != TLS_OUT_OF_INDEXES);
       loc = TlsGetValue(locale);
-      if (loc && TlsSetValue(locale, NULL))
-        _free_locale(loc);
+      if (loc && TlsSetValue(locale, NULL)) _free_locale(loc);
       break;
     case DLL_PROCESS_DETACH:
       assert(locale != TLS_OUT_OF_INDEXES);
       loc = TlsGetValue(locale);
-      if (loc)
-        _free_locale(loc);
+      if (loc) _free_locale(loc);
       TlsSetValue(locale, NULL);
       TlsFree(locale);
       locale = TLS_OUT_OF_INDEXES;
@@ -425,45 +409,35 @@ _Pragma("GCC diagnostic pop")
 #endif
 
 #if defined __MINGW32__
-  PIMAGE_TLS_CALLBACK __crt_xl_tls_callback__ __attribute__ ((section(".CRT$XLZ"))) = idl_cdtor;
+  PIMAGE_TLS_CALLBACK __crt_xl_tls_callback__ __attribute__((section(".CRT$XLZ"))) = idl_cdtor;
 #elif defined _WIN64
-  #pragma comment (linker, "/INCLUDE:_tls_used")
-  #pragma comment (linker, "/INCLUDE:tls_callback_func")
-  #pragma const_seg(".CRT$XLZ")
-  EXTERN_C const PIMAGE_TLS_CALLBACK tls_callback_func = idl_cdtor;
-  #pragma const_seg()
+#pragma comment(linker, "/INCLUDE:_tls_used")
+#pragma comment(linker, "/INCLUDE:tls_callback_func")
+#pragma const_seg(".CRT$XLZ")
+EXTERN_C const PIMAGE_TLS_CALLBACK tls_callback_func = idl_cdtor;
+#pragma const_seg()
 #else
-  #pragma comment (linker, "/INCLUDE:__tls_used")
-  #pragma comment (linker, "/INCLUDE:_tls_callback_func")
-  #pragma data_seg(".CRT$XLZ")
-  EXTERN_C PIMAGE_TLS_CALLBACK tls_callback_func = idl_cdtor;
-  #pragma data_seg()
+#pragma comment(linker, "/INCLUDE:__tls_used")
+#pragma comment(linker, "/INCLUDE:_tls_callback_func")
+#pragma data_seg(".CRT$XLZ")
+EXTERN_C PIMAGE_TLS_CALLBACK tls_callback_func = idl_cdtor;
+#pragma data_seg()
 #endif /* _WIN32 */
 
-static locale_t posix_locale(void)
-{
-  return TlsGetValue(locale);
-}
+static locale_t posix_locale(void) { return TlsGetValue(locale); }
 #else /* _WIN32 */
 static pthread_key_t key;
 static pthread_once_t once = PTHREAD_ONCE_INIT;
 
-static void free_locale(void *ptr)
-{
-  freelocale((locale_t)ptr);
-}
+static void free_locale(void * ptr) { freelocale((locale_t)ptr); }
 
-static void make_key(void)
-{
-  (void)pthread_key_create(&key, free_locale);
-}
+static void make_key(void) { (void)pthread_key_create(&key, free_locale); }
 
 static locale_t posix_locale(void)
 {
   locale_t locale;
   (void)pthread_once(&once, make_key);
-  if ((locale = pthread_getspecific(key)))
-    return locale;
+  if ((locale = pthread_getspecific(key))) return locale;
 #if __APPLE__ || __FreeBSD__
   locale = newlocale(LC_ALL_MASK, NULL, NULL);
 #else

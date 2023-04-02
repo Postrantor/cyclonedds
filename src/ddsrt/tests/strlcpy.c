@@ -17,10 +17,9 @@
 
 CU_TheoryDataPoints(ddsrt_strlcpy, dest_size) = {
   CU_DataPoints(char *, "foo", "foo", "foo", "foo", "foo", "", "", ""),
-  CU_DataPoints(size_t, 0,     1,     3,     4,     5,     0,  1,  2)
-};
+  CU_DataPoints(size_t, 0, 1, 3, 4, 5, 0, 1, 2)};
 
-CU_Theory((char *src, size_t size), ddsrt_strlcpy, dest_size)
+CU_Theory((char * src, size_t size), ddsrt_strlcpy, dest_size)
 {
   char dest[] = "................";
   size_t len, srclen;
@@ -33,7 +32,7 @@ CU_Theory((char *src, size_t size), ddsrt_strlcpy, dest_size)
       len = size - 1;
     }
     CU_ASSERT_EQUAL(dest[len], '\0');
-    CU_ASSERT_EQUAL(dest[len+1], '.');
+    CU_ASSERT_EQUAL(dest[len + 1], '.');
     CU_ASSERT((strncmp(dest, src, len) == 0));
   } else {
     CU_ASSERT_EQUAL(dest[0], '.');
@@ -41,12 +40,15 @@ CU_Theory((char *src, size_t size), ddsrt_strlcpy, dest_size)
 }
 
 CU_TheoryDataPoints(ddsrt_strlcat, dest_size) = {
-  CU_DataPoints(char *, "",    "",    "",    "",    "foo", "foo", "foo", "foo", "foo", "foo", "foo", "", "", "foo", "foo", "foo"),
-  CU_DataPoints(char *, "bar", "bar", "bar", "bar", "bar", "bar", "bar", "bar", "bar", "bar", "bar", "", "", "",    "",    ""),
-  CU_DataPoints(size_t, 0,     1,     3,     4,     0,     1,     3,     4,     5,     6,     7,     0,  1,  3,     4,     5)
-};
+  CU_DataPoints(
+    char *, "", "", "", "", "foo", "foo", "foo", "foo", "foo", "foo", "foo", "", "", "foo", "foo",
+    "foo"),
+  CU_DataPoints(
+    char *, "bar", "bar", "bar", "bar", "bar", "bar", "bar", "bar", "bar", "bar", "bar", "", "", "",
+    "", ""),
+  CU_DataPoints(size_t, 0, 1, 3, 4, 0, 1, 3, 4, 5, 6, 7, 0, 1, 3, 4, 5)};
 
-CU_Theory((char *seed, char *src, size_t size), ddsrt_strlcat, dest_size)
+CU_Theory((char * seed, char * src, size_t size), ddsrt_strlcat, dest_size)
 {
   char dest[] = "................";
   size_t len, seedlen, srclen;
@@ -69,10 +71,10 @@ CU_Theory((char *seed, char *src, size_t size), ddsrt_strlcat, dest_size)
     CU_ASSERT_EQUAL(dest[len], '\0');
 
     if (seedlen < (size - 1)) {
-      CU_ASSERT_EQUAL(dest[len+1], '.');
+      CU_ASSERT_EQUAL(dest[len + 1], '.');
     }
 
-    (void)snprintf(foobar, len+1, "%s%s", seed, src);
+    (void)snprintf(foobar, len + 1, "%s%s", seed, src);
     CU_ASSERT((strncmp(dest, foobar, len) == 0));
   } else {
     CU_ASSERT((strcmp(dest, seed) == 0));

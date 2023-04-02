@@ -12,30 +12,33 @@
 
 #include "dds/security/core/dds_security_shared_secret.h"
 
-const DDS_Security_octet*
-DDS_Security_get_challenge1_from_secret_handle (DDS_Security_SharedSecretHandle handle)
+const DDS_Security_octet * DDS_Security_get_challenge1_from_secret_handle(
+  DDS_Security_SharedSecretHandle handle)
 {
-  DDS_Security_SharedSecretHandleImpl *secret = (DDS_Security_SharedSecretHandleImpl *)(uintptr_t)handle;
+  DDS_Security_SharedSecretHandleImpl * secret =
+    (DDS_Security_SharedSecretHandleImpl *)(uintptr_t)handle;
   return secret->challenge1;
 }
 
-const DDS_Security_octet*
-DDS_Security_get_challenge2_from_secret_handle (DDS_Security_SharedSecretHandle handle)
+const DDS_Security_octet * DDS_Security_get_challenge2_from_secret_handle(
+  DDS_Security_SharedSecretHandle handle)
 {
-  DDS_Security_SharedSecretHandleImpl *secret = (DDS_Security_SharedSecretHandleImpl *)(uintptr_t)handle;
+  DDS_Security_SharedSecretHandleImpl * secret =
+    (DDS_Security_SharedSecretHandleImpl *)(uintptr_t)handle;
   return secret->challenge2;
 }
 
-const DDS_Security_octet*
-DDS_Security_get_secret_from_secret_handle (DDS_Security_SharedSecretHandle handle)
+const DDS_Security_octet * DDS_Security_get_secret_from_secret_handle(
+  DDS_Security_SharedSecretHandle handle)
 {
-  DDS_Security_SharedSecretHandleImpl *secret = (DDS_Security_SharedSecretHandleImpl *)(uintptr_t)handle;
+  DDS_Security_SharedSecretHandleImpl * secret =
+    (DDS_Security_SharedSecretHandleImpl *)(uintptr_t)handle;
   return secret->shared_secret;
 }
 
-size_t
-DDS_Security_get_secret_size_from_secret_handle (DDS_Security_SharedSecretHandle handle)
+size_t DDS_Security_get_secret_size_from_secret_handle(DDS_Security_SharedSecretHandle handle)
 {
-  DDS_Security_SharedSecretHandleImpl *secret = (DDS_Security_SharedSecretHandleImpl *)(uintptr_t)handle;
-  return (size_t) secret->shared_secret_size;
+  DDS_Security_SharedSecretHandleImpl * secret =
+    (DDS_Security_SharedSecretHandleImpl *)(uintptr_t)handle;
+  return (size_t)secret->shared_secret_size;
 }

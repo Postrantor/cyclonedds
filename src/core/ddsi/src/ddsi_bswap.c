@@ -12,31 +12,30 @@
 #include "dds/ddsi/ddsi_protocol.h"
 #include "ddsi__bswap.h"
 
-extern inline void ddsi_bswap_sequence_number (ddsi_sequence_number_t *sn);
+extern inline void ddsi_bswap_sequence_number(ddsi_sequence_number_t * sn);
 
-void ddsi_bswap_sequence_number_set_hdr (ddsi_sequence_number_set_header_t *snset)
+void ddsi_bswap_sequence_number_set_hdr(ddsi_sequence_number_set_header_t * snset)
 {
-  ddsi_bswap_sequence_number (&snset->bitmap_base);
-  snset->numbits = ddsrt_bswap4u (snset->numbits);
+  ddsi_bswap_sequence_number(&snset->bitmap_base);
+  snset->numbits = ddsrt_bswap4u(snset->numbits);
 }
 
-void ddsi_bswap_sequence_number_set_bitmap (ddsi_sequence_number_set_header_t *snset, uint32_t *bits)
+void ddsi_bswap_sequence_number_set_bitmap(
+  ddsi_sequence_number_set_header_t * snset, uint32_t * bits)
 {
   const uint32_t n = (snset->numbits + 31) / 32;
-  for (uint32_t i = 0; i < n; i++)
-    bits[i] = ddsrt_bswap4u (bits[i]);
+  for (uint32_t i = 0; i < n; i++) bits[i] = ddsrt_bswap4u(bits[i]);
 }
 
-void ddsi_bswap_fragment_number_set_hdr (ddsi_fragment_number_set_header_t *fnset)
+void ddsi_bswap_fragment_number_set_hdr(ddsi_fragment_number_set_header_t * fnset)
 {
-  fnset->bitmap_base = ddsrt_bswap4u (fnset->bitmap_base);
-  fnset->numbits = ddsrt_bswap4u (fnset->numbits);
+  fnset->bitmap_base = ddsrt_bswap4u(fnset->bitmap_base);
+  fnset->numbits = ddsrt_bswap4u(fnset->numbits);
 }
 
-void ddsi_bswap_fragment_number_set_bitmap (ddsi_fragment_number_set_header_t *fnset, uint32_t *bits)
+void ddsi_bswap_fragment_number_set_bitmap(
+  ddsi_fragment_number_set_header_t * fnset, uint32_t * bits)
 {
   const uint32_t n = (fnset->numbits + 31) / 32;
-  for (uint32_t i = 0; i < n; i++)
-    bits[i] = ddsrt_bswap4u (bits[i]);
+  for (uint32_t i = 0; i < n; i++) bits[i] = ddsrt_bswap4u(bits[i]);
 }
-

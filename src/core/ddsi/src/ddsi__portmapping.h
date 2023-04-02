@@ -12,12 +12,13 @@
 #ifndef DDSI__PORTMAPPING_H
 #define DDSI__PORTMAPPING_H
 
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
 #include "dds/ddsi/ddsi_portmapping.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -31,12 +32,14 @@ enum ddsi_port {
 struct ddsi_config;
 
 /** @component port_mapping */
-bool ddsi_valid_portmapping (const struct ddsi_config *config, int32_t participant_index, char *msg, size_t msgsize);
+bool ddsi_valid_portmapping(
+  const struct ddsi_config * config, int32_t participant_index, char * msg, size_t msgsize);
 
 /** @component port_mapping */
-uint32_t ddsi_get_port (const struct ddsi_config *config, enum ddsi_port which, int32_t participant_index);
+uint32_t ddsi_get_port(
+  const struct ddsi_config * config, enum ddsi_port which, int32_t participant_index);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

@@ -12,28 +12,32 @@
 #ifndef _TEST_UTIL_H_
 #define _TEST_UTIL_H_
 
-#include <stdint.h>
 #include <stddef.h>
-#include "dds/ddsi/ddsi_domaingv.h"
+#include <stdint.h>
+
 #include "dds/dds.h"
+#include "dds/ddsi/ddsi_domaingv.h"
 
 /* Get unique g_topic name on each invocation. */
-char *create_unique_topic_name (const char *prefix, char *name, size_t size);
+char * create_unique_topic_name(const char * prefix, char * name, size_t size);
 
 /* Sync the reader to the writer and writer to reader */
-void sync_reader_writer (dds_entity_t participant_rd, dds_entity_t reader, dds_entity_t participant_wr, dds_entity_t writer);
+void sync_reader_writer(
+  dds_entity_t participant_rd, dds_entity_t reader, dds_entity_t participant_wr,
+  dds_entity_t writer);
 
 /* Try to sync the reader to the writer and writer to reader, expect to fail */
-void no_sync_reader_writer (dds_entity_t participant_rd, dds_entity_t reader, dds_entity_t participant_wr, dds_entity_t writer, dds_duration_t timeout);
+void no_sync_reader_writer(
+  dds_entity_t participant_rd, dds_entity_t reader, dds_entity_t participant_wr,
+  dds_entity_t writer, dds_duration_t timeout);
 
 /* Print message preceded by time stamp */
-void tprintf (const char *msg, ...)
-  ddsrt_attribute_format_printf (1, 2);
+void tprintf(const char * msg, ...) ddsrt_attribute_format_printf(1, 2);
 
 /* Get gv from the provided entity */
-struct ddsi_domaingv *get_domaingv (dds_entity_t handle);
+struct ddsi_domaingv * get_domaingv(dds_entity_t handle);
 
 /* Generate a guid */
-void gen_test_guid (struct ddsi_domaingv *gv, ddsi_guid_t *guid, uint32_t entity_id);
+void gen_test_guid(struct ddsi_domaingv * gv, ddsi_guid_t * guid, uint32_t entity_id);
 
 #endif /* _TEST_UTIL_H_ */

@@ -25,11 +25,11 @@
 #endif /* __VXWORKS__ */
 
 #if !defined(HOST_NAME_MAX)
-# if LWIP_SOCKET
-#   define HOST_NAME_MAX DNS_MAX_NAME_LENGTH
-# elif defined(_POSIX_HOST_NAME_MAX)
-#   define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
-# endif
+#if LWIP_SOCKET
+#define HOST_NAME_MAX DNS_MAX_NAME_LENGTH
+#elif defined(_POSIX_HOST_NAME_MAX)
+#define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
+#endif
 #endif
 
 #if DDSRT_HAVE_GETHOSTNAME
@@ -37,10 +37,7 @@
 #define HOST_NAME_MAX 256
 #endif
 
-dds_return_t
-ddsrt_gethostname(
-  char *name,
-  size_t len)
+dds_return_t ddsrt_gethostname(char * name, size_t len)
 {
   char buf[HOST_NAME_MAX + 1 /* '\0' */];
 
@@ -49,9 +46,7 @@ ddsrt_gethostname(
   if (gethostname(buf, HOST_NAME_MAX) == 0) {
     /* If truncation occurrs, no error is returned whether or not the buffer
        is null-terminated. */
-    if (buf[HOST_NAME_MAX - 1] != '\0' ||
-        ddsrt_strlcpy(name, buf, len) >= len)
-    {
+    if (buf[HOST_NAME_MAX - 1] != '\0' || ddsrt_strlcpy(name, buf, len) >= len) {
       return DDS_RETCODE_NOT_ENOUGH_SPACE;
     }
 
@@ -71,4 +66,4 @@ ddsrt_gethostname(
 
   return DDS_RETCODE_ERROR;
 }
-#endif // DDSRT_GETHOSTNAME
+#endif  // DDSRT_GETHOSTNAME

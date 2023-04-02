@@ -9,38 +9,32 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/environ.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "dds/ddsrt/environ.h"
 #include "dds/ddsrt/retcode.h"
 
-extern char **environ;
+extern char ** environ;
 
-static int
-isenvvar(const char *name)
-{
-  return (*name == '\0' || strchr(name, '=') != NULL) == 0;
-}
+static int isenvvar(const char * name) { return (*name == '\0' || strchr(name, '=') != NULL) == 0; }
 
-dds_return_t
-ddsrt_getenv(const char *name, const char **value)
+dds_return_t ddsrt_getenv(const char * name, const char ** value)
 {
-  char **ep;
+  char ** ep;
   size_t name_len;
 
   assert(name != NULL);
   assert(value != NULL);
 
-  if (!isenvvar(name))
-    return DDS_RETCODE_BAD_PARAMETER;
-  
+  if (!isenvvar(name)) return DDS_RETCODE_BAD_PARAMETER;
+
   /* poor mans getenv, good enough for CYCLONEDDS_URI */
   name_len = strlen(name);
-  for (ep = environ; *ep != NULL; ep++)
-  {
+  for (ep = environ; *ep != NULL; ep++) {
     if (!strncmp(*ep, name, name_len) && (*ep)[name_len] == '=') {
       *value = *ep + name_len + 1;
       return DDS_RETCODE_OK;
@@ -50,31 +44,26 @@ ddsrt_getenv(const char *name, const char **value)
   return DDS_RETCODE_NOT_FOUND;
 }
 
-dds_return_t
-ddsrt_setenv(const char *name, const char *value)
+dds_return_t ddsrt_setenv(const char * name, const char * value)
 {
   assert(name != NULL);
   assert(value != NULL);
 
-  if (strlen(value) == 0)
-    return ddsrt_unsetenv(name);
-  if (!isenvvar(name))
-    return DDS_RETCODE_BAD_PARAMETER;
+  if (strlen(value) == 0) return ddsrt_unsetenv(name);
+  if (!isenvvar(name)) return DDS_RETCODE_BAD_PARAMETER;
 
   /* TODO */
 
   return DDS_RETCODE_OK;
 }
 
-dds_return_t
-ddsrt_unsetenv(const char *name)
+dds_return_t ddsrt_unsetenv(const char * name)
 {
   assert(name != NULL);
 
-  if (!isenvvar(name))
-    return DDS_RETCODE_BAD_PARAMETER;
-  
+  if (!isenvvar(name)) return DDS_RETCODE_BAD_PARAMETER;
+
   /* TODO */
-  
+
   return DDS_RETCODE_OK;
 }

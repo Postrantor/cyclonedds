@@ -12,14 +12,15 @@
 #ifndef DDSI__UDP_H
 #define DDSI__UDP_H
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 struct in_addr;
 struct ddsi_domaingv;
 
-typedef struct ddsi_udpv4mcgen_address {
+typedef struct ddsi_udpv4mcgen_address
+{
   /* base IPv4 MC address is ipv4, host bits are bits base .. base+count-1, this machine is bit idx */
   struct in_addr ipv4;
   uint8_t base;
@@ -28,9 +29,9 @@ typedef struct ddsi_udpv4mcgen_address {
 } ddsi_udpv4mcgen_address_t;
 
 /** @component udp_transport */
-int ddsi_udp_init (struct ddsi_domaingv *gv);
+int ddsi_udp_init(struct ddsi_domaingv * gv);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

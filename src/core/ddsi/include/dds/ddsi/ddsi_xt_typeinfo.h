@@ -9,8 +9,8 @@
 #ifndef DDSI_XT_TYPEINFO_H
 #define DDSI_XT_TYPEINFO_H
 
-#include "dds/ddsc/dds_public_impl.h"
 #include "dds/cdr/dds_cdrstream.h"
+#include "dds/ddsc/dds_public_impl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,7 +19,7 @@ extern "C" {
 typedef uint8_t DDS_XTypes_EquivalenceKind;
 
 #define DDS_XTypes_EquivalenceKind__alloc() \
-((DDS_XTypes_EquivalenceKind*) dds_alloc (sizeof (DDS_XTypes_EquivalenceKind)));
+  ((DDS_XTypes_EquivalenceKind *)dds_alloc(sizeof(DDS_XTypes_EquivalenceKind)));
 
 #define DDS_XTypes_EK_MINIMAL 241
 #define DDS_XTypes_EK_COMPLETE 242
@@ -27,7 +27,7 @@ typedef uint8_t DDS_XTypes_EquivalenceKind;
 typedef uint8_t DDS_XTypes_TypeKind;
 
 #define DDS_XTypes_TypeKind__alloc() \
-((DDS_XTypes_TypeKind*) dds_alloc (sizeof (DDS_XTypes_TypeKind)));
+  ((DDS_XTypes_TypeKind *)dds_alloc(sizeof(DDS_XTypes_TypeKind)));
 
 #define DDS_XTypes_TK_NONE 0
 #define DDS_XTypes_TK_BOOLEAN 1
@@ -58,7 +58,7 @@ typedef uint8_t DDS_XTypes_TypeKind;
 typedef uint8_t DDS_XTypes_TypeIdentiferKind;
 
 #define DDS_XTypes_TypeIdentiferKind__alloc() \
-((DDS_XTypes_TypeIdentiferKind*) dds_alloc (sizeof (DDS_XTypes_TypeIdentiferKind)));
+  ((DDS_XTypes_TypeIdentiferKind *)dds_alloc(sizeof(DDS_XTypes_TypeIdentiferKind)));
 
 #define DDS_XTypes_TI_STRING8_SMALL 112
 #define DDS_XTypes_TI_STRING8_LARGE 113
@@ -75,72 +75,69 @@ typedef uint8_t DDS_XTypes_TypeIdentiferKind;
 typedef char DDS_XTypes_MemberName[257];
 
 #define DDS_XTypes_MemberName__alloc() \
-((DDS_XTypes_MemberName*) dds_alloc (sizeof (DDS_XTypes_MemberName)));
+  ((DDS_XTypes_MemberName *)dds_alloc(sizeof(DDS_XTypes_MemberName)));
 
 #define DDS_XTypes_TYPE_NAME_MAX_LENGTH 256
 typedef char DDS_XTypes_QualifiedTypeName[257];
 
 #define DDS_XTypes_QualifiedTypeName__alloc() \
-((DDS_XTypes_QualifiedTypeName*) dds_alloc (sizeof (DDS_XTypes_QualifiedTypeName)));
+  ((DDS_XTypes_QualifiedTypeName *)dds_alloc(sizeof(DDS_XTypes_QualifiedTypeName)));
 
 typedef uint8_t DDS_XTypes_PrimitiveTypeId;
 
 #define DDS_XTypes_PrimitiveTypeId__alloc() \
-((DDS_XTypes_PrimitiveTypeId*) dds_alloc (sizeof (DDS_XTypes_PrimitiveTypeId)));
+  ((DDS_XTypes_PrimitiveTypeId *)dds_alloc(sizeof(DDS_XTypes_PrimitiveTypeId)));
 
 typedef uint8_t DDS_XTypes_EquivalenceHash[14];
 
 #define DDS_XTypes_EquivalenceHash__alloc() \
-((DDS_XTypes_EquivalenceHash*) dds_alloc (sizeof (DDS_XTypes_EquivalenceHash)));
+  ((DDS_XTypes_EquivalenceHash *)dds_alloc(sizeof(DDS_XTypes_EquivalenceHash)));
 
 typedef uint8_t DDS_XTypes_NameHash[4];
 
 #define DDS_XTypes_NameHash__alloc() \
-((DDS_XTypes_NameHash*) dds_alloc (sizeof (DDS_XTypes_NameHash)));
+  ((DDS_XTypes_NameHash *)dds_alloc(sizeof(DDS_XTypes_NameHash)));
 
 typedef uint32_t DDS_XTypes_LBound;
 
-#define DDS_XTypes_LBound__alloc() \
-((DDS_XTypes_LBound*) dds_alloc (sizeof (DDS_XTypes_LBound)));
+#define DDS_XTypes_LBound__alloc() ((DDS_XTypes_LBound *)dds_alloc(sizeof(DDS_XTypes_LBound)));
 
 typedef struct DDS_XTypes_LBoundSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  DDS_XTypes_LBound *_buffer;
+  DDS_XTypes_LBound * _buffer;
   bool _release;
 } DDS_XTypes_LBoundSeq;
 
 #define DDS_XTypes_LBoundSeq__alloc() \
-((DDS_XTypes_LBoundSeq*) dds_alloc (sizeof (DDS_XTypes_LBoundSeq)));
+  ((DDS_XTypes_LBoundSeq *)dds_alloc(sizeof(DDS_XTypes_LBoundSeq)));
 
 #define DDS_XTypes_LBoundSeq_allocbuf(l) \
-((DDS_XTypes_LBound *) dds_alloc ((l) * sizeof (DDS_XTypes_LBound)))
+  ((DDS_XTypes_LBound *)dds_alloc((l) * sizeof(DDS_XTypes_LBound)))
 #define DDS_XTypes_INVALID_LBOUND 0
 typedef uint8_t DDS_XTypes_SBound;
 
-#define DDS_XTypes_SBound__alloc() \
-((DDS_XTypes_SBound*) dds_alloc (sizeof (DDS_XTypes_SBound)));
+#define DDS_XTypes_SBound__alloc() ((DDS_XTypes_SBound *)dds_alloc(sizeof(DDS_XTypes_SBound)));
 
 typedef struct DDS_XTypes_SBoundSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  DDS_XTypes_SBound *_buffer;
+  DDS_XTypes_SBound * _buffer;
   bool _release;
 } DDS_XTypes_SBoundSeq;
 
 #define DDS_XTypes_SBoundSeq__alloc() \
-((DDS_XTypes_SBoundSeq*) dds_alloc (sizeof (DDS_XTypes_SBoundSeq)));
+  ((DDS_XTypes_SBoundSeq *)dds_alloc(sizeof(DDS_XTypes_SBoundSeq)));
 
 #define DDS_XTypes_SBoundSeq_allocbuf(l) \
-((DDS_XTypes_SBound *) dds_alloc ((l) * sizeof (DDS_XTypes_SBound)))
+  ((DDS_XTypes_SBound *)dds_alloc((l) * sizeof(DDS_XTypes_SBound)))
 #define DDS_XTypes_INVALID_SBOUND 0
 typedef struct DDS_XTypes_TypeObjectHashId
 {
   uint8_t _d;
-  union
-  {
+  union {
     DDS_XTypes_EquivalenceHash hash;
   } _u;
 } DDS_XTypes_TypeObjectHashId;
@@ -156,47 +153,47 @@ typedef uint16_t DDS_XTypes_MemberFlag;
 typedef DDS_XTypes_MemberFlag DDS_XTypes_CollectionElementFlag;
 
 #define DDS_XTypes_CollectionElementFlag__alloc() \
-((DDS_XTypes_CollectionElementFlag*) dds_alloc (sizeof (DDS_XTypes_CollectionElementFlag)));
+  ((DDS_XTypes_CollectionElementFlag *)dds_alloc(sizeof(DDS_XTypes_CollectionElementFlag)));
 
 typedef DDS_XTypes_MemberFlag DDS_XTypes_StructMemberFlag;
 
 #define DDS_XTypes_StructMemberFlag__alloc() \
-((DDS_XTypes_StructMemberFlag*) dds_alloc (sizeof (DDS_XTypes_StructMemberFlag)));
+  ((DDS_XTypes_StructMemberFlag *)dds_alloc(sizeof(DDS_XTypes_StructMemberFlag)));
 
 typedef DDS_XTypes_MemberFlag DDS_XTypes_UnionMemberFlag;
 
 #define DDS_XTypes_UnionMemberFlag__alloc() \
-((DDS_XTypes_UnionMemberFlag*) dds_alloc (sizeof (DDS_XTypes_UnionMemberFlag)));
+  ((DDS_XTypes_UnionMemberFlag *)dds_alloc(sizeof(DDS_XTypes_UnionMemberFlag)));
 
 typedef DDS_XTypes_MemberFlag DDS_XTypes_UnionDiscriminatorFlag;
 
 #define DDS_XTypes_UnionDiscriminatorFlag__alloc() \
-((DDS_XTypes_UnionDiscriminatorFlag*) dds_alloc (sizeof (DDS_XTypes_UnionDiscriminatorFlag)));
+  ((DDS_XTypes_UnionDiscriminatorFlag *)dds_alloc(sizeof(DDS_XTypes_UnionDiscriminatorFlag)));
 
 typedef DDS_XTypes_MemberFlag DDS_XTypes_EnumeratedLiteralFlag;
 
 #define DDS_XTypes_EnumeratedLiteralFlag__alloc() \
-((DDS_XTypes_EnumeratedLiteralFlag*) dds_alloc (sizeof (DDS_XTypes_EnumeratedLiteralFlag)));
+  ((DDS_XTypes_EnumeratedLiteralFlag *)dds_alloc(sizeof(DDS_XTypes_EnumeratedLiteralFlag)));
 
 typedef DDS_XTypes_MemberFlag DDS_XTypes_AnnotationParameterFlag;
 
 #define DDS_XTypes_AnnotationParameterFlag__alloc() \
-((DDS_XTypes_AnnotationParameterFlag*) dds_alloc (sizeof (DDS_XTypes_AnnotationParameterFlag)));
+  ((DDS_XTypes_AnnotationParameterFlag *)dds_alloc(sizeof(DDS_XTypes_AnnotationParameterFlag)));
 
 typedef DDS_XTypes_MemberFlag DDS_XTypes_AliasMemberFlag;
 
 #define DDS_XTypes_AliasMemberFlag__alloc() \
-((DDS_XTypes_AliasMemberFlag*) dds_alloc (sizeof (DDS_XTypes_AliasMemberFlag)));
+  ((DDS_XTypes_AliasMemberFlag *)dds_alloc(sizeof(DDS_XTypes_AliasMemberFlag)));
 
 typedef DDS_XTypes_MemberFlag DDS_XTypes_BitflagFlag;
 
 #define DDS_XTypes_BitflagFlag__alloc() \
-((DDS_XTypes_BitflagFlag*) dds_alloc (sizeof (DDS_XTypes_BitflagFlag)));
+  ((DDS_XTypes_BitflagFlag *)dds_alloc(sizeof(DDS_XTypes_BitflagFlag)));
 
 typedef DDS_XTypes_MemberFlag DDS_XTypes_BitsetMemberFlag;
 
 #define DDS_XTypes_BitsetMemberFlag__alloc() \
-((DDS_XTypes_BitsetMemberFlag*) dds_alloc (sizeof (DDS_XTypes_BitsetMemberFlag)));
+  ((DDS_XTypes_BitsetMemberFlag *)dds_alloc(sizeof(DDS_XTypes_BitsetMemberFlag)));
 
 #define DDS_XTypes_MemberFlagMinimalMask 63
 typedef uint16_t DDS_XTypes_TypeFlag;
@@ -208,42 +205,42 @@ typedef uint16_t DDS_XTypes_TypeFlag;
 typedef DDS_XTypes_TypeFlag DDS_XTypes_StructTypeFlag;
 
 #define DDS_XTypes_StructTypeFlag__alloc() \
-((DDS_XTypes_StructTypeFlag*) dds_alloc (sizeof (DDS_XTypes_StructTypeFlag)));
+  ((DDS_XTypes_StructTypeFlag *)dds_alloc(sizeof(DDS_XTypes_StructTypeFlag)));
 
 typedef DDS_XTypes_TypeFlag DDS_XTypes_UnionTypeFlag;
 
 #define DDS_XTypes_UnionTypeFlag__alloc() \
-((DDS_XTypes_UnionTypeFlag*) dds_alloc (sizeof (DDS_XTypes_UnionTypeFlag)));
+  ((DDS_XTypes_UnionTypeFlag *)dds_alloc(sizeof(DDS_XTypes_UnionTypeFlag)));
 
 typedef DDS_XTypes_TypeFlag DDS_XTypes_CollectionTypeFlag;
 
 #define DDS_XTypes_CollectionTypeFlag__alloc() \
-((DDS_XTypes_CollectionTypeFlag*) dds_alloc (sizeof (DDS_XTypes_CollectionTypeFlag)));
+  ((DDS_XTypes_CollectionTypeFlag *)dds_alloc(sizeof(DDS_XTypes_CollectionTypeFlag)));
 
 typedef DDS_XTypes_TypeFlag DDS_XTypes_AnnotationTypeFlag;
 
 #define DDS_XTypes_AnnotationTypeFlag__alloc() \
-((DDS_XTypes_AnnotationTypeFlag*) dds_alloc (sizeof (DDS_XTypes_AnnotationTypeFlag)));
+  ((DDS_XTypes_AnnotationTypeFlag *)dds_alloc(sizeof(DDS_XTypes_AnnotationTypeFlag)));
 
 typedef DDS_XTypes_TypeFlag DDS_XTypes_AliasTypeFlag;
 
 #define DDS_XTypes_AliasTypeFlag__alloc() \
-((DDS_XTypes_AliasTypeFlag*) dds_alloc (sizeof (DDS_XTypes_AliasTypeFlag)));
+  ((DDS_XTypes_AliasTypeFlag *)dds_alloc(sizeof(DDS_XTypes_AliasTypeFlag)));
 
 typedef DDS_XTypes_TypeFlag DDS_XTypes_EnumTypeFlag;
 
 #define DDS_XTypes_EnumTypeFlag__alloc() \
-((DDS_XTypes_EnumTypeFlag*) dds_alloc (sizeof (DDS_XTypes_EnumTypeFlag)));
+  ((DDS_XTypes_EnumTypeFlag *)dds_alloc(sizeof(DDS_XTypes_EnumTypeFlag)));
 
 typedef DDS_XTypes_TypeFlag DDS_XTypes_BitmaskTypeFlag;
 
 #define DDS_XTypes_BitmaskTypeFlag__alloc() \
-((DDS_XTypes_BitmaskTypeFlag*) dds_alloc (sizeof (DDS_XTypes_BitmaskTypeFlag)));
+  ((DDS_XTypes_BitmaskTypeFlag *)dds_alloc(sizeof(DDS_XTypes_BitmaskTypeFlag)));
 
 typedef DDS_XTypes_TypeFlag DDS_XTypes_BitsetTypeFlag;
 
 #define DDS_XTypes_BitsetTypeFlag__alloc() \
-((DDS_XTypes_BitsetTypeFlag*) dds_alloc (sizeof (DDS_XTypes_BitsetTypeFlag)));
+  ((DDS_XTypes_BitsetTypeFlag *)dds_alloc(sizeof(DDS_XTypes_BitsetTypeFlag)));
 
 #define DDS_XTypes_TypeFlagMinimalMask 7
 struct DDS_XTypes_TypeIdentifier;
@@ -316,7 +313,7 @@ typedef struct DDS_XTypes_StronglyConnectedComponentId
   int32_t scc_index;
 } DDS_XTypes_StronglyConnectedComponentId;
 
-#if 0 /* empty struct */
+#if 0  /* empty struct */
 typedef struct DDS_XTypes_ExtendedTypeDefn
 {
 } DDS_XTypes_ExtendedTypeDefn;
@@ -325,8 +322,7 @@ typedef struct DDS_XTypes_ExtendedTypeDefn
 typedef struct DDS_XTypes_TypeIdentifier
 {
   uint8_t _d;
-  union
-  {
+  union {
     struct DDS_XTypes_StringSTypeDefn string_sdefn;
     struct DDS_XTypes_StringLTypeDefn string_ldefn;
     struct DDS_XTypes_PlainSequenceSElemDefn seq_sdefn;
@@ -343,10 +339,10 @@ typedef struct DDS_XTypes_TypeIdentifier
 DDS_EXPORT extern const dds_topic_descriptor_t DDS_XTypes_TypeIdentifier_desc;
 
 #define DDS_XTypes_TypeIdentifier__alloc() \
-((DDS_XTypes_TypeIdentifier*) dds_alloc (sizeof (DDS_XTypes_TypeIdentifier)));
+  ((DDS_XTypes_TypeIdentifier *)dds_alloc(sizeof(DDS_XTypes_TypeIdentifier)));
 
-#define DDS_XTypes_TypeIdentifier_free(d,o) \
-dds_sample_free ((d), &DDS_XTypes_TypeIdentifier_desc, (o))
+#define DDS_XTypes_TypeIdentifier_free(d, o) \
+  dds_sample_free((d), &DDS_XTypes_TypeIdentifier_desc, (o))
 
 DDS_EXPORT extern const struct dds_cdrstream_desc DDS_XTypes_TypeIdentifier_cdrstream_desc;
 
@@ -354,23 +350,23 @@ typedef struct DDS_XTypes_TypeIdentifierSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifier *_buffer;
+  struct DDS_XTypes_TypeIdentifier * _buffer;
   bool _release;
 } DDS_XTypes_TypeIdentifierSeq;
 
 #define DDS_XTypes_TypeIdentifierSeq__alloc() \
-((DDS_XTypes_TypeIdentifierSeq*) dds_alloc (sizeof (DDS_XTypes_TypeIdentifierSeq)));
+  ((DDS_XTypes_TypeIdentifierSeq *)dds_alloc(sizeof(DDS_XTypes_TypeIdentifierSeq)));
 
 #define DDS_XTypes_TypeIdentifierSeq_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifier *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifier)))
+  ((struct DDS_XTypes_TypeIdentifier *)dds_alloc((l) * sizeof(struct DDS_XTypes_TypeIdentifier)))
 typedef uint32_t DDS_XTypes_MemberId;
 
 #define DDS_XTypes_MemberId__alloc() \
-((DDS_XTypes_MemberId*) dds_alloc (sizeof (DDS_XTypes_MemberId)));
+  ((DDS_XTypes_MemberId *)dds_alloc(sizeof(DDS_XTypes_MemberId)));
 
 #define DDS_XTypes_ANNOTATION_STR_VALUE_MAX_LEN 128
 #define DDS_XTypes_ANNOTATION_OCTETSEC_VALUE_MAX_LEN 128
-#if 0 /* empty struct */
+#if 0  /* empty struct */
 typedef struct DDS_XTypes_ExtendedAnnotationParameterValue
 {
 } DDS_XTypes_ExtendedAnnotationParameterValue;
@@ -379,8 +375,7 @@ typedef struct DDS_XTypes_ExtendedAnnotationParameterValue
 typedef struct DDS_XTypes_AnnotationParameterValue
 {
   uint8_t _d;
-  union
-  {
+  union {
     bool boolean_value;
     uint8_t byte_value;
     int16_t int16_value;
@@ -408,15 +403,17 @@ typedef struct DDS_XTypes_AppliedAnnotationParameterSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_AppliedAnnotationParameter *_buffer;
+  struct DDS_XTypes_AppliedAnnotationParameter * _buffer;
   bool _release;
 } DDS_XTypes_AppliedAnnotationParameterSeq;
 
 #define DDS_XTypes_AppliedAnnotationParameterSeq__alloc() \
-((DDS_XTypes_AppliedAnnotationParameterSeq*) dds_alloc (sizeof (DDS_XTypes_AppliedAnnotationParameterSeq)));
+  ((DDS_XTypes_AppliedAnnotationParameterSeq *)dds_alloc( \
+    sizeof(DDS_XTypes_AppliedAnnotationParameterSeq)));
 
-#define DDS_XTypes_AppliedAnnotationParameterSeq_allocbuf(l) \
-((struct DDS_XTypes_AppliedAnnotationParameter *) dds_alloc ((l) * sizeof (struct DDS_XTypes_AppliedAnnotationParameter)))
+#define DDS_XTypes_AppliedAnnotationParameterSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_AppliedAnnotationParameter *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_AppliedAnnotationParameter)))
 typedef struct DDS_XTypes_AppliedAnnotation
 {
   struct DDS_XTypes_TypeIdentifier annotation_typeid;
@@ -427,15 +424,16 @@ typedef struct DDS_XTypes_AppliedAnnotationSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_AppliedAnnotation *_buffer;
+  struct DDS_XTypes_AppliedAnnotation * _buffer;
   bool _release;
 } DDS_XTypes_AppliedAnnotationSeq;
 
 #define DDS_XTypes_AppliedAnnotationSeq__alloc() \
-((DDS_XTypes_AppliedAnnotationSeq*) dds_alloc (sizeof (DDS_XTypes_AppliedAnnotationSeq)));
+  ((DDS_XTypes_AppliedAnnotationSeq *)dds_alloc(sizeof(DDS_XTypes_AppliedAnnotationSeq)));
 
-#define DDS_XTypes_AppliedAnnotationSeq_allocbuf(l) \
-((struct DDS_XTypes_AppliedAnnotation *) dds_alloc ((l) * sizeof (struct DDS_XTypes_AppliedAnnotation)))
+#define DDS_XTypes_AppliedAnnotationSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_AppliedAnnotation *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_AppliedAnnotation)))
 typedef struct DDS_XTypes_AppliedVerbatimAnnotation
 {
   char placement[33];
@@ -480,15 +478,16 @@ typedef struct DDS_XTypes_CompleteStructMemberSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_CompleteStructMember *_buffer;
+  struct DDS_XTypes_CompleteStructMember * _buffer;
   bool _release;
 } DDS_XTypes_CompleteStructMemberSeq;
 
 #define DDS_XTypes_CompleteStructMemberSeq__alloc() \
-((DDS_XTypes_CompleteStructMemberSeq*) dds_alloc (sizeof (DDS_XTypes_CompleteStructMemberSeq)));
+  ((DDS_XTypes_CompleteStructMemberSeq *)dds_alloc(sizeof(DDS_XTypes_CompleteStructMemberSeq)));
 
-#define DDS_XTypes_CompleteStructMemberSeq_allocbuf(l) \
-((struct DDS_XTypes_CompleteStructMember *) dds_alloc ((l) * sizeof (struct DDS_XTypes_CompleteStructMember)))
+#define DDS_XTypes_CompleteStructMemberSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_CompleteStructMember *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_CompleteStructMember)))
 typedef struct DDS_XTypes_MinimalStructMember
 {
   struct DDS_XTypes_CommonStructMember common;
@@ -499,21 +498,22 @@ typedef struct DDS_XTypes_MinimalStructMemberSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_MinimalStructMember *_buffer;
+  struct DDS_XTypes_MinimalStructMember * _buffer;
   bool _release;
 } DDS_XTypes_MinimalStructMemberSeq;
 
 #define DDS_XTypes_MinimalStructMemberSeq__alloc() \
-((DDS_XTypes_MinimalStructMemberSeq*) dds_alloc (sizeof (DDS_XTypes_MinimalStructMemberSeq)));
+  ((DDS_XTypes_MinimalStructMemberSeq *)dds_alloc(sizeof(DDS_XTypes_MinimalStructMemberSeq)));
 
-#define DDS_XTypes_MinimalStructMemberSeq_allocbuf(l) \
-((struct DDS_XTypes_MinimalStructMember *) dds_alloc ((l) * sizeof (struct DDS_XTypes_MinimalStructMember)))
+#define DDS_XTypes_MinimalStructMemberSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_MinimalStructMember *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_MinimalStructMember)))
 typedef struct DDS_XTypes_AppliedBuiltinTypeAnnotations
 {
   struct DDS_XTypes_AppliedVerbatimAnnotation * verbatim;
 } DDS_XTypes_AppliedBuiltinTypeAnnotations;
 
-#if 0 /* empty struct */
+#if 0  /* empty struct */
 typedef struct DDS_XTypes_MinimalTypeDetail
 {
 } DDS_XTypes_MinimalTypeDetail;
@@ -556,15 +556,14 @@ typedef struct DDS_XTypes_UnionCaseLabelSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  int32_t *_buffer;
+  int32_t * _buffer;
   bool _release;
 } DDS_XTypes_UnionCaseLabelSeq;
 
 #define DDS_XTypes_UnionCaseLabelSeq__alloc() \
-((DDS_XTypes_UnionCaseLabelSeq*) dds_alloc (sizeof (DDS_XTypes_UnionCaseLabelSeq)));
+  ((DDS_XTypes_UnionCaseLabelSeq *)dds_alloc(sizeof(DDS_XTypes_UnionCaseLabelSeq)));
 
-#define DDS_XTypes_UnionCaseLabelSeq_allocbuf(l) \
-((int32_t *) dds_alloc ((l) * sizeof (int32_t)))
+#define DDS_XTypes_UnionCaseLabelSeq_allocbuf(l) ((int32_t *)dds_alloc((l) * sizeof(int32_t)))
 typedef struct DDS_XTypes_CommonUnionMember
 {
   DDS_XTypes_MemberId member_id;
@@ -583,15 +582,16 @@ typedef struct DDS_XTypes_CompleteUnionMemberSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_CompleteUnionMember *_buffer;
+  struct DDS_XTypes_CompleteUnionMember * _buffer;
   bool _release;
 } DDS_XTypes_CompleteUnionMemberSeq;
 
 #define DDS_XTypes_CompleteUnionMemberSeq__alloc() \
-((DDS_XTypes_CompleteUnionMemberSeq*) dds_alloc (sizeof (DDS_XTypes_CompleteUnionMemberSeq)));
+  ((DDS_XTypes_CompleteUnionMemberSeq *)dds_alloc(sizeof(DDS_XTypes_CompleteUnionMemberSeq)));
 
-#define DDS_XTypes_CompleteUnionMemberSeq_allocbuf(l) \
-((struct DDS_XTypes_CompleteUnionMember *) dds_alloc ((l) * sizeof (struct DDS_XTypes_CompleteUnionMember)))
+#define DDS_XTypes_CompleteUnionMemberSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_CompleteUnionMember *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_CompleteUnionMember)))
 typedef struct DDS_XTypes_MinimalUnionMember
 {
   struct DDS_XTypes_CommonUnionMember common;
@@ -602,15 +602,16 @@ typedef struct DDS_XTypes_MinimalUnionMemberSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_MinimalUnionMember *_buffer;
+  struct DDS_XTypes_MinimalUnionMember * _buffer;
   bool _release;
 } DDS_XTypes_MinimalUnionMemberSeq;
 
 #define DDS_XTypes_MinimalUnionMemberSeq__alloc() \
-((DDS_XTypes_MinimalUnionMemberSeq*) dds_alloc (sizeof (DDS_XTypes_MinimalUnionMemberSeq)));
+  ((DDS_XTypes_MinimalUnionMemberSeq *)dds_alloc(sizeof(DDS_XTypes_MinimalUnionMemberSeq)));
 
-#define DDS_XTypes_MinimalUnionMemberSeq_allocbuf(l) \
-((struct DDS_XTypes_MinimalUnionMember *) dds_alloc ((l) * sizeof (struct DDS_XTypes_MinimalUnionMember)))
+#define DDS_XTypes_MinimalUnionMemberSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_MinimalUnionMember *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_MinimalUnionMember)))
 typedef struct DDS_XTypes_CommonDiscriminatorMember
 {
   DDS_XTypes_UnionDiscriminatorFlag member_flags;
@@ -634,7 +635,7 @@ typedef struct DDS_XTypes_CompleteUnionHeader
   struct DDS_XTypes_CompleteTypeDetail detail;
 } DDS_XTypes_CompleteUnionHeader;
 
-#if 0 /* empty struct */
+#if 0  /* empty struct */
 typedef struct DDS_XTypes_MinimalUnionHeader
 {
   /* struct DDS_XTypes_MinimalTypeDetail detail */ /* no members */
@@ -674,15 +675,17 @@ typedef struct DDS_XTypes_CompleteAnnotationParameterSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_CompleteAnnotationParameter *_buffer;
+  struct DDS_XTypes_CompleteAnnotationParameter * _buffer;
   bool _release;
 } DDS_XTypes_CompleteAnnotationParameterSeq;
 
 #define DDS_XTypes_CompleteAnnotationParameterSeq__alloc() \
-((DDS_XTypes_CompleteAnnotationParameterSeq*) dds_alloc (sizeof (DDS_XTypes_CompleteAnnotationParameterSeq)));
+  ((DDS_XTypes_CompleteAnnotationParameterSeq *)dds_alloc( \
+    sizeof(DDS_XTypes_CompleteAnnotationParameterSeq)));
 
-#define DDS_XTypes_CompleteAnnotationParameterSeq_allocbuf(l) \
-((struct DDS_XTypes_CompleteAnnotationParameter *) dds_alloc ((l) * sizeof (struct DDS_XTypes_CompleteAnnotationParameter)))
+#define DDS_XTypes_CompleteAnnotationParameterSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_CompleteAnnotationParameter *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_CompleteAnnotationParameter)))
 typedef struct DDS_XTypes_MinimalAnnotationParameter
 {
   struct DDS_XTypes_CommonAnnotationParameter common;
@@ -694,21 +697,23 @@ typedef struct DDS_XTypes_MinimalAnnotationParameterSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_MinimalAnnotationParameter *_buffer;
+  struct DDS_XTypes_MinimalAnnotationParameter * _buffer;
   bool _release;
 } DDS_XTypes_MinimalAnnotationParameterSeq;
 
 #define DDS_XTypes_MinimalAnnotationParameterSeq__alloc() \
-((DDS_XTypes_MinimalAnnotationParameterSeq*) dds_alloc (sizeof (DDS_XTypes_MinimalAnnotationParameterSeq)));
+  ((DDS_XTypes_MinimalAnnotationParameterSeq *)dds_alloc( \
+    sizeof(DDS_XTypes_MinimalAnnotationParameterSeq)));
 
-#define DDS_XTypes_MinimalAnnotationParameterSeq_allocbuf(l) \
-((struct DDS_XTypes_MinimalAnnotationParameter *) dds_alloc ((l) * sizeof (struct DDS_XTypes_MinimalAnnotationParameter)))
+#define DDS_XTypes_MinimalAnnotationParameterSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_MinimalAnnotationParameter *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_MinimalAnnotationParameter)))
 typedef struct DDS_XTypes_CompleteAnnotationHeader
 {
   DDS_XTypes_QualifiedTypeName annotation_name;
 } DDS_XTypes_CompleteAnnotationHeader;
 
-#if 0 /* empty struct */
+#if 0  /* empty struct */
 typedef struct DDS_XTypes_MinimalAnnotationHeader
 {
 } DDS_XTypes_MinimalAnnotationHeader;
@@ -751,7 +756,7 @@ typedef struct DDS_XTypes_CompleteAliasHeader
   struct DDS_XTypes_CompleteTypeDetail detail;
 } DDS_XTypes_CompleteAliasHeader;
 
-#if 0 /* empty struct */
+#if 0  /* empty struct */
 typedef struct DDS_XTypes_MinimalAliasHeader
 {
 } DDS_XTypes_MinimalAliasHeader;
@@ -873,7 +878,7 @@ typedef struct DDS_XTypes_MinimalMapType
 typedef uint16_t DDS_XTypes_BitBound;
 
 #define DDS_XTypes_BitBound__alloc() \
-((DDS_XTypes_BitBound*) dds_alloc (sizeof (DDS_XTypes_BitBound)));
+  ((DDS_XTypes_BitBound *)dds_alloc(sizeof(DDS_XTypes_BitBound)));
 
 typedef struct DDS_XTypes_CommonEnumeratedLiteral
 {
@@ -891,15 +896,17 @@ typedef struct DDS_XTypes_CompleteEnumeratedLiteralSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_CompleteEnumeratedLiteral *_buffer;
+  struct DDS_XTypes_CompleteEnumeratedLiteral * _buffer;
   bool _release;
 } DDS_XTypes_CompleteEnumeratedLiteralSeq;
 
 #define DDS_XTypes_CompleteEnumeratedLiteralSeq__alloc() \
-((DDS_XTypes_CompleteEnumeratedLiteralSeq*) dds_alloc (sizeof (DDS_XTypes_CompleteEnumeratedLiteralSeq)));
+  ((DDS_XTypes_CompleteEnumeratedLiteralSeq *)dds_alloc( \
+    sizeof(DDS_XTypes_CompleteEnumeratedLiteralSeq)));
 
-#define DDS_XTypes_CompleteEnumeratedLiteralSeq_allocbuf(l) \
-((struct DDS_XTypes_CompleteEnumeratedLiteral *) dds_alloc ((l) * sizeof (struct DDS_XTypes_CompleteEnumeratedLiteral)))
+#define DDS_XTypes_CompleteEnumeratedLiteralSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_CompleteEnumeratedLiteral *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_CompleteEnumeratedLiteral)))
 typedef struct DDS_XTypes_MinimalEnumeratedLiteral
 {
   struct DDS_XTypes_CommonEnumeratedLiteral common;
@@ -910,15 +917,17 @@ typedef struct DDS_XTypes_MinimalEnumeratedLiteralSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_MinimalEnumeratedLiteral *_buffer;
+  struct DDS_XTypes_MinimalEnumeratedLiteral * _buffer;
   bool _release;
 } DDS_XTypes_MinimalEnumeratedLiteralSeq;
 
 #define DDS_XTypes_MinimalEnumeratedLiteralSeq__alloc() \
-((DDS_XTypes_MinimalEnumeratedLiteralSeq*) dds_alloc (sizeof (DDS_XTypes_MinimalEnumeratedLiteralSeq)));
+  ((DDS_XTypes_MinimalEnumeratedLiteralSeq *)dds_alloc( \
+    sizeof(DDS_XTypes_MinimalEnumeratedLiteralSeq)));
 
-#define DDS_XTypes_MinimalEnumeratedLiteralSeq_allocbuf(l) \
-((struct DDS_XTypes_MinimalEnumeratedLiteral *) dds_alloc ((l) * sizeof (struct DDS_XTypes_MinimalEnumeratedLiteral)))
+#define DDS_XTypes_MinimalEnumeratedLiteralSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_MinimalEnumeratedLiteral *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_MinimalEnumeratedLiteral)))
 typedef struct DDS_XTypes_CommonEnumeratedHeader
 {
   DDS_XTypes_BitBound bit_bound;
@@ -965,15 +974,15 @@ typedef struct DDS_XTypes_CompleteBitflagSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_CompleteBitflag *_buffer;
+  struct DDS_XTypes_CompleteBitflag * _buffer;
   bool _release;
 } DDS_XTypes_CompleteBitflagSeq;
 
 #define DDS_XTypes_CompleteBitflagSeq__alloc() \
-((DDS_XTypes_CompleteBitflagSeq*) dds_alloc (sizeof (DDS_XTypes_CompleteBitflagSeq)));
+  ((DDS_XTypes_CompleteBitflagSeq *)dds_alloc(sizeof(DDS_XTypes_CompleteBitflagSeq)));
 
 #define DDS_XTypes_CompleteBitflagSeq_allocbuf(l) \
-((struct DDS_XTypes_CompleteBitflag *) dds_alloc ((l) * sizeof (struct DDS_XTypes_CompleteBitflag)))
+  ((struct DDS_XTypes_CompleteBitflag *)dds_alloc((l) * sizeof(struct DDS_XTypes_CompleteBitflag)))
 typedef struct DDS_XTypes_MinimalBitflag
 {
   struct DDS_XTypes_CommonBitflag common;
@@ -984,15 +993,15 @@ typedef struct DDS_XTypes_MinimalBitflagSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_MinimalBitflag *_buffer;
+  struct DDS_XTypes_MinimalBitflag * _buffer;
   bool _release;
 } DDS_XTypes_MinimalBitflagSeq;
 
 #define DDS_XTypes_MinimalBitflagSeq__alloc() \
-((DDS_XTypes_MinimalBitflagSeq*) dds_alloc (sizeof (DDS_XTypes_MinimalBitflagSeq)));
+  ((DDS_XTypes_MinimalBitflagSeq *)dds_alloc(sizeof(DDS_XTypes_MinimalBitflagSeq)));
 
 #define DDS_XTypes_MinimalBitflagSeq_allocbuf(l) \
-((struct DDS_XTypes_MinimalBitflag *) dds_alloc ((l) * sizeof (struct DDS_XTypes_MinimalBitflag)))
+  ((struct DDS_XTypes_MinimalBitflag *)dds_alloc((l) * sizeof(struct DDS_XTypes_MinimalBitflag)))
 typedef struct DDS_XTypes_CommonBitmaskHeader
 {
   DDS_XTypes_BitBound bit_bound;
@@ -1001,12 +1010,12 @@ typedef struct DDS_XTypes_CommonBitmaskHeader
 typedef DDS_XTypes_CompleteEnumeratedHeader DDS_XTypes_CompleteBitmaskHeader;
 
 #define DDS_XTypes_CompleteBitmaskHeader__alloc() \
-((DDS_XTypes_CompleteBitmaskHeader*) dds_alloc (sizeof (DDS_XTypes_CompleteBitmaskHeader)));
+  ((DDS_XTypes_CompleteBitmaskHeader *)dds_alloc(sizeof(DDS_XTypes_CompleteBitmaskHeader)));
 
 typedef DDS_XTypes_MinimalEnumeratedHeader DDS_XTypes_MinimalBitmaskHeader;
 
 #define DDS_XTypes_MinimalBitmaskHeader__alloc() \
-((DDS_XTypes_MinimalBitmaskHeader*) dds_alloc (sizeof (DDS_XTypes_MinimalBitmaskHeader)));
+  ((DDS_XTypes_MinimalBitmaskHeader *)dds_alloc(sizeof(DDS_XTypes_MinimalBitmaskHeader)));
 
 typedef struct DDS_XTypes_CompleteBitmaskType
 {
@@ -1040,15 +1049,16 @@ typedef struct DDS_XTypes_CompleteBitfieldSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_CompleteBitfield *_buffer;
+  struct DDS_XTypes_CompleteBitfield * _buffer;
   bool _release;
 } DDS_XTypes_CompleteBitfieldSeq;
 
 #define DDS_XTypes_CompleteBitfieldSeq__alloc() \
-((DDS_XTypes_CompleteBitfieldSeq*) dds_alloc (sizeof (DDS_XTypes_CompleteBitfieldSeq)));
+  ((DDS_XTypes_CompleteBitfieldSeq *)dds_alloc(sizeof(DDS_XTypes_CompleteBitfieldSeq)));
 
-#define DDS_XTypes_CompleteBitfieldSeq_allocbuf(l) \
-((struct DDS_XTypes_CompleteBitfield *) dds_alloc ((l) * sizeof (struct DDS_XTypes_CompleteBitfield)))
+#define DDS_XTypes_CompleteBitfieldSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_CompleteBitfield *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_CompleteBitfield)))
 typedef struct DDS_XTypes_MinimalBitfield
 {
   struct DDS_XTypes_CommonBitfield common;
@@ -1059,21 +1069,21 @@ typedef struct DDS_XTypes_MinimalBitfieldSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_MinimalBitfield *_buffer;
+  struct DDS_XTypes_MinimalBitfield * _buffer;
   bool _release;
 } DDS_XTypes_MinimalBitfieldSeq;
 
 #define DDS_XTypes_MinimalBitfieldSeq__alloc() \
-((DDS_XTypes_MinimalBitfieldSeq*) dds_alloc (sizeof (DDS_XTypes_MinimalBitfieldSeq)));
+  ((DDS_XTypes_MinimalBitfieldSeq *)dds_alloc(sizeof(DDS_XTypes_MinimalBitfieldSeq)));
 
 #define DDS_XTypes_MinimalBitfieldSeq_allocbuf(l) \
-((struct DDS_XTypes_MinimalBitfield *) dds_alloc ((l) * sizeof (struct DDS_XTypes_MinimalBitfield)))
+  ((struct DDS_XTypes_MinimalBitfield *)dds_alloc((l) * sizeof(struct DDS_XTypes_MinimalBitfield)))
 typedef struct DDS_XTypes_CompleteBitsetHeader
 {
   struct DDS_XTypes_CompleteTypeDetail detail;
 } DDS_XTypes_CompleteBitsetHeader;
 
-#if 0 /* empty struct */
+#if 0  /* empty struct */
 typedef struct DDS_XTypes_MinimalBitsetHeader
 {
 } DDS_XTypes_MinimalBitsetHeader;
@@ -1093,7 +1103,7 @@ typedef struct DDS_XTypes_MinimalBitsetType
   DDS_XTypes_MinimalBitfieldSeq field_seq;
 } DDS_XTypes_MinimalBitsetType;
 
-#if 0 /* empty struct */
+#if 0  /* empty struct */
 typedef struct DDS_XTypes_CompleteExtendedType
 {
 } DDS_XTypes_CompleteExtendedType;
@@ -1102,8 +1112,7 @@ typedef struct DDS_XTypes_CompleteExtendedType
 typedef struct DDS_XTypes_CompleteTypeObject
 {
   uint8_t _d;
-  union
-  {
+  union {
     struct DDS_XTypes_CompleteAliasType alias_type;
     struct DDS_XTypes_CompleteAnnotationType annotation_type;
     struct DDS_XTypes_CompleteStructType struct_type;
@@ -1118,7 +1127,7 @@ typedef struct DDS_XTypes_CompleteTypeObject
   } _u;
 } DDS_XTypes_CompleteTypeObject;
 
-#if 0 /* empty struct */
+#if 0  /* empty struct */
 typedef struct DDS_XTypes_MinimalExtendedType
 {
 } DDS_XTypes_MinimalExtendedType;
@@ -1127,8 +1136,7 @@ typedef struct DDS_XTypes_MinimalExtendedType
 typedef struct DDS_XTypes_MinimalTypeObject
 {
   uint8_t _d;
-  union
-  {
+  union {
     struct DDS_XTypes_MinimalAliasType alias_type;
     struct DDS_XTypes_MinimalAnnotationType annotation_type;
     struct DDS_XTypes_MinimalStructType struct_type;
@@ -1146,8 +1154,7 @@ typedef struct DDS_XTypes_MinimalTypeObject
 typedef struct DDS_XTypes_TypeObject
 {
   uint8_t _d;
-  union
-  {
+  union {
     struct DDS_XTypes_CompleteTypeObject complete;
     struct DDS_XTypes_MinimalTypeObject minimal;
   } _u;
@@ -1156,10 +1163,9 @@ typedef struct DDS_XTypes_TypeObject
 DDS_EXPORT extern const dds_topic_descriptor_t DDS_XTypes_TypeObject_desc;
 
 #define DDS_XTypes_TypeObject__alloc() \
-((DDS_XTypes_TypeObject*) dds_alloc (sizeof (DDS_XTypes_TypeObject)));
+  ((DDS_XTypes_TypeObject *)dds_alloc(sizeof(DDS_XTypes_TypeObject)));
 
-#define DDS_XTypes_TypeObject_free(d,o) \
-dds_sample_free ((d), &DDS_XTypes_TypeObject_desc, (o))
+#define DDS_XTypes_TypeObject_free(d, o) dds_sample_free((d), &DDS_XTypes_TypeObject_desc, (o))
 
 DDS_EXPORT extern const struct dds_cdrstream_desc DDS_XTypes_TypeObject_cdrstream_desc;
 
@@ -1167,19 +1173,20 @@ typedef struct DDS_XTypes_TypeObjectSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeObject *_buffer;
+  struct DDS_XTypes_TypeObject * _buffer;
   bool _release;
 } DDS_XTypes_TypeObjectSeq;
 
 #define DDS_XTypes_TypeObjectSeq__alloc() \
-((DDS_XTypes_TypeObjectSeq*) dds_alloc (sizeof (DDS_XTypes_TypeObjectSeq)));
+  ((DDS_XTypes_TypeObjectSeq *)dds_alloc(sizeof(DDS_XTypes_TypeObjectSeq)));
 
 #define DDS_XTypes_TypeObjectSeq_allocbuf(l) \
-((struct DDS_XTypes_TypeObject *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeObject)))
+  ((struct DDS_XTypes_TypeObject *)dds_alloc((l) * sizeof(struct DDS_XTypes_TypeObject)))
 typedef DDS_XTypes_TypeObjectSeq DDS_XTypes_StronglyConnectedComponent;
 
 #define DDS_XTypes_StronglyConnectedComponent__alloc() \
-((DDS_XTypes_StronglyConnectedComponent*) dds_alloc (sizeof (DDS_XTypes_StronglyConnectedComponent)));
+  ((DDS_XTypes_StronglyConnectedComponent *)dds_alloc( \
+    sizeof(DDS_XTypes_StronglyConnectedComponent)));
 
 typedef struct DDS_XTypes_TypeIdentifierTypeObjectPair
 {
@@ -1191,15 +1198,17 @@ typedef struct DDS_XTypes_TypeIdentifierTypeObjectPairSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifierTypeObjectPair *_buffer;
+  struct DDS_XTypes_TypeIdentifierTypeObjectPair * _buffer;
   bool _release;
 } DDS_XTypes_TypeIdentifierTypeObjectPairSeq;
 
 #define DDS_XTypes_TypeIdentifierTypeObjectPairSeq__alloc() \
-((DDS_XTypes_TypeIdentifierTypeObjectPairSeq*) dds_alloc (sizeof (DDS_XTypes_TypeIdentifierTypeObjectPairSeq)));
+  ((DDS_XTypes_TypeIdentifierTypeObjectPairSeq *)dds_alloc( \
+    sizeof(DDS_XTypes_TypeIdentifierTypeObjectPairSeq)));
 
-#define DDS_XTypes_TypeIdentifierTypeObjectPairSeq_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifierTypeObjectPair *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifierTypeObjectPair)))
+#define DDS_XTypes_TypeIdentifierTypeObjectPairSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_TypeIdentifierTypeObjectPair *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_TypeIdentifierTypeObjectPair)))
 typedef struct DDS_XTypes_TypeIdentifierPair
 {
   struct DDS_XTypes_TypeIdentifier type_identifier1;
@@ -1210,15 +1219,16 @@ typedef struct DDS_XTypes_TypeIdentifierPairSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifierPair *_buffer;
+  struct DDS_XTypes_TypeIdentifierPair * _buffer;
   bool _release;
 } DDS_XTypes_TypeIdentifierPairSeq;
 
 #define DDS_XTypes_TypeIdentifierPairSeq__alloc() \
-((DDS_XTypes_TypeIdentifierPairSeq*) dds_alloc (sizeof (DDS_XTypes_TypeIdentifierPairSeq)));
+  ((DDS_XTypes_TypeIdentifierPairSeq *)dds_alloc(sizeof(DDS_XTypes_TypeIdentifierPairSeq)));
 
-#define DDS_XTypes_TypeIdentifierPairSeq_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifierPair *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifierPair)))
+#define DDS_XTypes_TypeIdentifierPairSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_TypeIdentifierPair *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_TypeIdentifierPair)))
 typedef struct DDS_XTypes_TypeIdentifierWithSize
 {
   struct DDS_XTypes_TypeIdentifier type_id;
@@ -1229,30 +1239,33 @@ typedef struct DDS_XTypes_TypeIdentifierWithSizeSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifierWithSize *_buffer;
+  struct DDS_XTypes_TypeIdentifierWithSize * _buffer;
   bool _release;
 } DDS_XTypes_TypeIdentifierWithSizeSeq;
 
 #define DDS_XTypes_TypeIdentifierWithSizeSeq__alloc() \
-((DDS_XTypes_TypeIdentifierWithSizeSeq*) dds_alloc (sizeof (DDS_XTypes_TypeIdentifierWithSizeSeq)));
+  ((DDS_XTypes_TypeIdentifierWithSizeSeq *)dds_alloc(sizeof(DDS_XTypes_TypeIdentifierWithSizeSeq)));
 
-#define DDS_XTypes_TypeIdentifierWithSizeSeq_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifierWithSize *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifierWithSize)))
+#define DDS_XTypes_TypeIdentifierWithSizeSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_TypeIdentifierWithSize *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_TypeIdentifierWithSize)))
 #ifndef DDS_SEQUENCE_DDS_XTYPES_TYPEIDENTIFIERWITHSIZE_DEFINED
 #define DDS_SEQUENCE_DDS_XTYPES_TYPEIDENTIFIERWITHSIZE_DEFINED
 typedef struct dds_sequence_DDS_XTypes_TypeIdentifierWithSize
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifierWithSize *_buffer;
+  struct DDS_XTypes_TypeIdentifierWithSize * _buffer;
   bool _release;
 } dds_sequence_DDS_XTypes_TypeIdentifierWithSize;
 
 #define dds_sequence_DDS_XTypes_TypeIdentifierWithSize__alloc() \
-((dds_sequence_DDS_XTypes_TypeIdentifierWithSize*) dds_alloc (sizeof (dds_sequence_DDS_XTypes_TypeIdentifierWithSize)));
+  ((dds_sequence_DDS_XTypes_TypeIdentifierWithSize *)dds_alloc( \
+    sizeof(dds_sequence_DDS_XTypes_TypeIdentifierWithSize)));
 
 #define dds_sequence_DDS_XTypes_TypeIdentifierWithSize_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifierWithSize *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifierWithSize)))
+  ((struct DDS_XTypes_TypeIdentifierWithSize *)dds_alloc(          \
+    (l) * sizeof(struct DDS_XTypes_TypeIdentifierWithSize)))
 #endif /* DDS_SEQUENCE_DDS_XTYPES_TYPEIDENTIFIERWITHSIZE_DEFINED */
 
 typedef struct DDS_XTypes_TypeIdentifierWithDependencies
@@ -1266,15 +1279,17 @@ typedef struct DDS_XTypes_TypeIdentifierWithDependenciesSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifierWithDependencies *_buffer;
+  struct DDS_XTypes_TypeIdentifierWithDependencies * _buffer;
   bool _release;
 } DDS_XTypes_TypeIdentifierWithDependenciesSeq;
 
 #define DDS_XTypes_TypeIdentifierWithDependenciesSeq__alloc() \
-((DDS_XTypes_TypeIdentifierWithDependenciesSeq*) dds_alloc (sizeof (DDS_XTypes_TypeIdentifierWithDependenciesSeq)));
+  ((DDS_XTypes_TypeIdentifierWithDependenciesSeq *)dds_alloc( \
+    sizeof(DDS_XTypes_TypeIdentifierWithDependenciesSeq)));
 
-#define DDS_XTypes_TypeIdentifierWithDependenciesSeq_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifierWithDependencies *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifierWithDependencies)))
+#define DDS_XTypes_TypeIdentifierWithDependenciesSeq_allocbuf(l)  \
+  ((struct DDS_XTypes_TypeIdentifierWithDependencies *)dds_alloc( \
+    (l) * sizeof(struct DDS_XTypes_TypeIdentifierWithDependencies)))
 typedef struct DDS_XTypes_TypeInformation
 {
   struct DDS_XTypes_TypeIdentifierWithDependencies minimal;
@@ -1284,10 +1299,10 @@ typedef struct DDS_XTypes_TypeInformation
 DDS_EXPORT extern const dds_topic_descriptor_t DDS_XTypes_TypeInformation_desc;
 
 #define DDS_XTypes_TypeInformation__alloc() \
-((DDS_XTypes_TypeInformation*) dds_alloc (sizeof (DDS_XTypes_TypeInformation)));
+  ((DDS_XTypes_TypeInformation *)dds_alloc(sizeof(DDS_XTypes_TypeInformation)));
 
-#define DDS_XTypes_TypeInformation_free(d,o) \
-dds_sample_free ((d), &DDS_XTypes_TypeInformation_desc, (o))
+#define DDS_XTypes_TypeInformation_free(d, o) \
+  dds_sample_free((d), &DDS_XTypes_TypeInformation_desc, (o))
 
 DDS_EXPORT extern const struct dds_cdrstream_desc DDS_XTypes_TypeInformation_cdrstream_desc;
 
@@ -1295,15 +1310,15 @@ typedef struct DDS_XTypes_TypeInformationSeq
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeInformation *_buffer;
+  struct DDS_XTypes_TypeInformation * _buffer;
   bool _release;
 } DDS_XTypes_TypeInformationSeq;
 
 #define DDS_XTypes_TypeInformationSeq__alloc() \
-((DDS_XTypes_TypeInformationSeq*) dds_alloc (sizeof (DDS_XTypes_TypeInformationSeq)));
+  ((DDS_XTypes_TypeInformationSeq *)dds_alloc(sizeof(DDS_XTypes_TypeInformationSeq)));
 
 #define DDS_XTypes_TypeInformationSeq_allocbuf(l) \
-((struct DDS_XTypes_TypeInformation *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeInformation)))
+  ((struct DDS_XTypes_TypeInformation *)dds_alloc((l) * sizeof(struct DDS_XTypes_TypeInformation)))
 #ifdef __cplusplus
 }
 #endif

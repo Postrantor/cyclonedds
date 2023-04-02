@@ -17,11 +17,12 @@
 #define DDSRT_HAVE_THREAD_SETNAME (1)
 #define DDSRT_HAVE_THREAD_LIST (1)
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
   DWORD tid;
   HANDLE handle;
 } ddsrt_thread_t;
@@ -31,7 +32,7 @@ typedef uint32_t ddsrt_tid_t;
 
 typedef HANDLE ddsrt_thread_list_id_t;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

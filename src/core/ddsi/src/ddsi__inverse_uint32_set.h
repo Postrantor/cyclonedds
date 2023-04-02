@@ -12,31 +12,32 @@
 #ifndef DDSI__INVERSE_UINT32_SET_H
 #define DDSI__INVERSE_UINT32_SET_H
 
-#include "dds/ddsrt/avl.h"
 #include "dds/ddsi/ddsi_inverse_uint32_set.h"
+#include "dds/ddsrt/avl.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-struct ddsi_inverse_uint32_set_node {
+struct ddsi_inverse_uint32_set_node
+{
   ddsrt_avl_node_t avlnode;
   uint32_t min, max;
 };
 
 /** @component inverset_set */
-void ddsi_inverse_uint32_set_init(struct ddsi_inverse_uint32_set *set, uint32_t min, uint32_t max);
+void ddsi_inverse_uint32_set_init(struct ddsi_inverse_uint32_set * set, uint32_t min, uint32_t max);
 
 /** @component inverset_set */
-void ddsi_inverse_uint32_set_fini(struct ddsi_inverse_uint32_set *set);
+void ddsi_inverse_uint32_set_fini(struct ddsi_inverse_uint32_set * set);
 
 /** @component inverset_set */
-int ddsi_inverse_uint32_set_alloc(uint32_t * const id, struct ddsi_inverse_uint32_set *set);
+int ddsi_inverse_uint32_set_alloc(uint32_t * const id, struct ddsi_inverse_uint32_set * set);
 
 /** @component inverset_set */
-void ddsi_inverse_uint32_set_free(struct ddsi_inverse_uint32_set *set, uint32_t id);
+void ddsi_inverse_uint32_set_free(struct ddsi_inverse_uint32_set * set, uint32_t id);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

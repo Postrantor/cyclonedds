@@ -12,8 +12,8 @@
 #ifndef DDSRT_FILESYSTEM_WINDOWS_H
 #define DDSRT_FILESYSTEM_WINDOWS_H
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include "dds/ddsrt/types.h"
 

@@ -12,16 +12,14 @@
 #ifndef DDSI_OMG_SECURITY_H
 #define DDSI_OMG_SECURITY_H
 
+#include "dds/ddsi/ddsi_domaingv.h"
+#include "dds/ddsi/ddsi_participant.h"
+#include "dds/ddsi/ddsi_xqos.h"
+#include "dds/ddsrt/avl.h"
+#include "dds/ddsrt/sync.h"
 #include "dds/features.h"
 
-#include "dds/ddsrt/sync.h"
-#include "dds/ddsrt/avl.h"
-
-#include "dds/ddsi/ddsi_participant.h"
-#include "dds/ddsi/ddsi_domaingv.h"
-#include "dds/ddsi/ddsi_xqos.h"
-
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -35,7 +33,7 @@ extern "C" {
  *
  * @returns bool  True if participant is secure
  */
-bool ddsi_omg_participant_is_secure(const struct ddsi_participant *pp);
+bool ddsi_omg_participant_is_secure(const struct ddsi_participant * pp);
 
 /**
  * @brief Check if security allows to create the topic.
@@ -53,7 +51,9 @@ bool ddsi_omg_participant_is_secure(const struct ddsi_participant *pp);
  * @retval true   Creation of the topic is allowed
  * @retval false  Otherwise.
  */
-bool ddsi_omg_security_check_create_topic (const struct ddsi_domaingv *gv, const ddsi_guid_t *pp_guid, const char *topic_name, const struct dds_qos *qos);
+bool ddsi_omg_security_check_create_topic(
+  const struct ddsi_domaingv * gv, const ddsi_guid_t * pp_guid, const char * topic_name,
+  const struct dds_qos * qos);
 
 /**
  * @brief Check if security allows to create the reader.
@@ -71,7 +71,9 @@ bool ddsi_omg_security_check_create_topic (const struct ddsi_domaingv *gv, const
  * @retval true   Creation of the writer is allowed
  * @retval false  Otherwise.
  */
-bool ddsi_omg_security_check_create_reader (struct ddsi_participant *pp, uint32_t domain_id, const char *topic_name, const struct dds_qos *reader_qos);
+bool ddsi_omg_security_check_create_reader(
+  struct ddsi_participant * pp, uint32_t domain_id, const char * topic_name,
+  const struct dds_qos * reader_qos);
 
 /**
  * @brief Check if security allows to create the writer.
@@ -89,39 +91,47 @@ bool ddsi_omg_security_check_create_reader (struct ddsi_participant *pp, uint32_
  * @retval true   Creation of the writer is allowed
  * @retval false  Otherwise.
  */
-bool ddsi_omg_security_check_create_writer (struct ddsi_participant *pp, uint32_t domain_id, const char *topic_name, const struct dds_qos *writer_qos);
+bool ddsi_omg_security_check_create_writer(
+  struct ddsi_participant * pp, uint32_t domain_id, const char * topic_name,
+  const struct dds_qos * writer_qos);
 
 #else /* DDS_HAS_SECURITY */
 
 #include "dds/ddsi/ddsi_unused.h"
 
 /** @component security_entity */
-inline bool ddsi_omg_participant_is_secure(UNUSED_ARG(const struct ddsi_participant *pp))
+inline bool ddsi_omg_participant_is_secure(UNUSED_ARG(const struct ddsi_participant * pp))
 {
   return false;
 }
 
 /** @component security_entity */
-inline bool ddsi_omg_security_check_create_topic (UNUSED_ARG(const struct ddsi_domaingv *gv), UNUSED_ARG(const ddsi_guid_t *pp_guid), UNUSED_ARG(const char *topic_name), UNUSED_ARG(const struct dds_qos *qos))
+inline bool ddsi_omg_security_check_create_topic(
+  UNUSED_ARG(const struct ddsi_domaingv * gv), UNUSED_ARG(const ddsi_guid_t * pp_guid),
+  UNUSED_ARG(const char * topic_name), UNUSED_ARG(const struct dds_qos * qos))
 {
   return true;
 }
 
 /** @component security_entity */
-inline bool ddsi_omg_security_check_create_reader (UNUSED_ARG(struct ddsi_participant *pp), UNUSED_ARG(uint32_t domain_id), UNUSED_ARG(const char *topic_name), UNUSED_ARG(const struct dds_qos *reader_qos))
+inline bool ddsi_omg_security_check_create_reader(
+  UNUSED_ARG(struct ddsi_participant * pp), UNUSED_ARG(uint32_t domain_id),
+  UNUSED_ARG(const char * topic_name), UNUSED_ARG(const struct dds_qos * reader_qos))
 {
   return true;
 }
 
 /** @component security_entity */
-inline bool ddsi_omg_security_check_create_writer (UNUSED_ARG(struct ddsi_participant *pp), UNUSED_ARG(uint32_t domain_id), UNUSED_ARG(const char *topic_name), UNUSED_ARG(const struct dds_qos *writer_qos))
+inline bool ddsi_omg_security_check_create_writer(
+  UNUSED_ARG(struct ddsi_participant * pp), UNUSED_ARG(uint32_t domain_id),
+  UNUSED_ARG(const char * topic_name), UNUSED_ARG(const struct dds_qos * writer_qos))
 {
   return true;
 }
 
 #endif /* DDS_HAS_SECURITY */
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

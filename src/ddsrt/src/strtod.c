@@ -9,6 +9,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/strtod.h"
+
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -18,7 +20,6 @@
 
 #include "dds/ddsrt/io.h"
 #include "dds/ddsrt/log.h"
-#include "dds/ddsrt/strtod.h"
 
 /*
  * Determine the maximum size that a string should have to be
@@ -39,27 +40,25 @@
  * spaces tail the double). This isn't that bad, because the call
  * to strtod itself will handle these extra characters properly.
  */
-#define VALID_DOUBLE_CHAR(c) ( (isspace((unsigned char)(c)))  || /* (leading) whitespaces   */ \
-                               (isxdigit((unsigned char)(c))) || /* (hexa)decimal digits    */ \
-                               ((c) == '.')                   || /* ospl LC_NUMERIC         */ \
-                               ((c) == os_lcNumericGet())     || /* locale LC_NUMERIC       */ \
-                               ((c) == '+') || ((c) == '-')   || /* signs                   */ \
-                               ((c) == 'x') || ((c) == 'X')   || /* hexadecimal indication  */ \
-                               ((c) == 'e') || ((c) == 'E')   || /* exponent chars          */ \
-                               ((c) == 'p') || ((c) == 'P')   || /* binary exponent chars   */ \
-                               ((c) == 'a') || ((c) == 'A')   || /* char for NaN            */ \
-                               ((c) == 'n') || ((c) == 'N')   || /* char for NaN & INFINITY */ \
-                               ((c) == 'i') || ((c) == 'I')   || /* char for INFINITY       */ \
-                               ((c) == 'f') || ((c) == 'F')   || /* char for INFINITY       */ \
-                               ((c) == 't') || ((c) == 'T')   || /* char for INFINITY       */ \
-                               ((c) == 'y') || ((c) == 'Y'))     /* char for INFINITY       */
-
-
+#define VALID_DOUBLE_CHAR(c)                                       \
+  ((isspace((unsigned char)(c))) ||  /* (leading) whitespaces   */ \
+   (isxdigit((unsigned char)(c))) || /* (hexa)decimal digits    */ \
+   ((c) == '.') ||                   /* ospl LC_NUMERIC         */ \
+   ((c) == os_lcNumericGet()) ||     /* locale LC_NUMERIC       */ \
+   ((c) == '+') || ((c) == '-') ||   /* signs                   */ \
+   ((c) == 'x') || ((c) == 'X') ||   /* hexadecimal indication  */ \
+   ((c) == 'e') || ((c) == 'E') ||   /* exponent chars          */ \
+   ((c) == 'p') || ((c) == 'P') ||   /* binary exponent chars   */ \
+   ((c) == 'a') || ((c) == 'A') ||   /* char for NaN            */ \
+   ((c) == 'n') || ((c) == 'N') ||   /* char for NaN & INFINITY */ \
+   ((c) == 'i') || ((c) == 'I') ||   /* char for INFINITY       */ \
+   ((c) == 'f') || ((c) == 'F') ||   /* char for INFINITY       */ \
+   ((c) == 't') || ((c) == 'T') ||   /* char for INFINITY       */ \
+   ((c) == 'y') || ((c) == 'Y'))     /* char for INFINITY       */
 
 /** \brief Detect and return the LC_NUMERIC char of the locale.
  */
-static char
-os_lcNumericGet(void)
+static char os_lcNumericGet(void)
 {
   static char lcNumeric = ' ';
 
@@ -67,24 +66,25 @@ os_lcNumericGet(void)
   if (lcNumeric == ' ') {
     /* There could be multiple threads here, but it is still save and works.
      * Only side effect is that possibly multiple os_reports are traced. */
-    char num[] = { '\0', '\0', '\0', '\0' };
-    (void) snprintf(num, 4, "%3.1f", 2.2);
-    lcNumeric = num [1];
+    char num[] = {'\0', '\0', '\0', '\0'};
+    (void)snprintf(num, 4, "%3.1f", 2.2);
+    lcNumeric = num[1];
     if (lcNumeric != '.') {
-      DDS_WARNING("Locale with LC_NUMERIC \'%c\' detected, which is not '.'. "
-                  "This can decrease performance.", lcNumeric);
+      DDS_WARNING(
+        "Locale with LC_NUMERIC \'%c\' detected, which is not '.'. "
+        "This can decrease performance.",
+        lcNumeric);
     }
   }
 
   return lcNumeric;
 }
 
-
 /** \brief Replace lcNumeric char with '.' in floating point string when locale dependent
  *      functions use a non '.' LC_NUMERIC, while we want locale indepenent '.'.
  */
-static void
-os_lcNumericReplace(char *str) {
+static void os_lcNumericReplace(char * str)
+{
   /* We only need to replace when standard functions
    * did not put a '.' in the result string. */
   char lcNumeric = os_lcNumericGet();
@@ -96,8 +96,7 @@ os_lcNumericReplace(char *str) {
   }
 }
 
-dds_return_t
-ddsrt_strtod(const char *nptr, char **endptr, double *dblptr)
+dds_return_t ddsrt_strtod(const char * nptr, char ** endptr, double * dblptr)
 {
   double dbl;
   int orig_errno;
@@ -116,16 +115,16 @@ ddsrt_strtod(const char *nptr, char **endptr, double *dblptr)
     /* The current locale uses ',', so we can not use the standard functions as
        is, but have to do extra work because ospl uses "x.x" doubles (notice
        the dot). Just copy the string and replace the LC_NUMERIC. */
-    char  nptrCopy[DOUBLE_STRING_MAX_LENGTH];
-    char *nptrCopyIdx;
-    char *nptrCopyEnd;
-    char *nptrIdx;
+    char nptrCopy[DOUBLE_STRING_MAX_LENGTH];
+    char * nptrCopyIdx;
+    char * nptrCopyEnd;
+    char * nptrIdx;
 
     /* It is possible that the given nptr just starts with a double
        representation but continues with other data. To be able to copy not too
        much and not too little, we have to scan across nptr until we detect the
        doubles' end. */
-    nptrIdx = (char*)nptr;
+    nptrIdx = (char *)nptr;
     nptrCopyIdx = nptrCopy;
     nptrCopyEnd = nptrCopyIdx + DOUBLE_STRING_MAX_LENGTH - 1;
     while (VALID_DOUBLE_CHAR(*nptrIdx) && (nptrCopyIdx < nptrCopyEnd)) {
@@ -146,7 +145,7 @@ ddsrt_strtod(const char *nptr, char **endptr, double *dblptr)
 
     /* Calculate the proper end char when needed. */
     if (endptr != NULL) {
-      *endptr = (char*)nptr + (nptrCopyEnd - nptrCopy);
+      *endptr = (char *)nptr + (nptrCopyEnd - nptrCopy);
     }
   }
 
@@ -161,8 +160,7 @@ ddsrt_strtod(const char *nptr, char **endptr, double *dblptr)
   return ret;
 }
 
-dds_return_t
-ddsrt_strtof(const char *nptr, char **endptr, float *fltptr)
+dds_return_t ddsrt_strtof(const char * nptr, char ** endptr, float * fltptr)
 {
   /* Just use os_strtod(). */
   /* FIXME: This will have to do for now, but a single-precision floating
@@ -179,8 +177,7 @@ ddsrt_strtof(const char *nptr, char **endptr, float *fltptr)
   return ret;
 }
 
-int
-ddsrt_dtostr(double src, char *str, size_t size)
+int ddsrt_dtostr(double src, char * str, size_t size)
 {
   int i;
 
@@ -193,8 +190,7 @@ ddsrt_dtostr(double src, char *str, size_t size)
   return i;
 }
 
-int
-ddsrt_ftostr(float src, char *str, size_t size)
+int ddsrt_ftostr(float src, char * str, size_t size)
 {
   int i;
 

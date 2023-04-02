@@ -9,12 +9,12 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/strtol.h"
+
 #include <assert.h>
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
-
-#include "dds/ddsrt/strtol.h"
 
 int32_t ddsrt_todigit(const int chr)
 {
@@ -29,12 +29,8 @@ int32_t ddsrt_todigit(const int chr)
   return -1;
 }
 
-static dds_return_t
-ullfstr(
-  const char *str,
-  char **endptr,
-  int32_t base,
-  unsigned long long *ullng,
+static dds_return_t ullfstr(
+  const char * str, char ** endptr, int32_t base, unsigned long long * ullng,
   unsigned long long max)
 {
   dds_return_t rc = DDS_RETCODE_OK;
@@ -64,12 +60,10 @@ ullfstr(
     return DDS_RETCODE_BAD_PARAMETER;
   }
 
-  while ((rc == DDS_RETCODE_OK) &&
-         (num = ddsrt_todigit(str[cnt])) >= 0 && num < base)
-  {
-    if (tot <= (max / (unsigned) base)) {
-      tot *= (unsigned) base;
-      tot += (unsigned) num;
+  while ((rc == DDS_RETCODE_OK) && (num = ddsrt_todigit(str[cnt])) >= 0 && num < base) {
+    if (tot <= (max / (unsigned)base)) {
+      tot *= (unsigned)base;
+      tot += (unsigned)num;
       cnt++;
     } else {
       rc = DDS_RETCODE_OUT_OF_RANGE;
@@ -86,12 +80,7 @@ ullfstr(
   return rc;
 }
 
-dds_return_t
-ddsrt_strtoll(
-  const char *str,
-  char **endptr,
-  int32_t base,
-  long long *llng)
+dds_return_t ddsrt_strtoll(const char * str, char ** endptr, int32_t base, long long * llng)
 {
   dds_return_t rc = DDS_RETCODE_OK;
   size_t cnt = 0;
@@ -114,20 +103,14 @@ ddsrt_strtoll(
   }
 
   rc = ullfstr(str + cnt, endptr, base, &ullng, max);
-  if (endptr && *endptr == (str + cnt))
-    *endptr = (char *)str;
-  if (rc != DDS_RETCODE_BAD_PARAMETER)
-    *llng = tot * (long long)ullng;
+  if (endptr && *endptr == (str + cnt)) *endptr = (char *)str;
+  if (rc != DDS_RETCODE_BAD_PARAMETER) *llng = tot * (long long)ullng;
 
   return rc;
 }
 
-dds_return_t
-ddsrt_strtoull(
-  const char *str,
-  char **endptr,
-  int32_t base,
-  unsigned long long *ullng)
+dds_return_t ddsrt_strtoull(
+  const char * str, char ** endptr, int32_t base, unsigned long long * ullng)
 {
   dds_return_t rc = DDS_RETCODE_OK;
   size_t cnt = 0;
@@ -142,50 +125,37 @@ ddsrt_strtoull(
   }
 
   if (str[cnt] == '-') {
-    tot = (unsigned long long) -1;
+    tot = (unsigned long long)-1;
     cnt++;
   } else if (str[cnt] == '+') {
     cnt++;
   }
 
   rc = ullfstr(str + cnt, endptr, base, ullng, max);
-  if (endptr && *endptr == (str + cnt))
-    *endptr = (char *)str;
-  if (rc != DDS_RETCODE_BAD_PARAMETER)
-    *ullng *= tot;
+  if (endptr && *endptr == (str + cnt)) *endptr = (char *)str;
+  if (rc != DDS_RETCODE_BAD_PARAMETER) *ullng *= tot;
 
   return rc;
 }
 
-dds_return_t
-ddsrt_atoll(
-  const char *str,
-  long long *llng)
+dds_return_t ddsrt_atoll(const char * str, long long * llng)
 {
   return ddsrt_strtoll(str, NULL, 10, llng);
 }
 
-dds_return_t
-ddsrt_atoull(
-  const char *str,
-  unsigned long long *ullng)
+dds_return_t ddsrt_atoull(const char * str, unsigned long long * ullng)
 {
   return ddsrt_strtoull(str, NULL, 10, ullng);
 }
 
-char *
-ddsrt_ulltostr(
-  unsigned long long num,
-  char *str,
-  size_t len,
-  char **endptr)
+char * ddsrt_ulltostr(unsigned long long num, char * str, size_t len, char ** endptr)
 {
   char chr, *ptr;
   size_t cnt;
   size_t lim = 0;
   size_t tot = 0;
 
-  assert (str != NULL);
+  assert(str != NULL);
 
   if (len > 1) {
     lim = len - 1;
@@ -233,18 +203,13 @@ ddsrt_ulltostr(
   return str;
 }
 
-char *
-ddsrt_lltostr(
-  long long num,
-  char *str,
-  size_t len,
-  char **endptr)
+char * ddsrt_lltostr(long long num, char * str, size_t len, char ** endptr)
 {
   unsigned long long pos;
-  char *ptr;
+  char * ptr;
   size_t cnt = 0;
 
-  assert (str != NULL);
+  assert(str != NULL);
 
   if (len == 0) {
     str = NULL;
@@ -257,12 +222,12 @@ ddsrt_lltostr(
       if (num == INT64_MIN) {
         pos = (unsigned long long)INT64_MAX + 1;
       } else {
-        pos = (unsigned long long) -num;
+        pos = (unsigned long long)-num;
       }
 
       str[cnt++] = '-';
     } else {
-      pos = (unsigned long long) num;
+      pos = (unsigned long long)num;
     }
 
     (void)ddsrt_ulltostr(pos, str + cnt, len - cnt, &ptr);

@@ -15,10 +15,11 @@
 #include "dds/ddsrt/threads.h"
 
 /** \brief Internal structure used to store cleanup handlers (private) */
-typedef struct {
-  void *prev;
+typedef struct
+{
+  void * prev;
   void (*routine)(void *);
-  void *arg;
+  void * arg;
 } thread_cleanup_t;
 
 #endif /* DDSRT_THREAD_TYPES_H */

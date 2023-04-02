@@ -12,8 +12,8 @@
 #ifndef _TEST_ONELINER_H_
 #define _TEST_ONELINER_H_
 
-#include <stdint.h>
 #include <setjmp.h>
+#include <stdint.h>
 
 #include "dds/dds.h"
 #include "dds/ddsrt/sync.h"
@@ -235,19 +235,19 @@
  *
  * @return > 0 success, 0 failure, < 0 invalid input
  */
-int test_oneliner_with_config (const char *ops, const char *config_override);
+int test_oneliner_with_config(const char * ops, const char * config_override);
 
 /** @brief shorthand for test_oneliner_with_config (ops, NULL)
  * @param[in] ops Program to execute
  * @return > 0 sucess, 0 failure, < 0 invalid input
  */
-int test_oneliner (const char *ops);
+int test_oneliner(const char * ops);
 
 /** @brief shorthand for test_oneliner with an override that disables any use of shared memory
  * @param[in] ops Program to execute
  * @return > 0 sucess, 0 failure, < 0 invalid input
  */
-int test_oneliner_no_shm (const char *ops);
+int test_oneliner_no_shm(const char * ops);
 
 union oneliner_tokval {
   int i;
@@ -255,8 +255,9 @@ union oneliner_tokval {
   char n[32];
 };
 
-struct oneliner_lex {
-  const char *inp;
+struct oneliner_lex
+{
+  const char * inp;
   dds_time_t tref;
   int tok;
   union oneliner_tokval v;
@@ -264,9 +265,10 @@ struct oneliner_lex {
 
 struct oneliner_ctx;
 
-struct oneliner_cb {
-  struct oneliner_ctx *ctx;
-  dds_listener_t *list;
+struct oneliner_cb
+{
+  struct oneliner_ctx * ctx;
+  dds_listener_t * list;
   uint32_t cb_called[DDS_STATUS_ID_MAX + 1];
   dds_entity_t cb_topic, cb_writer, cb_reader, cb_subscriber;
   dds_inconsistent_topic_status_t cb_inconsistent_topic_status;
@@ -282,7 +284,8 @@ struct oneliner_cb {
   dds_subscription_matched_status_t cb_subscription_matched_status;
 };
 
-struct oneliner_ctx {
+struct oneliner_ctx
+{
   struct oneliner_lex l;
 
   dds_entity_t es[3 * 9];
@@ -295,21 +298,21 @@ struct oneliner_ctx {
   // topic name used for data
   char topicname[100];
 
-  const dds_qos_t *qos;
-  dds_qos_t *entqos;
+  const dds_qos_t * qos;
+  dds_qos_t * entqos;
 
   int result;
   char msg[256];
 
   jmp_buf jb;
-  
+
   int mprintf_needs_timestamp;
 
   ddsrt_mutex_t g_mutex;
   ddsrt_cond_t g_cond;
   struct oneliner_cb cb[3];
-  
-  const char *config_override; // optional
+
+  const char * config_override;  // optional
 };
 
 /** @brief Initialize a "oneliner test" context
@@ -317,7 +320,7 @@ struct oneliner_ctx {
  * @param[out] ctx   context to initialize
  * @param[in] config_override  XML configuration fragment or NULL
  */
-void test_oneliner_init (struct oneliner_ctx *ctx, const char *config_override);
+void test_oneliner_init(struct oneliner_ctx * ctx, const char * config_override);
 
 /** @brief Run a sequence of operations in an initialized context
  *
@@ -333,7 +336,7 @@ void test_oneliner_init (struct oneliner_ctx *ctx, const char *config_override);
  * @retval 0   test failure
  * @retval <0  syntax error unexpected error
  */
-int test_oneliner_step (struct oneliner_ctx *ctx, const char *ops);
+int test_oneliner_step(struct oneliner_ctx * ctx, const char * ops);
 
 /** @brief Get a pointer to the error message from a "oneliner test"
  *
@@ -346,7 +349,7 @@ int test_oneliner_step (struct oneliner_ctx *ctx, const char *ops);
  *
  * @return pointer to null-terminated string aliasing a string in ctx
  */
-const char *test_oneliner_message (const struct oneliner_ctx *ctx);
+const char * test_oneliner_message(const struct oneliner_ctx * ctx);
 
 /** @brief Deinitialize a "oneliner test" context
  *
@@ -361,6 +364,6 @@ const char *test_oneliner_message (const struct oneliner_ctx *ctx);
  * @retval 0   test failure
  * @retval <0  syntax error unexpected error
  */
-int test_oneliner_fini (struct oneliner_ctx *ctx);
+int test_oneliner_fini(struct oneliner_ctx * ctx);
 
 #endif

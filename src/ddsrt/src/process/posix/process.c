@@ -9,38 +9,37 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "dds/ddsrt/process.h"
+
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include "dds/ddsrt/process.h"
-#include "dds/ddsrt/string.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "dds/ddsrt/heap.h"
 #include "dds/ddsrt/io.h"
+#include "dds/ddsrt/string.h"
 
-
-ddsrt_pid_t
-ddsrt_getpid(void)
+ddsrt_pid_t ddsrt_getpid(void)
 {
   /* Mapped to taskIdSelf() in VxWorks kernel mode. */
   return getpid();
 }
 
 #if (defined(__APPLE__) || defined(__FreeBSD__) || defined(_GNU_SOURCE))
-  // _basename not needed
+// _basename not needed
 #else
-static const char *_basename(char const *path)
+static const char * _basename(char const * path)
 {
-  const char *s = strrchr(path, '/');
+  const char * s = strrchr(path, '/');
   return s ? s + 1 : path;
 }
 #endif
 
-char *
-ddsrt_getprocessname(void)
+char * ddsrt_getprocessname(void)
 {
 #if defined(__APPLE__) || defined(__FreeBSD__)
   const char * appname = getprogname();
@@ -50,16 +49,16 @@ ddsrt_getprocessname(void)
   const char * appname = NULL;
 
   char buff[400];
-  FILE *fp;
+  FILE * fp;
   if ((fp = fopen("/proc/self/cmdline", "r")) != NULL) {
     buff[0] = '\0';
-    for(size_t i = 0; i < sizeof(buff); ++i) {
+    for (size_t i = 0; i < sizeof(buff); ++i) {
       int c = fgetc(fp);
       if (c == EOF || c == '\0') {
         buff[i] = '\0';
         break;
       } else {
-        buff[i] = (char) c;
+        buff[i] = (char)c;
       }
     }
     if (buff[0] != '\0') {
@@ -70,16 +69,14 @@ ddsrt_getprocessname(void)
 #endif
 
   if (appname) {
-    return ddsrt_strdup (appname);
+    return ddsrt_strdup(appname);
   } else {
-    char *ret = NULL;
-    if (ddsrt_asprintf (&ret, "process-%ld", (long) ddsrt_getpid()) > 0) {
+    char * ret = NULL;
+    if (ddsrt_asprintf(&ret, "process-%ld", (long)ddsrt_getpid()) > 0) {
       return ret;
     } else {
-      if (ret)
-        ddsrt_free (ret);
+      if (ret) ddsrt_free(ret);
       return NULL;
     }
   }
 }
-

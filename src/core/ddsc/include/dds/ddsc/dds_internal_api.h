@@ -10,26 +10,27 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 
-
 /*
- * WARNING This file is only needed for the work around for https://github.com/eclipse-cyclonedds/cyclonedds/issues/74
- * Do not include this file in an application! Once issue #74 is solved this header file should be removed.
+ * WARNING This file is only needed for the work around for
+ * https://github.com/eclipse-cyclonedds/cyclonedds/issues/74 Do not include this file in an
+ * application! Once issue #74 is solved this header file should be removed.
  */
 
 #ifndef DDS_INTERNAL_API_H
 #define DDS_INTERNAL_API_H
 
-#include "dds/export.h"
 #include "dds/cdr/dds_cdrstream.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 /**
  * @anchor DDS_READ_WITHOUT_LOCK
  * @ingroup internal
- * @brief Constant to use with dds_read() or dds_take() when using dds_reader_lock_samples()
+ * @brief 与 dds_read() 或 dds_take() 一起使用的常量，当使用 dds_reader_lock_samples() 时
+ *        (Constant to use with dds_read() or dds_take() when using dds_reader_lock_samples())
  */
 #define DDS_READ_WITHOUT_LOCK (0xFFFFFFED)
 
@@ -37,38 +38,46 @@ extern "C" {
  * @ingroup internal
  * @component reader
  * @unstable
- * @brief Returns number of samples in read cache and locks the reader cache,
- * to make sure that the samples content doesn't change.
+ * @brief 返回读取缓存中的样本数量，并锁定读取器缓存，
+ *        以确保样本内容不会发生变化。
+ *        (Returns number of samples in read cache and locks the reader cache,
+ *        to make sure that the samples content doesn't change.)
  *
- * Because the cache is locked, you should be able to read/take without having to
- * lock first. This is done by passing the @ref DDS_READ_WITHOUT_LOCK value to the
- * read/take call as maxs. Then the read/take will not lock but still unlock.
+ * 由于缓存被锁定，您应该可以在不锁定的情况下进行读取/获取。这是通过将 @ref DDS_READ_WITHOUT_LOCK
+ * 值作为 maxs 传递给 read/take 调用来完成的。然后，read/take 将不锁定但仍然解锁。 (Because the
+ * cache is locked, you should be able to read/take without having to lock first. This is done by
+ * passing the @ref DDS_READ_WITHOUT_LOCK value to the read/take call as maxs. Then the read/take
+ * will not lock but still unlock.)
  *
- * CycloneDDS doesn't support a read/take that just returns all
- * available samples issue #74. As a work around to support LENGTH_UNLIMITED in C++.
- * dds_reader_lock_samples() and @ref DDS_READ_WITHOUT_LOCK are needed.
+ * CycloneDDS 不支持只返回所有可用样本的 read/take 问题 #74。作为支持 C++ 中 LENGTH_UNLIMITED
+ * 的解决方法。 需要 dds_reader_lock_samples() 和 @ref DDS_READ_WITHOUT_LOCK。 (CycloneDDS doesn't
+ * support a read/take that just returns all available samples issue #74. As a work around to
+ * support LENGTH_UNLIMITED in C++. dds_reader_lock_samples() and @ref DDS_READ_WITHOUT_LOCK are
+ * needed.)
  *
- * @param[in]   reader  Reader to lock the cache of.
+ * @param[in]   reader  要锁定其缓存的读取器。(Reader to lock the cache of.)
  *
- * @returns the number of samples in the reader cache.
+ * @returns 读取器缓存中的样本数量。(the number of samples in the reader cache.)
  */
-DDS_EXPORT uint32_t
-dds_reader_lock_samples (dds_entity_t reader);
+DDS_EXPORT uint32_t dds_reader_lock_samples(dds_entity_t reader);
 
 /**
  * @ingroup internal
  * @component topic
  * @unstable
- * @brief Gets a CDR stream serializer type descriptor from a topic descriptor
+ * @brief 从主题描述符获取 CDR 流序列化类型描述符
+ *        (Gets a CDR stream serializer type descriptor from a topic descriptor)
  *
- * @param[out] desc Pointer to the target struct that can be filled with the CDR stream topic descriptor
- * @param[in] topic_desc The source topic descriptor
+ * @param[out] desc 可以用 CDR 流主题描述符填充的目标结构的指针
+ *                  (Pointer to the target struct that can be filled with the CDR stream topic
+ *                  descriptor)
+ * @param[in] topic_desc 源主题描述符 (The source topic descriptor)
  *
-*/
-DDS_EXPORT void
-dds_cdrstream_desc_from_topic_desc (struct dds_cdrstream_desc *desc, const dds_topic_descriptor_t *topic_desc);
+ */
+DDS_EXPORT void dds_cdrstream_desc_from_topic_desc(struct dds_cdrstream_desc* desc,
+                                                   const dds_topic_descriptor_t* topic_desc);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif

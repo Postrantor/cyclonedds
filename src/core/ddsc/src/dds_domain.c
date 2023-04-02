@@ -61,12 +61,10 @@ const struct dds_entity_deriver dds_entity_deriver_domain = {
  * @param vb 指向第二个要比较的dds_domainid_t的指针
  * @return 如果相等返回0，如果a小于b返回-1，否则返回1
  */
-static int dds_domain_compare(const void *va, const void *vb)
-{
+static int dds_domain_compare(const void *va, const void *vb) {
   const dds_domainid_t *a = va;
   const dds_domainid_t *b = vb;
-  return (*a == *b) ? 0 : (*a < *b) ? -1
-                                    : 1;
+  return (*a == *b) ? 0 : (*a < *b) ? -1 : 1;
 }
 
 // 定义DDS域树结构体
@@ -74,17 +72,14 @@ static const ddsrt_avl_treedef_t dds_domaintree_def = DDSRT_AVL_TREEDEF_INITIALI
     offsetof(dds_domain, m_node), offsetof(dds_domain, m_id), dds_domain_compare, 0);
 
 // 定义配置源结构体
-struct config_source
-{
-  enum
-  {
-    CFGKIND_XML, // XML类型的配置
-    CFGKIND_RAW  // 原始类型的配置
+struct config_source {
+  enum {
+    CFGKIND_XML,  // XML类型的配置
+    CFGKIND_RAW   // 原始类型的配置
   } kind;
-  union
-  {
-    const char *xml;               // XML配置字符串
-    const struct ddsi_config *raw; // 原始配置结构体指针
+  union {
+    const char *xml;                // XML配置字符串
+    const struct ddsi_config *raw;  // 原始配置结构体指针
   } u;
 };
 
@@ -97,13 +92,16 @@ struct config_source
  * @param[in] implicit      是否为隐式创建的域
  * @return dds_entity_t     返回初始化后的域实例句柄
  */
-static dds_entity_t dds_domain_init(dds_domain *domain, dds_domainid_t domain_id, const struct config_source *config, bool implicit)
-{
+static dds_entity_t dds_domain_init(dds_domain *domain,
+                                    dds_domainid_t domain_id,
+                                    const struct config_source *config,
+                                    bool implicit) {
   // 定义域实例句柄变量
   dds_entity_t domh;
 
   // 初始化域实例并检查是否成功
-  if ((domh = dds_entity_init(&domain->m_entity, &dds_global.m_entity, DDS_KIND_DOMAIN, implicit, true, NULL, NULL, 0)) < 0)
+  if ((domh = dds_entity_init(&domain->m_entity, &dds_global.m_entity, DDS_KIND_DOMAIN, implicit,
+                              true, NULL, NULL, 0)) < 0)
     return domh;
   // 设置域实例的域和实例ID
   domain->m_entity.m_domain = domain;
@@ -113,40 +111,35 @@ static dds_entity_t dds_domain_init(dds_domain *domain, dds_domainid_t domain_id
   domain->gv.tstart = ddsrt_time_wallclock();
 
   // 根据配置模型设置域ID
-  switch (config->kind)
-  {
-  case CFGKIND_RAW:
-    domain->cfgst = NULL;
-    memcpy(&domain->gv.config, config->u.raw, sizeof(domain->gv.config));
-    if (domain_id != DDS_DOMAIN_DEFAULT)
-      domain->gv.config.domainId = domain_id;
-    break;
+  switch (config->kind) {
+    case CFGKIND_RAW:
+      domain->cfgst = NULL;
+      memcpy(&domain->gv.config, config->u.raw, sizeof(domain->gv.config));
+      if (domain_id != DDS_DOMAIN_DEFAULT) domain->gv.config.domainId = domain_id;
+      break;
 
-  case CFGKIND_XML:
-    domain->cfgst = ddsi_config_init(config->u.xml, &domain->gv.config, domain_id);
-    if (domain->cfgst == NULL)
-    {
-      DDS_ILOG(DDS_LC_CONFIG, domain_id, "Failed to parse configuration\n");
-      domh = DDS_RETCODE_ERROR;
-      goto fail_config;
-    }
-    assert(domain_id == DDS_DOMAIN_DEFAULT || domain_id == domain->gv.config.domainId);
-    break;
+    case CFGKIND_XML:
+      domain->cfgst = ddsi_config_init(config->u.xml, &domain->gv.config, domain_id);
+      if (domain->cfgst == NULL) {
+        DDS_ILOG(DDS_LC_CONFIG, domain_id, "Failed to parse configuration\n");
+        domh = DDS_RETCODE_ERROR;
+        goto fail_config;
+      }
+      assert(domain_id == DDS_DOMAIN_DEFAULT || domain_id == domain->gv.config.domainId);
+      break;
   }
   // 设置域实例的ID
   domain->m_id = domain->gv.config.domainId;
 
   // 准备配置并检查是否成功
-  if (ddsi_config_prep(&domain->gv, domain->cfgst) != 0)
-  {
+  if (ddsi_config_prep(&domain->gv, domain->cfgst) != 0) {
     DDS_ILOG(DDS_LC_CONFIG, domain->m_id, "Failed to configure RTPS\n");
     domh = DDS_RETCODE_ERROR;
     goto fail_ddsi_config;
   }
 
   // 初始化RTPS并检查是否成功
-  if (ddsi_init(&domain->gv) < 0)
-  {
+  if (ddsi_init(&domain->gv) < 0) {
     DDS_ILOG(DDS_LC_CONFIG, domain->m_id, "Failed to initialize RTPS\n");
     domh = DDS_RETCODE_ERROR;
     goto fail_ddsi_init;
@@ -157,8 +150,7 @@ static dds_entity_t dds_domain_init(dds_domain *domain, dds_domainid_t domain_id
 
 #ifdef DDS_HAS_SHM
   // 如果启用了共享内存，初始化基于iceoryx的共享内存监视器
-  if (domain->gv.config.enable_shm)
-  {
+  if (domain->gv.config.enable_shm) {
     dds_shm_monitor_init(&domain->m_shm_monitor);
   }
 #endif
@@ -168,16 +160,13 @@ static dds_entity_t dds_domain_init(dds_domain *domain, dds_domainid_t domain_id
    * @param domain 指向 dds_domain 的指针
    * @param domh 返回的域句柄
    */
-  if (domain->gv.config.liveliness_monitoring)
-  {
+  if (domain->gv.config.liveliness_monitoring) {
     // 如果启用了生命周期监控
-    if (dds_global.threadmon_count++ == 0)
-    {
+    if (dds_global.threadmon_count++ == 0) {
       // 如果全局线程监视器计数为 0，则创建新的线程监视器并增加计数
       dds_global.threadmon = ddsi_threadmon_new(DDS_MSECS(333), true);
       // 判断线程监视器是否创建成功
-      if (dds_global.threadmon == NULL)
-      {
+      if (dds_global.threadmon == NULL) {
         // 记录错误日志：无法创建线程生命周期监视器
         DDS_ILOG(DDS_LC_CONFIG, domain->m_id, "Failed to create a thread liveliness monitor\n");
         // 设置错误码为 OUT_OF_RESOURCES
@@ -187,8 +176,7 @@ static dds_entity_t dds_domain_init(dds_domain *domain, dds_domainid_t domain_id
       }
 
       // 启动线程生命周期监视器
-      if (ddsi_threadmon_start(dds_global.threadmon, "threadmon") < 0)
-      {
+      if (ddsi_threadmon_start(dds_global.threadmon, "threadmon") < 0) {
         // 记录错误日志：无法启动线程生命周期监视器
         DDS_ILOG(DDS_LC_ERROR, domain->m_id, "Failed to start the thread liveliness monitor\n");
         // 设置错误码为 ERROR
@@ -203,8 +191,7 @@ static dds_entity_t dds_domain_init(dds_domain *domain, dds_domainid_t domain_id
   dds__builtin_init(domain);
 
   // 启动RTPS并检查是否成功
-  if (ddsi_start(&domain->gv) < 0)
-  {
+  if (ddsi_start(&domain->gv) < 0) {
     DDS_ILOG(DDS_LC_CONFIG, domain->m_id, "Failed to start RTPS\n");
     domh = DDS_RETCODE_ERROR;
     goto fail_ddsi_start;
@@ -231,8 +218,7 @@ fail_ddsi_start:
     ddsi_threadmon_stop(dds_global.threadmon);
 fail_threadmon_start:
   // 如果启用了生命周期监控且递减线程监视器计数后为0，则释放线程监视器资源并将其设置为NULL
-  if (domain->gv.config.liveliness_monitoring && --dds_global.threadmon_count == 0)
-  {
+  if (domain->gv.config.liveliness_monitoring && --dds_global.threadmon_count == 0) {
     ddsi_threadmon_free(dds_global.threadmon);
     dds_global.threadmon = NULL;
   }
@@ -244,8 +230,7 @@ fail_threadmon_new:
 fail_ddsi_init:
 fail_ddsi_config:
   // 如果存在配置状态，则结束配置并释放资源
-  if (domain->cfgst)
-    ddsi_config_fini(domain->cfgst);
+  if (domain->cfgst) ddsi_config_fini(domain->cfgst);
 fail_config:
   // 删除实体句柄并释放资源
   dds_handle_delete(&domain->m_entity.m_hdllink);
@@ -259,8 +244,7 @@ fail_config:
  * @param[in] id 要查找的DDS域的ID
  * @return 返回指向dds_domain结构体的指针，如果找到了对应ID的DDS域；否则返回NULL
  */
-dds_domain *dds_domain_find_locked(dds_domainid_t id)
-{
+dds_domain *dds_domain_find_locked(dds_domainid_t id) {
   // 使用ddsrt_avl_lookup在dds_global.m_domains中查找具有给定ID的DDS域
   return ddsrt_avl_lookup(&dds_domaintree_def, &dds_global.m_domains, &id);
 }
@@ -274,8 +258,10 @@ dds_domain *dds_domain_find_locked(dds_domainid_t id)
  * @param[in] config 配置源，包含 XML 或原始配置数据。
  * @return 返回创建的域实体句柄，如果失败则返回错误码。
  */
-static dds_entity_t dds_domain_create_internal_xml_or_raw(dds_domain **domain_out, dds_domainid_t id, bool implicit, const struct config_source *config)
-{
+static dds_entity_t dds_domain_create_internal_xml_or_raw(dds_domain **domain_out,
+                                                          dds_domainid_t id,
+                                                          bool implicit,
+                                                          const struct config_source *config) {
   struct dds_domain *dom;
   dds_entity_t domh = DDS_RETCODE_ERROR;
 
@@ -290,21 +276,16 @@ retry:
     dom = ddsrt_avl_find_min(&dds_domaintree_def, &dds_global.m_domains);
 
   // 如果找到了域
-  if (dom)
-  {
+  if (dom) {
     // 如果 dom 不为空
-    if (!implicit)
-    {
+    if (!implicit) {
       // 如果不是隐式创建域，则设置错误码为 PRECONDITION_NOT_MET
       domh = DDS_RETCODE_PRECONDITION_NOT_MET;
-    }
-    else
-    {
+    } else {
       // 锁定实体互斥锁
       ddsrt_mutex_lock(&dom->m_entity.m_mutex);
       // 判断实体句柄是否已关闭
-      if (dds_handle_is_closed(&dom->m_entity.m_hdllink))
-      {
+      if (dds_handle_is_closed(&dom->m_entity.m_hdllink)) {
         // 解锁实体互斥锁
         ddsrt_mutex_unlock(&dom->m_entity.m_mutex);
         // 等待全局条件变量
@@ -323,19 +304,14 @@ retry:
       // 设置输出参数 domain_out
       *domain_out = dom;
     }
-  }
-  else
-  {
+  } else {
     // 如果 dom 为空，分配内存空间
     dom = dds_alloc(sizeof(*dom));
     // 初始化域，并获取域句柄
-    if ((domh = dds_domain_init(dom, id, config, implicit)) < 0)
-    {
+    if ((domh = dds_domain_init(dom, id, config, implicit)) < 0) {
       // 如果初始化失败，释放内存空间
       dds_free(dom);
-    }
-    else
-    {
+    } else {
       // 锁定实体互斥锁
       ddsrt_mutex_lock(&dom->m_entity.m_mutex);
       // 将新创建的域插入到全局域树中
@@ -343,8 +319,7 @@ retry:
       // 注册子实体
       dds_entity_register_child(&dds_global.m_entity, &dom->m_entity);
       // 如果是隐式创建域
-      if (implicit)
-      {
+      if (implicit) {
         // 增加实体引用计数
         dds_entity_add_ref_locked(&dom->m_entity);
         // 重新锁定实体句柄
@@ -371,8 +346,10 @@ retry:
  * @param[in] config_xml 配置文件的XML字符串
  * @return 返回创建的实体
  */
-dds_entity_t dds_domain_create_internal(dds_domain **domain_out, dds_domainid_t id, bool implicit, const char *config_xml)
-{
+dds_entity_t dds_domain_create_internal(dds_domain **domain_out,
+                                        dds_domainid_t id,
+                                        bool implicit,
+                                        const char *config_xml) {
   // 初始化配置结构体
   const struct config_source config = {.kind = CFGKIND_XML, .u = {.xml = config_xml}};
 
@@ -387,22 +364,18 @@ dds_entity_t dds_domain_create_internal(dds_domain **domain_out, dds_domainid_t 
  * @param[in] config_xml 配置文件的XML字符串
  * @return 返回创建的实体
  */
-dds_entity_t dds_create_domain(const dds_domainid_t domain, const char *config_xml)
-{
+dds_entity_t dds_create_domain(const dds_domainid_t domain, const char *config_xml) {
   dds_domain *dom;
   dds_entity_t ret;
 
   // 检查是否为默认域
-  if (domain == DDS_DOMAIN_DEFAULT)
-    return DDS_RETCODE_BAD_PARAMETER;
+  if (domain == DDS_DOMAIN_DEFAULT) return DDS_RETCODE_BAD_PARAMETER;
 
   // 如果配置文件为空，则设置为空字符串
-  if (config_xml == NULL)
-    config_xml = "";
+  if (config_xml == NULL) config_xml = "";
 
   // 确保DDS实例已初始化
-  if ((ret = dds_init()) < 0)
-    return ret;
+  if ((ret = dds_init()) < 0) return ret;
 
   // 初始化配置结构体
   const struct config_source config = {.kind = CFGKIND_XML, .u = {.xml = config_xml}};
@@ -420,26 +393,25 @@ dds_entity_t dds_create_domain(const dds_domainid_t domain, const char *config_x
  * @brief 创建一个具有原始配置的DDS域实体 (Create a DDS domain entity with raw configuration)
  *
  * @param[in] domain 域ID，不能为DDS_DOMAIN_DEFAULT (Domain ID, cannot be DDS_DOMAIN_DEFAULT)
- * @param[in] config_raw 指向ddsi_config结构的指针，包含原始配置信息 (Pointer to ddsi_config structure containing the raw configuration information)
- * @return 成功时返回创建的域实体，否则返回错误代码 (Returns the created domain entity on success, otherwise returns an error code)
+ * @param[in] config_raw 指向ddsi_config结构的指针，包含原始配置信息 (Pointer to ddsi_config
+ * structure containing the raw configuration information)
+ * @return 成功时返回创建的域实体，否则返回错误代码 (Returns the created domain entity on success,
+ * otherwise returns an error code)
  */
-dds_entity_t dds_create_domain_with_rawconfig(const dds_domainid_t domain, const struct ddsi_config *config_raw)
-{
+dds_entity_t dds_create_domain_with_rawconfig(const dds_domainid_t domain,
+                                              const struct ddsi_config *config_raw) {
   // 定义一个指向dds_domain的指针
   dds_domain *dom;
   // 定义一个dds_entity_t类型的变量用于存储返回值
   dds_entity_t ret;
 
   // 检查domain是否为DDS_DOMAIN_DEFAULT，如果是，则返回错误代码
-  if (domain == DDS_DOMAIN_DEFAULT)
-    return DDS_RETCODE_BAD_PARAMETER;
+  if (domain == DDS_DOMAIN_DEFAULT) return DDS_RETCODE_BAD_PARAMETER;
   // 检查config_raw是否为空，如果是，则返回错误代码
-  if (config_raw == NULL)
-    return DDS_RETCODE_BAD_PARAMETER;
+  if (config_raw == NULL) return DDS_RETCODE_BAD_PARAMETER;
 
   // 确保DDS实例已初始化
-  if ((ret = dds_init()) < 0)
-    return ret;
+  if ((ret = dds_init()) < 0) return ret;
 
   // 创建并初始化config_source结构
   const struct config_source config = {.kind = CFGKIND_RAW, .u = {.raw = config_raw}};
@@ -454,11 +426,11 @@ dds_entity_t dds_create_domain_with_rawconfig(const dds_domainid_t domain, const
 /**
  * @brief 释放DDS域实体 (Free a DDS domain entity)
  *
- * @param[in] vdomain 指向要释放的dds_entity结构的指针 (Pointer to the dds_entity structure to be freed)
+ * @param[in] vdomain 指向要释放的dds_entity结构的指针 (Pointer to the dds_entity structure to be
+ * freed)
  * @return 返回DDS_RETCODE_NO_DATA
  */
-static dds_return_t dds_domain_free(dds_entity *vdomain)
-{
+static dds_return_t dds_domain_free(dds_entity *vdomain) {
   // 将vdomain转换为dds_domain类型的指针
   struct dds_domain *domain = (struct dds_domain *)vdomain;
   // 停止DDSI服务
@@ -472,8 +444,7 @@ static dds_return_t dds_domain_free(dds_entity *vdomain)
 
 #ifdef DDS_HAS_SHM
   // 如果启用了共享内存，则销毁共享内存监视器
-  if (domain->gv.config.enable_shm)
-    dds_shm_monitor_destroy(&domain->m_shm_monitor);
+  if (domain->gv.config.enable_shm) dds_shm_monitor_destroy(&domain->m_shm_monitor);
 #endif
 
   // 结束DDSI服务
@@ -484,8 +455,7 @@ static dds_return_t dds_domain_free(dds_entity *vdomain)
   // 锁定全局互斥锁
   ddsrt_mutex_lock(&dds_global.m_mutex);
   // 如果启用了生命周期监控且所有域都已删除，则停止线程监视器并释放资源
-  if (domain->gv.config.liveliness_monitoring && --dds_global.threadmon_count == 0)
-  {
+  if (domain->gv.config.liveliness_monitoring && --dds_global.threadmon_count == 0) {
     ddsi_threadmon_stop(dds_global.threadmon);
     ddsi_threadmon_free(dds_global.threadmon);
   }
@@ -495,8 +465,7 @@ static dds_return_t dds_domain_free(dds_entity *vdomain)
   // 在释放之前执行实体的最终反初始化
   dds_entity_final_deinit_before_free(vdomain);
   // 如果存在配置状态，则清理配置状态
-  if (domain->cfgst)
-    ddsi_config_fini(domain->cfgst);
+  if (domain->cfgst) ddsi_config_fini(domain->cfgst);
   // 释放vdomain内存
   dds_free(vdomain);
   // 广播全局条件变量
@@ -516,21 +485,22 @@ static dds_return_t dds_domain_free(dds_entity *vdomain)
  * @param reset_after 在此时间段后重置听力和发声状态
  * @return dds_return_t 操作结果代码
  */
-dds_return_t dds_domain_set_deafmute(dds_entity_t entity, bool deaf, bool mute, dds_duration_t reset_after)
-{
-  struct dds_entity *e;                      // 定义实体指针
-  dds_return_t rc;                           // 定义返回值
-  if ((rc = dds_entity_pin(entity, &e)) < 0) // 尝试获取实体，如果失败则返回错误码
+dds_return_t dds_domain_set_deafmute(dds_entity_t entity,
+                                     bool deaf,
+                                     bool mute,
+                                     dds_duration_t reset_after) {
+  struct dds_entity *e;                       // 定义实体指针
+  dds_return_t rc;                            // 定义返回值
+  if ((rc = dds_entity_pin(entity, &e)) < 0)  // 尝试获取实体，如果失败则返回错误码
     return rc;
-  if (e->m_domain == NULL) // 如果实体没有关联域，则返回非法操作错误
+  if (e->m_domain == NULL)  // 如果实体没有关联域，则返回非法操作错误
     rc = DDS_RETCODE_ILLEGAL_OPERATION;
-  else
-  {
-    ddsi_set_deafmute(&e->m_domain->gv, deaf, mute, reset_after); // 设置实体的听力和发声状态
-    rc = DDS_RETCODE_OK;                                          // 设置成功，返回 OK 状态码
+  else {
+    ddsi_set_deafmute(&e->m_domain->gv, deaf, mute, reset_after);  // 设置实体的听力和发声状态
+    rc = DDS_RETCODE_OK;  // 设置成功，返回 OK 状态码
   }
-  dds_entity_unpin(e); // 解除实体引用
-  return rc;           // 返回操作结果
+  dds_entity_unpin(e);  // 解除实体引用
+  return rc;            // 返回操作结果
 }
 
 #include "dds__entity.h"
@@ -541,36 +511,33 @@ dds_return_t dds_domain_set_deafmute(dds_entity_t entity, bool deaf, bool mute, 
  * @param e 实体指针
  * @param enable 是否启用批处理
  */
-static void pushdown_set_batch(struct dds_entity *e, bool enable)
-{
+static void pushdown_set_batch(struct dds_entity *e, bool enable) {
   // e 已经被引用，没有锁定
-  dds_instance_handle_t last_iid = 0; // 定义最后一个实例标识符
-  struct dds_entity *c;               // 定义子实体指针
-  ddsrt_mutex_lock(&e->m_mutex);      // 锁定实体互斥量
+  dds_instance_handle_t last_iid = 0;  // 定义最后一个实例标识符
+  struct dds_entity *c;                // 定义子实体指针
+  ddsrt_mutex_lock(&e->m_mutex);       // 锁定实体互斥量
 
   // 遍历子实体
-  while ((c = ddsrt_avl_lookup_succ(&dds_entity_children_td, &e->m_children, &last_iid)) != NULL)
-  {
+  while ((c = ddsrt_avl_lookup_succ(&dds_entity_children_td, &e->m_children, &last_iid)) != NULL) {
     struct dds_entity *x;
     last_iid = c->m_iid;
-    if (dds_entity_pin(c->m_hdllink.hdl, &x) < 0) // 尝试获取子实体，如果失败则跳过
+    if (dds_entity_pin(c->m_hdllink.hdl, &x) < 0)  // 尝试获取子实体，如果失败则跳过
       continue;
     assert(x == c);
-    ddsrt_mutex_unlock(&e->m_mutex); // 解锁实体互斥量
+    ddsrt_mutex_unlock(&e->m_mutex);  // 解锁实体互斥量
 
     // 根据子实体类型进行操作
     if (c->m_kind == DDS_KIND_PARTICIPANT)
-      pushdown_set_batch(c, enable); // 如果是参与者，则递归调用此函数
-    else if (c->m_kind == DDS_KIND_WRITER)
-    {
-      struct dds_writer *w = (struct dds_writer *)c; // 转换为写入器类型
-      w->whc_batch = enable;                         // 设置批处理状态
+      pushdown_set_batch(c, enable);  // 如果是参与者，则递归调用此函数
+    else if (c->m_kind == DDS_KIND_WRITER) {
+      struct dds_writer *w = (struct dds_writer *)c;  // 转换为写入器类型
+      w->whc_batch = enable;                          // 设置批处理状态
     }
 
-    ddsrt_mutex_lock(&e->m_mutex); // 再次锁定实体互斥量
-    dds_entity_unpin(c);           // 解除子实体引用
+    ddsrt_mutex_lock(&e->m_mutex);  // 再次锁定实体互斥量
+    dds_entity_unpin(c);            // 解除子实体引用
   }
-  ddsrt_mutex_unlock(&e->m_mutex); // 解锁实体互斥量
+  ddsrt_mutex_unlock(&e->m_mutex);  // 解锁实体互斥量
 }
 
 /**
@@ -578,21 +545,19 @@ static void pushdown_set_batch(struct dds_entity *e, bool enable)
  *
  * @param enable 是否启用批处理模式
  */
-void dds_write_set_batch(bool enable)
-{
+void dds_write_set_batch(bool enable) {
   // FIXME: 获取通道和延迟预算并解决此问题；同时，任何丑陋的hack都可以。
   struct dds_domain *dom;
   dds_domainid_t next_id = 0;
 
   // 如果DDS初始化失败，则返回
-  if (dds_init() < 0)
-    return;
+  if (dds_init() < 0) return;
   // 锁定全局互斥锁
   ddsrt_mutex_lock(&dds_global.m_mutex);
 
   // 遍历所有域
-  while ((dom = ddsrt_avl_lookup_succ_eq(&dds_domaintree_def, &dds_global.m_domains, &next_id)) != NULL)
-  {
+  while ((dom = ddsrt_avl_lookup_succ_eq(&dds_domaintree_def, &dds_global.m_domains, &next_id)) !=
+         NULL) {
     // 确保编译器不会从dom->m_id重新加载curr_id
     dds_domainid_t curr_id = *((volatile dds_domainid_t *)&dom->m_id);
     next_id = curr_id + 1;
@@ -603,13 +568,12 @@ void dds_write_set_batch(bool enable)
     struct dds_entity *e;
 
     // 遍历实体
-    while (dom && (e = ddsrt_avl_lookup_succ(&dds_entity_children_td, &dom->m_entity.m_children, &last_iid)) != NULL)
-    {
+    while (dom && (e = ddsrt_avl_lookup_succ(&dds_entity_children_td, &dom->m_entity.m_children,
+                                             &last_iid)) != NULL) {
       struct dds_entity *x;
       last_iid = e->m_iid;
       // 尝试锁定实体
-      if (dds_entity_pin(e->m_hdllink.hdl, &x) < 0)
-        continue;
+      if (dds_entity_pin(e->m_hdllink.hdl, &x) < 0) continue;
 
       // 断言实体相等
       assert(x == e);
@@ -645,32 +609,32 @@ void dds_write_set_batch(bool enable)
  *
  * @details 该函数用于获取类型对象，如果成功，将类型对象存储在type_obj中。
  */
-dds_return_t dds_get_typeobj(dds_entity_t entity, const dds_typeid_t *type_id, dds_duration_t timeout, dds_typeobj_t **type_obj)
-{
+dds_return_t dds_get_typeobj(dds_entity_t entity,
+                             const dds_typeid_t *type_id,
+                             dds_duration_t timeout,
+                             dds_typeobj_t **type_obj) {
   // 定义返回值变量
   dds_return_t ret;
   // 定义实体结构体指针
   struct dds_entity *e;
 
   // 检查type_obj是否为空
-  if (type_obj == NULL)
-    return DDS_RETCODE_BAD_PARAMETER;
+  if (type_obj == NULL) return DDS_RETCODE_BAD_PARAMETER;
   // 尝试获取实体并检查返回值
-  if ((ret = dds_entity_pin(entity, &e)) < 0)
-    return ret;
+  if ((ret = dds_entity_pin(entity, &e)) < 0) return ret;
 
   // 检查实体的域是否为空
   if (e->m_domain == NULL)
     ret = DDS_RETCODE_ILLEGAL_OPERATION;
-  else
-  {
+  else {
     // 获取实体域的全局变量
     struct ddsi_domaingv *gv = &e->m_domain->gv;
     // 定义类型结构体指针
     struct ddsi_type *type;
     // 等待类型解析完成，并检查返回值
-    if ((ret = ddsi_wait_for_type_resolved(gv, (const ddsi_typeid_t *)type_id, timeout, &type, DDSI_TYPE_IGNORE_DEPS, DDSI_TYPE_SEND_REQUEST)) == DDS_RETCODE_OK)
-    {
+    if ((ret = ddsi_wait_for_type_resolved(gv, (const ddsi_typeid_t *)type_id, timeout, &type,
+                                           DDSI_TYPE_IGNORE_DEPS, DDSI_TYPE_SEND_REQUEST)) ==
+        DDS_RETCODE_OK) {
       // 获取类型对象并存储在type_obj中
       *type_obj = ddsi_type_get_typeobj(gv, type);
       // 释放类型引用
@@ -691,11 +655,9 @@ dds_return_t dds_get_typeobj(dds_entity_t entity, const dds_typeid_t *type_id, d
  *
  * @details 该函数用于释放类型对象，如果成功，将释放类型对象占用的内存。
  */
-dds_return_t dds_free_typeobj(dds_typeobj_t *type_obj)
-{
+dds_return_t dds_free_typeobj(dds_typeobj_t *type_obj) {
   // 检查type_obj是否为空
-  if (type_obj == NULL)
-    return DDS_RETCODE_BAD_PARAMETER;
+  if (type_obj == NULL) return DDS_RETCODE_BAD_PARAMETER;
   // 销毁类型对象
   ddsi_typeobj_fini(type_obj);
   // 释放类型对象内存
@@ -717,13 +679,15 @@ dds_return_t dds_free_typeobj(dds_typeobj_t *type_obj)
  *
  * 该函数用于获取类型对象。
  */
-dds_return_t dds_get_typeobj(dds_entity_t entity, const dds_typeid_t *type_id, dds_duration_t timeout, dds_typeobj_t **type_obj)
-{
-  (void)entity;                   // 忽略实体参数
-  (void)type_id;                  // 忽略类型ID指针参数
-  (void)timeout;                  // 忽略超时时间参数
-  (void)type_obj;                 // 忽略类型对象双重指针参数
-  return DDS_RETCODE_UNSUPPORTED; // 返回不支持的状态码
+dds_return_t dds_get_typeobj(dds_entity_t entity,
+                             const dds_typeid_t *type_id,
+                             dds_duration_t timeout,
+                             dds_typeobj_t **type_obj) {
+  (void)entity;                    // 忽略实体参数
+  (void)type_id;                   // 忽略类型ID指针参数
+  (void)timeout;                   // 忽略超时时间参数
+  (void)type_obj;                  // 忽略类型对象双重指针参数
+  return DDS_RETCODE_UNSUPPORTED;  // 返回不支持的状态码
 }
 
 /**
@@ -734,10 +698,9 @@ dds_return_t dds_get_typeobj(dds_entity_t entity, const dds_typeid_t *type_id, d
  *
  * 该函数用于释放类型对象。
  */
-dds_return_t dds_free_typeobj(dds_typeobj_t *type_obj)
-{
-  (void)type_obj;                 // 忽略类型对象指针参数
-  return DDS_RETCODE_UNSUPPORTED; // 返回不支持的状态码
+dds_return_t dds_free_typeobj(dds_typeobj_t *type_obj) {
+  (void)type_obj;                  // 忽略类型对象指针参数
+  return DDS_RETCODE_UNSUPPORTED;  // 返回不支持的状态码
 }
 
 #endif /* DDS_HAS_TYPE_DISCOVERY */

@@ -15,21 +15,20 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "idl/processor.h"
 #include "idl/expression.h"
+#include "idl/processor.h"
 
-#define IDL_EXPRESSION \
-  (IDL_LITERAL|IDL_UNARY_OPERATOR|IDL_BINARY_OPERATOR)
+#define IDL_EXPRESSION (IDL_LITERAL | IDL_UNARY_OPERATOR | IDL_BINARY_OPERATOR)
 
 typedef enum idl_operator idl_operator_t;
 enum idl_operator {
   IDL_NOP = 0,
-#define IDL_UNARY_OPERATOR (1ull<<21)
-  IDL_MINUS = (IDL_UNARY_OPERATOR|1u),
+#define IDL_UNARY_OPERATOR (1ull << 21)
+  IDL_MINUS = (IDL_UNARY_OPERATOR | 1u),
   IDL_PLUS,
   IDL_NOT,
-#define IDL_BINARY_OPERATOR (1ull<<20)
-  IDL_OR = (IDL_BINARY_OPERATOR|1u),
+#define IDL_BINARY_OPERATOR (1ull << 20)
+  IDL_OR = (IDL_BINARY_OPERATOR | 1u),
   IDL_XOR,
   IDL_AND,
   IDL_LSHIFT,
@@ -41,10 +40,11 @@ enum idl_operator {
   IDL_MODULO
 };
 
-idl_operator_t idl_operator(const void *node);
+idl_operator_t idl_operator(const void * node);
 
 typedef struct idl_intval idl_intval_t;
-struct idl_intval {
+struct idl_intval
+{
   idl_type_t type;
   union {
     int64_t llng;
@@ -52,17 +52,13 @@ struct idl_intval {
   } value;
 };
 
-idl_intval_t idl_intval(const idl_const_expr_t *const_expr);
+idl_intval_t idl_intval(const idl_const_expr_t * const_expr);
 
 typedef long double idl_floatval_t;
 
-idl_floatval_t idl_floatval(const idl_const_expr_t *const_expr);
+idl_floatval_t idl_floatval(const idl_const_expr_t * const_expr);
 
 IDL_EXPORT idl_retcode_t
-idl_evaluate(
-  idl_pstate_t *pstate,
-  idl_const_expr_t *expr,
-  idl_type_t type,
-  void *nodep);
+idl_evaluate(idl_pstate_t * pstate, idl_const_expr_t * expr, idl_type_t type, void * nodep);
 
 #endif /* EXPRESSION_H */

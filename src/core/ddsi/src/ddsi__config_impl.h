@@ -14,10 +14,10 @@
 
 #include <stdio.h>
 
-#include "dds/ddsrt/attributes.h"
 #include "dds/ddsi/ddsi_config.h"
+#include "dds/ddsrt/attributes.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -25,15 +25,16 @@ struct ddsi_cfgst;
 struct ddsrt_log_cfg;
 
 /** @component config */
-void ddsi_config_print_cfgst (struct ddsi_cfgst *cfgst, const struct ddsrt_log_cfg *logcfg);
+void ddsi_config_print_cfgst(struct ddsi_cfgst * cfgst, const struct ddsrt_log_cfg * logcfg);
 
 /** @component config */
-void ddsi_config_print_rawconfig (const struct ddsi_config *cfg, const struct ddsrt_log_cfg *logcfg);
+void ddsi_config_print_rawconfig(
+  const struct ddsi_config * cfg, const struct ddsrt_log_cfg * logcfg);
 
 /** @component config */
-void ddsi_config_free_source_info (struct ddsi_cfgst *cfgst);
+void ddsi_config_free_source_info(struct ddsi_cfgst * cfgst);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

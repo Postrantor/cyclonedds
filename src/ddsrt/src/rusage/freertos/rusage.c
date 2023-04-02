@@ -9,12 +9,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/rusage.h"
+
 #include <FreeRTOS.h>
-#include <task.h>
 #include <string.h>
+#include <task.h>
 
 #include "dds/ddsrt/heap.h"
-#include "dds/ddsrt/rusage.h"
 
 /* Task CPU time statistics require a high resolution timer. FreeRTOS
    recommends a time base between 10 and 100 times faster than the tick
@@ -29,8 +30,7 @@
 #error "Time base for run time stats is not defined"
 #endif
 
-static dds_return_t
-rusage_self(ddsrt_rusage_t *usage)
+static dds_return_t rusage_self(ddsrt_rusage_t * usage)
 {
   dds_return_t rc = DDS_RETCODE_OK;
   dds_duration_t nsecs;
@@ -65,8 +65,7 @@ rusage_self(ddsrt_rusage_t *usage)
   return rc;
 }
 
-static dds_return_t
-rusage_thread(ddsrt_thread_list_id_t tid, ddsrt_rusage_t *usage)
+static dds_return_t rusage_thread(ddsrt_thread_list_id_t tid, ddsrt_rusage_t * usage)
 {
   TaskStatus_t states;
 
@@ -78,18 +77,17 @@ rusage_thread(ddsrt_thread_list_id_t tid, ddsrt_rusage_t *usage)
   return DDS_RETCODE_OK;
 }
 
-#if ! DDSRT_HAVE_THREAD_LIST
+#if !DDSRT_HAVE_THREAD_LIST
 static
 #endif
-dds_return_t
-ddsrt_getrusage_anythread(ddsrt_thread_list_id_t tid, ddsrt_rusage_t *__restrict usage)
+  dds_return_t
+  ddsrt_getrusage_anythread(ddsrt_thread_list_id_t tid, ddsrt_rusage_t * __restrict usage)
 {
   assert(usage != NULL);
   return rusage_thread(tid, usage);
 }
 
-dds_return_t
-ddsrt_getrusage(enum ddsrt_getrusage_who who, ddsrt_rusage_t *usage)
+dds_return_t ddsrt_getrusage(enum ddsrt_getrusage_who who, ddsrt_rusage_t * usage)
 {
   dds_return_t rc;
 

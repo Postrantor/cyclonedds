@@ -15,24 +15,26 @@
 #include "idl/processor.h"
 
 typedef struct idl_lexeme idl_lexeme_t;
-struct idl_lexeme {
-  const char *marker;
-  const char *limit;
+struct idl_lexeme
+{
+  const char * marker;
+  const char * limit;
   idl_location_t location;
 };
 
 typedef struct idl_token idl_token_t;
-struct idl_token {
+struct idl_token
+{
   int32_t code; /**< token identifier */
   union {
     char chr;
     unsigned long long ullng;
     long double ldbl;
-    char *str;
+    char * str;
   } value;
   idl_location_t location;
 };
 
-IDL_EXPORT idl_retcode_t idl_scan(idl_pstate_t *pstate, idl_token_t *tok);
+IDL_EXPORT idl_retcode_t idl_scan(idl_pstate_t * pstate, idl_token_t * tok);
 
 #endif /* SCANNER_H */

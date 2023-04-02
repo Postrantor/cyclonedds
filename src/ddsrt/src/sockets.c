@@ -15,27 +15,27 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "sockets_priv.h"
 #include "dds/ddsrt/heap.h"
 #include "dds/ddsrt/log.h"
+#include "sockets_priv.h"
 
 #if !LWIP_SOCKET
-# if !defined(_WIN32)
-#   include <arpa/inet.h>
-#   include <netdb.h>
-#   include <sys/socket.h>
-#   if defined(__linux)
-#     include <linux/if_packet.h> /* sockaddr_ll */
-#   endif /* __linux */
-# endif /* _WIN32 */
-#endif /* LWIP_SOCKET */
+#if !defined(_WIN32)
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#if defined(__linux)
+#include <linux/if_packet.h> /* sockaddr_ll */
+#endif                       /* __linux */
+#endif                       /* _WIN32 */
+#endif                       /* LWIP_SOCKET */
 
 #if defined __APPLE__
 #include <net/if_dl.h>
 #endif
 
-extern inline struct timeval *
-ddsrt_duration_to_timeval_ceil(dds_duration_t reltime, struct timeval *tv);
+extern inline struct timeval * ddsrt_duration_to_timeval_ceil(
+  dds_duration_t reltime, struct timeval * tv);
 
 #if DDSRT_HAVE_IPV6
 const struct in6_addr ddsrt_in6addr_any = IN6ADDR_ANY_INIT;
@@ -51,21 +51,19 @@ const int afs[] = {
 #endif
 #if DDSRT_HAVE_IPV6
   AF_INET6,
-#endif /* DDSRT_HAVE_IPV6 */
-  AF_INET,
-  DDSRT_AF_TERM /* Terminator */
+#endif                   /* DDSRT_HAVE_IPV6 */
+  AF_INET, DDSRT_AF_TERM /* Terminator */
 };
 
-const int *const os_supp_afs = afs;
+const int * const os_supp_afs = afs;
 
-socklen_t
-ddsrt_sockaddr_get_size(const struct sockaddr *const sa)
+socklen_t ddsrt_sockaddr_get_size(const struct sockaddr * const sa)
 {
   socklen_t sz;
 
   assert(sa != NULL);
 
-  switch(sa->sa_family) {
+  switch (sa->sa_family) {
 #if DDSRT_HAVE_IPV6
     case AF_INET6:
       sz = sizeof(struct sockaddr_in6);
@@ -89,11 +87,11 @@ ddsrt_sockaddr_get_size(const struct sockaddr *const sa)
   return sz;
 }
 
-uint16_t ddsrt_sockaddr_get_port(const struct sockaddr *const sa)
+uint16_t ddsrt_sockaddr_get_port(const struct sockaddr * const sa)
 {
   unsigned short port = 0;
 
-  switch(sa->sa_family) {
+  switch (sa->sa_family) {
 #if DDSRT_HAVE_IPV6
     case AF_INET6:
       port = ntohs(((struct sockaddr_in6 *)sa)->sin6_port);
@@ -108,15 +106,14 @@ uint16_t ddsrt_sockaddr_get_port(const struct sockaddr *const sa)
   return port;
 }
 
-bool
-ddsrt_sockaddr_isunspecified(const struct sockaddr *__restrict sa)
+bool ddsrt_sockaddr_isunspecified(const struct sockaddr * __restrict sa)
 {
   assert(sa != NULL);
 
-  switch(sa->sa_family) {
+  switch (sa->sa_family) {
 #if DDSRT_HAVE_IPV6
     case AF_INET6:
-      return IN6_IS_ADDR_UNSPECIFIED(&((struct sockaddr_in6*)sa)->sin6_addr);
+      return IN6_IS_ADDR_UNSPECIFIED(&((struct sockaddr_in6 *)sa)->sin6_addr);
 #endif
     case AF_INET:
       return (((struct sockaddr_in *)sa)->sin_addr.s_addr == 0);
@@ -125,47 +122,39 @@ ddsrt_sockaddr_isunspecified(const struct sockaddr *__restrict sa)
   return false;
 }
 
-bool
-ddsrt_sockaddr_isloopback(const struct sockaddr *__restrict sa)
+bool ddsrt_sockaddr_isloopback(const struct sockaddr * __restrict sa)
 {
   assert(sa != NULL);
 
   switch (sa->sa_family) {
 #if DDSRT_HAVE_IPV6
     case AF_INET6:
-      return IN6_IS_ADDR_LOOPBACK(
-        &((const struct sockaddr_in6 *)sa)->sin6_addr);
+      return IN6_IS_ADDR_LOOPBACK(&((const struct sockaddr_in6 *)sa)->sin6_addr);
 #endif /* DDSRT_HAVE_IPV6 */
     case AF_INET:
-      return (((const struct sockaddr_in *)sa)->sin_addr.s_addr
-                  == htonl(INADDR_LOOPBACK));
+      return (((const struct sockaddr_in *)sa)->sin_addr.s_addr == htonl(INADDR_LOOPBACK));
   }
 
   return false;
 }
 
-bool
-ddsrt_sockaddr_insamesubnet(
-  const struct sockaddr *sa1,
-  const struct sockaddr *sa2,
-  const struct sockaddr *mask)
+bool ddsrt_sockaddr_insamesubnet(
+  const struct sockaddr * sa1, const struct sockaddr * sa2, const struct sockaddr * mask)
 {
   bool eq = false;
 
-  if (sa1->sa_family != sa2->sa_family ||
-      sa1->sa_family != mask->sa_family)
-  {
+  if (sa1->sa_family != sa2->sa_family || sa1->sa_family != mask->sa_family) {
     return false;
   }
 
   switch (sa1->sa_family) {
     case AF_INET: {
-      eq = ((((struct sockaddr_in *)sa1)->sin_addr.s_addr &
-             ((struct sockaddr_in *)mask)->sin_addr.s_addr)
-                 ==
-            (((struct sockaddr_in *)sa2)->sin_addr.s_addr &
-             ((struct sockaddr_in *)mask)->sin_addr.s_addr));
-      } break;
+      eq =
+        ((((struct sockaddr_in *)sa1)->sin_addr.s_addr &
+          ((struct sockaddr_in *)mask)->sin_addr.s_addr) ==
+         (((struct sockaddr_in *)sa2)->sin_addr.s_addr &
+          ((struct sockaddr_in *)mask)->sin_addr.s_addr));
+    } break;
 #if DDSRT_HAVE_IPV6
     case AF_INET6: {
       struct sockaddr_in6 *sin61, *sin62, *mask6;
@@ -175,21 +164,18 @@ ddsrt_sockaddr_insamesubnet(
       mask6 = (struct sockaddr_in6 *)mask;
       eq = true;
       for (i = 0; eq && i < n; i++) {
-        eq = ((sin61->sin6_addr.s6_addr[i] &
-               mask6->sin6_addr.s6_addr[i])
-                 ==
-              (sin62->sin6_addr.s6_addr[i] &
-               mask6->sin6_addr.s6_addr[i]));
-        }
-      } break;
+        eq =
+          ((sin61->sin6_addr.s6_addr[i] & mask6->sin6_addr.s6_addr[i]) ==
+           (sin62->sin6_addr.s6_addr[i] & mask6->sin6_addr.s6_addr[i]));
+      }
+    } break;
 #endif
   }
 
   return eq;
 }
 
-dds_return_t
-ddsrt_sockaddrfromstr(int af, const char *str, void *sa)
+dds_return_t ddsrt_sockaddrfromstr(int af, const char * str, void * sa)
 {
   assert(str != NULL);
   assert(sa != NULL);
@@ -202,7 +188,7 @@ ddsrt_sockaddrfromstr(int af, const char *str, void *sa)
         return DDS_RETCODE_BAD_PARAMETER;
       }
 #else
-      buf.s_addr = inet_addr (str);
+      buf.s_addr = inet_addr(str);
       if (buf.s_addr == (in_addr_t)-1) {
         return DDS_RETCODE_BAD_PARAMETER;
       }
@@ -230,40 +216,38 @@ ddsrt_sockaddrfromstr(int af, const char *str, void *sa)
   return DDS_RETCODE_OK;
 }
 
-dds_return_t ddsrt_sockaddrtostr(const void *sa, char *buf, size_t size)
+dds_return_t ddsrt_sockaddrtostr(const void * sa, char * buf, size_t size)
 {
-  const char *ptr;
+  const char * ptr;
 
   assert(sa != NULL);
   assert(buf != NULL);
 
 #if LWIP_SOCKET
-DDSRT_WARNING_GNUC_OFF(sign-conversion)
+  DDSRT_WARNING_GNUC_OFF(sign - conversion)
 #endif
   switch (((struct sockaddr *)sa)->sa_family) {
     case AF_INET:
 #if DDSRT_HAVE_INET_NTOP
-      ptr = inet_ntop(
-        AF_INET, &((struct sockaddr_in *)sa)->sin_addr, buf, (uint32_t)size);
+      ptr = inet_ntop(AF_INET, &((struct sockaddr_in *)sa)->sin_addr, buf, (uint32_t)size);
 #else
-      {
-          in_addr_t x = ntohl(((struct sockaddr_in *)sa)->sin_addr.s_addr);
-          snprintf(buf,size,"%u.%u.%u.%u",(x>>24),(x>>16)&0xff,(x>>8)&0xff,x&0xff);
-          ptr = buf;
-      }
+    {
+      in_addr_t x = ntohl(((struct sockaddr_in *)sa)->sin_addr.s_addr);
+      snprintf(buf, size, "%u.%u.%u.%u", (x >> 24), (x >> 16) & 0xff, (x >> 8) & 0xff, x & 0xff);
+      ptr = buf;
+    }
 #endif
       break;
 #if DDSRT_HAVE_IPV6
     case AF_INET6:
-      ptr = inet_ntop(
-        AF_INET6, &((struct sockaddr_in6 *)sa)->sin6_addr, buf, (uint32_t)size);
+      ptr = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)sa)->sin6_addr, buf, (uint32_t)size);
       break;
 #endif
     default:
       return DDS_RETCODE_BAD_PARAMETER;
   }
 #if LWIP_SOCKET
-DDSRT_WARNING_GNUC_ON(sign-conversion)
+  DDSRT_WARNING_GNUC_ON(sign - conversion)
 #endif
 
   if (ptr == NULL) {
@@ -274,25 +258,18 @@ DDSRT_WARNING_GNUC_ON(sign-conversion)
 }
 
 #if DDSRT_HAVE_DNS
-static bool
-is_valid_hostname_char(char c)
+static bool is_valid_hostname_char(char c)
 {
-  return
-    (c >= 'a' && c <= 'z') ||
-    (c >= 'A' && c <= 'Z') ||
-    (c >= '0' && c <= '9') ||
-    c == '-' ||
-    c == '.' ||
-    c == ':';
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' ||
+         c == '.' || c == ':';
 }
 
 #if DDSRT_HAVE_GETADDRINFO
-dds_return_t
-ddsrt_gethostbyname(const char *name, int af, ddsrt_hostent_t **hentp)
+dds_return_t ddsrt_gethostbyname(const char * name, int af, ddsrt_hostent_t ** hentp)
 {
   int gai_err = 0;
   struct addrinfo hints, *res = NULL;
-  ddsrt_hostent_t *hent = NULL;
+  ddsrt_hostent_t * hent = NULL;
 
   assert(name != NULL);
   assert(hentp != NULL);
@@ -366,13 +343,13 @@ ddsrt_gethostbyname(const char *name, int af, ddsrt_hostent_t **hentp)
 #if defined(EAI_BADFLAGS)
     case EAI_BADFLAGS: /* Invalid flags in hints.ai_flags. */
 #endif
-    case EAI_FAMILY: /* Address family not supported. */
+    case EAI_FAMILY:  /* Address family not supported. */
     case EAI_SERVICE: /* Service not available for socket type. */
 #if defined(EAI_SOCKTYPE)
     case EAI_SOCKTYPE: /* Socket type not supported. */
 #endif
     case 0: {
-      struct addrinfo *ai;
+      struct addrinfo * ai;
       size_t addrno, naddrs, size;
 
       assert(gai_err == 0);
@@ -385,11 +362,8 @@ ddsrt_gethostbyname(const char *name, int af, ddsrt_hostent_t **hentp)
 
       size = sizeof(*hent) + (naddrs * sizeof(hent->addrs[0]));
       if ((hent = ddsrt_calloc_s(1, size)) != NULL) {
-           hent->naddrs = naddrs;
-        for (addrno = 0, ai = res;
-             addrno < naddrs && ai != NULL;
-             addrno++, ai = ai->ai_next)
-        {
+        hent->naddrs = naddrs;
+        for (addrno = 0, ai = res; addrno < naddrs && ai != NULL; addrno++, ai = ai->ai_next) {
           memcpy(&hent->addrs[addrno], res->ai_addr, res->ai_addrlen);
         }
       } else {
@@ -399,7 +373,7 @@ ddsrt_gethostbyname(const char *name, int af, ddsrt_hostent_t **hentp)
       freeaddrinfo(res);
     } break;
     default:
-      DDS_ERROR ("getaddrinfo returned unknown error %d\n", gai_err);
+      DDS_ERROR("getaddrinfo returned unknown error %d\n", gai_err);
       return DDS_RETCODE_ERROR;
   }
 
@@ -407,13 +381,12 @@ ddsrt_gethostbyname(const char *name, int af, ddsrt_hostent_t **hentp)
   return DDS_RETCODE_OK;
 }
 #elif DDSRT_HAVE_GETHOSTBYNAME_R
-dds_return_t
-ddsrt_gethostbyname(const char *name, int af, ddsrt_hostent_t **hentp)
+dds_return_t ddsrt_gethostbyname(const char * name, int af, ddsrt_hostent_t ** hentp)
 {
   struct hostent hest, *he;
   char buf[256];
   int err;
-  he = gethostbyname_r (name, &hest, buf, sizeof (buf), &err);
+  he = gethostbyname_r(name, &hest, buf, sizeof(buf), &err);
   if (he == NULL) {
     return DDS_RETCODE_HOST_NOT_FOUND;
   } else {
@@ -424,17 +397,15 @@ ddsrt_gethostbyname(const char *name, int af, ddsrt_hostent_t **hentp)
     return DDS_RETCODE_OK;
   }
 }
-#endif // DDSRT_HAVE_GETADDRINFO
-#endif // DDSRT_HAVE_DNS
+#endif  // DDSRT_HAVE_GETADDRINFO
+#endif  // DDSRT_HAVE_DNS
 
-dds_return_t
-ddsrt_setsockreuse(ddsrt_socket_t sock, bool reuse)
+dds_return_t ddsrt_setsockreuse(ddsrt_socket_t sock, bool reuse)
 {
   int flags = reuse;
 #ifdef SO_REUSEPORT
-  const dds_return_t rc = ddsrt_setsockopt (sock, SOL_SOCKET, SO_REUSEPORT, &flags, sizeof (flags));
-  switch (rc)
-  {
+  const dds_return_t rc = ddsrt_setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &flags, sizeof(flags));
+  switch (rc) {
     case DDS_RETCODE_UNSUPPORTED:
       // e.g. LWIP, which defines SO_REUSEPORT but doesn't implement it.
       //      note that we ignore this error because some systems use SO_REUSEADDR instead
@@ -444,5 +415,5 @@ ddsrt_setsockreuse(ddsrt_socket_t sock, bool reuse)
       return rc;
   }
 #endif
-  return ddsrt_setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof (flags));
+  return ddsrt_setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof(flags));
 }

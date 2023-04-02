@@ -57,7 +57,7 @@
 
 #ifndef NDEBUG
 
-static void tasklist_assert(ddsrt_tasklist_t *list)
+static void tasklist_assert(ddsrt_tasklist_t * list)
 {
   size_t i;
 
@@ -78,9 +78,9 @@ static void tasklist_assert(ddsrt_tasklist_t *list)
 #define tasklist_assert(...)
 #endif /* NDEBUG */
 
-int ddsrt_tasklist_init(ddsrt_tasklist_t *list)
+int ddsrt_tasklist_init(ddsrt_tasklist_t * list)
 {
-  TaskHandle_t *p;
+  TaskHandle_t * p;
 
   assert(list != NULL);
 
@@ -97,13 +97,13 @@ int ddsrt_tasklist_init(ddsrt_tasklist_t *list)
   return 0;
 }
 
-void ddsrt_tasklist_fini(ddsrt_tasklist_t *list)
+void ddsrt_tasklist_fini(ddsrt_tasklist_t * list)
 {
   ddsrt_free(list->tasks);
   memset(list, 0, sizeof(*list));
 }
 
-void ddsrt_tasklist_ltrim(ddsrt_tasklist_t *list)
+void ddsrt_tasklist_ltrim(ddsrt_tasklist_t * list)
 {
   size_t i;
 
@@ -111,19 +111,21 @@ void ddsrt_tasklist_ltrim(ddsrt_tasklist_t *list)
   assert(list->cnt != 0);
 
   i = list->off;
-  for (; i < list->len - 1 && list->tasks[i] == NULL; i++) { }
+  for (; i < list->len - 1 && list->tasks[i] == NULL; i++) {
+  }
   /* Take into account wrap around. */
   if (list->tasks[i] == NULL) {
     assert(i == list->len - 1);
     assert(list->off > list->end);
     i = 0;
     /* Trim invalidated buckets from head. */
-    for (; i < list->len - 1 && list->tasks[i] == NULL; i++) { }
+    for (; i < list->len - 1 && list->tasks[i] == NULL; i++) {
+    }
   }
   list->off = i;
 }
 
-void ddsrt_tasklist_rtrim(ddsrt_tasklist_t *list)
+void ddsrt_tasklist_rtrim(ddsrt_tasklist_t * list)
 {
   size_t i;
 
@@ -131,19 +133,21 @@ void ddsrt_tasklist_rtrim(ddsrt_tasklist_t *list)
   assert(list->cnt != 0);
 
   i = list->end;
-  for (; i > 0 && list->tasks[i] == NULL; i--) { }
+  for (; i > 0 && list->tasks[i] == NULL; i--) {
+  }
   /* Take into account wrap around. */
   if (list->tasks[i] == NULL) {
     assert(i == 0);
     assert(list->off > list->end);
     i = list->len - 1;
     /* Trim invalidated buckets from tail. */
-    for (; i > 0 && list->tasks[i] == NULL; i--) { }
+    for (; i > 0 && list->tasks[i] == NULL; i--) {
+    }
   }
   list->end = i;
 }
 
-void ddsrt_tasklist_pack(ddsrt_tasklist_t *list)
+void ddsrt_tasklist_pack(ddsrt_tasklist_t * list)
 {
   size_t i, j;
 
@@ -206,10 +210,10 @@ void ddsrt_tasklist_pack(ddsrt_tasklist_t *list)
   }
 }
 
-int ddsrt_tasklist_shrink(ddsrt_tasklist_t *list)
+int ddsrt_tasklist_shrink(ddsrt_tasklist_t * list)
 {
   static const size_t x = DDSRT_TASKLIST_CHUNK;
-  TaskHandle_t *p;
+  TaskHandle_t * p;
   size_t mv = 0, n;
 
   assert(list != NULL);
@@ -217,8 +221,7 @@ int ddsrt_tasklist_shrink(ddsrt_tasklist_t *list)
   /* Shrink by one chunk too, but only if the difference is at least two
      chunks to avoid memory (re)allocation if a task is pushed and popped
      just over the boundary. */
-  if (list->cnt > (list->len - (x * 2)) || (list->len - x) < DDSRT_TASKLIST_INITIAL)
-  {
+  if (list->cnt > (list->len - (x * 2)) || (list->len - x) < DDSRT_TASKLIST_INITIAL) {
     return 0;
   }
 
@@ -250,10 +253,10 @@ int ddsrt_tasklist_shrink(ddsrt_tasklist_t *list)
   return 0;
 }
 
-int ddsrt_tasklist_grow(ddsrt_tasklist_t *list)
+int ddsrt_tasklist_grow(ddsrt_tasklist_t * list)
 {
   static const size_t x = DDSRT_TASKLIST_CHUNK;
-  TaskHandle_t *p;
+  TaskHandle_t * p;
   size_t n;
 
   assert(list != NULL);
@@ -281,7 +284,7 @@ int ddsrt_tasklist_grow(ddsrt_tasklist_t *list)
   return 0;
 }
 
-ssize_t ddsrt_tasklist_find(ddsrt_tasklist_t *list, TaskHandle_t task)
+ssize_t ddsrt_tasklist_find(ddsrt_tasklist_t * list, TaskHandle_t task)
 {
   size_t i, n;
 
@@ -292,15 +295,13 @@ ssize_t ddsrt_tasklist_find(ddsrt_tasklist_t *list, TaskHandle_t task)
     /* Task list is circular, so window does not have to be consecutive. */
     n = list->off <= list->end ? list->end : list->len - 1;
     for (i = list->off; i <= n; i++) {
-      if (list->tasks[i] == task)
-        return (ssize_t)i;
+      if (list->tasks[i] == task) return (ssize_t)i;
     }
 
     if (list->off > list->end) {
       n = list->end;
       for (i = 0; i <= n; i++) {
-        if (list->tasks[i] == task)
-          return (ssize_t)i;
+        if (list->tasks[i] == task) return (ssize_t)i;
       }
     }
   }
@@ -308,7 +309,7 @@ ssize_t ddsrt_tasklist_find(ddsrt_tasklist_t *list, TaskHandle_t task)
   return -1;
 }
 
-TaskHandle_t ddsrt_tasklist_peek(ddsrt_tasklist_t *list, TaskHandle_t task)
+TaskHandle_t ddsrt_tasklist_peek(ddsrt_tasklist_t * list, TaskHandle_t task)
 {
   tasklist_assert(list);
 
@@ -321,7 +322,7 @@ TaskHandle_t ddsrt_tasklist_peek(ddsrt_tasklist_t *list, TaskHandle_t task)
   return list->tasks[list->off];
 }
 
-TaskHandle_t ddsrt_tasklist_pop(ddsrt_tasklist_t *list, TaskHandle_t task)
+TaskHandle_t ddsrt_tasklist_pop(ddsrt_tasklist_t * list, TaskHandle_t task)
 {
   ssize_t i;
 
@@ -353,7 +354,7 @@ TaskHandle_t ddsrt_tasklist_pop(ddsrt_tasklist_t *list, TaskHandle_t task)
       /* Window is now sparse. */
     }
 
-    if (list->cnt <= (list->len - DDSRT_TASKLIST_CHUNK*2)) {
+    if (list->cnt <= (list->len - DDSRT_TASKLIST_CHUNK * 2)) {
       /* Shrink operation failure can safely be ignored. */
       (void)ddsrt_tasklist_shrink(list);
     }
@@ -362,7 +363,7 @@ TaskHandle_t ddsrt_tasklist_pop(ddsrt_tasklist_t *list, TaskHandle_t task)
   return task;
 }
 
-int ddsrt_tasklist_push(ddsrt_tasklist_t *list, TaskHandle_t task)
+int ddsrt_tasklist_push(ddsrt_tasklist_t * list, TaskHandle_t task)
 {
   tasklist_assert(list);
   assert(task != NULL);
@@ -377,7 +378,7 @@ int ddsrt_tasklist_push(ddsrt_tasklist_t *list, TaskHandle_t task)
       return -1;
     }
     list->end++;
-  /* Wrap around if there is room at the head. */
+    /* Wrap around if there is room at the head. */
   } else if (list->end == list->len - 1 && list->off != 0) {
     list->end = 0;
   } else {

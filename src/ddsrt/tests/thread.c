@@ -12,11 +12,11 @@
 #include <assert.h>
 #include <stdlib.h>
 #if DDSRT_WITH_FREERTOS
-# include <FreeRTOS.h>
-# include <task.h>
+#include <FreeRTOS.h>
+#include <task.h>
 #elif !defined(_WIN32)
-# include <sched.h>
-# include <unistd.h>
+#include <sched.h>
+#include <unistd.h>
 #endif
 
 #include "CUnit/Theory.h"
@@ -44,10 +44,10 @@ CU_Init(ddsrt_thread)
 #else
   min_fifo_prio = sched_get_priority_min(SCHED_FIFO);
   max_fifo_prio = sched_get_priority_max(SCHED_FIFO);
-# if !defined(_WRS_KERNEL)
+#if !defined(_WRS_KERNEL)
   max_other_prio = sched_get_priority_max(SCHED_OTHER);
   min_other_prio = sched_get_priority_min(SCHED_OTHER);
-# endif
+#endif
 #endif
 
   return 0;
@@ -59,16 +59,17 @@ CU_Clean(ddsrt_thread)
   return 0;
 }
 
-typedef struct {
+typedef struct
+{
   int res;
   int ret;
-  ddsrt_threadattr_t *attr;
+  ddsrt_threadattr_t * attr;
 } thread_arg_t;
 
-static uint32_t thread_main(void *ptr)
+static uint32_t thread_main(void * ptr)
 {
-  thread_arg_t *arg = (thread_arg_t *)ptr;
-  ddsrt_threadattr_t *attr;
+  thread_arg_t * arg = (thread_arg_t *)ptr;
+  ddsrt_threadattr_t * attr;
 
   assert(arg != NULL);
 
@@ -81,8 +82,7 @@ static uint32_t thread_main(void *ptr)
   }
 #elif _WIN32
   int prio = GetThreadPriority(GetCurrentThread());
-  if (prio == THREAD_PRIORITY_ERROR_RETURN)
-    abort();
+  if (prio == THREAD_PRIORITY_ERROR_RETURN) abort();
   if (prio == attr->schedPriority) {
     arg->res = 1;
   }
@@ -95,10 +95,10 @@ static uint32_t thread_main(void *ptr)
   if (err != 0) {
     abort();
   }
-  if (((policy == SCHED_OTHER && attr->schedClass == DDSRT_SCHED_TIMESHARE) ||
-       (policy == SCHED_FIFO && attr->schedClass == DDSRT_SCHED_REALTIME))
-    && (sched.sched_priority == attr->schedPriority))
-  {
+  if (
+    ((policy == SCHED_OTHER && attr->schedClass == DDSRT_SCHED_TIMESHARE) ||
+     (policy == SCHED_FIFO && attr->schedClass == DDSRT_SCHED_REALTIME)) &&
+    (sched.sched_priority == attr->schedPriority)) {
     arg->res = 1;
   }
 #endif
@@ -107,15 +107,14 @@ static uint32_t thread_main(void *ptr)
 }
 
 CU_TheoryDataPoints(ddsrt_thread, create_and_join) = {
-  CU_DataPoints(ddsrt_sched_t, DDSRT_SCHED_TIMESHARE, DDSRT_SCHED_TIMESHARE,
-                               DDSRT_SCHED_REALTIME,  DDSRT_SCHED_REALTIME),
-  CU_DataPoints(int32_t *,     &min_other_prio,       &max_other_prio,
-                               &min_fifo_prio,        &max_fifo_prio),
-  CU_DataPoints(uint32_t,      10101,                 20202,
-                               30303,                 40404)
-};
+  CU_DataPoints(
+    ddsrt_sched_t, DDSRT_SCHED_TIMESHARE, DDSRT_SCHED_TIMESHARE, DDSRT_SCHED_REALTIME,
+    DDSRT_SCHED_REALTIME),
+  CU_DataPoints(int32_t *, &min_other_prio, &max_other_prio, &min_fifo_prio, &max_fifo_prio),
+  CU_DataPoints(uint32_t, 10101, 20202, 30303, 40404)};
 
-CU_Theory((ddsrt_sched_t sched, int32_t *prio, uint32_t exp), ddsrt_thread, create_and_join, .timeout=60)
+CU_Theory(
+  (ddsrt_sched_t sched, int32_t * prio, uint32_t exp), ddsrt_thread, create_and_join, .timeout = 60)
 {
   int skip = 0;
   uint32_t res = 50505;
@@ -130,12 +129,12 @@ CU_Theory((ddsrt_sched_t sched, int32_t *prio, uint32_t exp), ddsrt_thread, crea
     CU_PASS("FreeRTOS only support SCHED_FIFO");
   }
 #elif defined(__VXWORKS__)
-# if defined(_WRS_KERNEL)
+#if defined(_WRS_KERNEL)
   if (sched == DDSRT_SCHED_TIMESHARE) {
     skip = 1;
     CU_PASS("VxWorks DKM only supports SCHED_FIFO");
   }
-# endif
+#endif
 #elif !defined(_WIN32)
   if (sched == DDSRT_SCHED_REALTIME && (getuid() != 0 && geteuid() != 0)) {
     skip = 1;
@@ -152,7 +151,7 @@ CU_Theory((ddsrt_sched_t sched, int32_t *prio, uint32_t exp), ddsrt_thread, crea
     ret = ddsrt_thread_create(&thr, "thread", &attr, &thread_main, &arg);
     CU_ASSERT_EQUAL(ret, DDS_RETCODE_OK);
     if (ret == DDS_RETCODE_OK) {
-      ret = ddsrt_thread_join (thr, &res);
+      ret = ddsrt_thread_join(thr, &res);
       CU_ASSERT_EQUAL(ret, DDS_RETCODE_OK);
       CU_ASSERT_EQUAL(res, exp);
       if (ret == DDS_RETCODE_OK) {
@@ -190,10 +189,9 @@ CU_Test(ddsrt_thread, thread_id)
   CU_ASSERT_NOT_EQUAL(eq, 0);
 }
 
-
 static ddsrt_mutex_t locks[2];
 
-static uint32_t thread_main_waitforme(void *ptr)
+static uint32_t thread_main_waitforme(void * ptr)
 {
   uint32_t ret = 0;
   (void)ptr;
@@ -203,10 +201,10 @@ static uint32_t thread_main_waitforme(void *ptr)
   return ret;
 }
 
-static uint32_t thread_main_waitforit(void *ptr)
+static uint32_t thread_main_waitforit(void * ptr)
 {
   uint32_t res = 0;
-  ddsrt_thread_t *thr = (ddsrt_thread_t *)ptr;
+  ddsrt_thread_t * thr = (ddsrt_thread_t *)ptr;
   ddsrt_mutex_lock(&locks[1]);
   (void)ddsrt_thread_join(*thr, &res);
   ddsrt_mutex_unlock(&locks[1]);

@@ -12,14 +12,13 @@
 #ifndef DDSI__SERDATA_PLIST_H
 #define DDSI__SERDATA_PLIST_H
 
+#include "dds/dds.h"
 #include "dds/ddsi/ddsi_keyhash.h"
 #include "dds/ddsi/ddsi_serdata.h"
 #include "dds/ddsi/ddsi_sertype.h"
 #include "ddsi__protocol.h"
 
-#include "dds/dds.h"
-
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -27,19 +26,20 @@ extern "C" {
    offset mod 8 for the conversion to/from a dds_stream to work).
    So we define two types: one without any additional padding, and
    one where the appropriate amount of padding is inserted */
-#define DDSI_SERDATA_PLIST_PREPAD     \
-  struct ddsi_serdata c;              \
-  uint32_t pos;                       \
-  uint32_t size;                      \
+#define DDSI_SERDATA_PLIST_PREPAD       \
+  struct ddsi_serdata c;                \
+  uint32_t pos;                         \
+  uint32_t size;                        \
   ddsi_vendorid_t vendorid;             \
   ddsi_protocol_version_t protoversion; \
   ddsi_keyhash_t keyhash
-#define DDSI_SERDATA_PLIST_POSTPAD    \
-  uint16_t identifier;                \
-  uint16_t options;                   \
+#define DDSI_SERDATA_PLIST_POSTPAD \
+  uint16_t identifier;             \
+  uint16_t options;                \
   char data[]
 
-struct ddsi_serdata_plist_unpadded {
+struct ddsi_serdata_plist_unpadded
+{
   DDSI_SERDATA_PLIST_PREPAD;
   DDSI_SERDATA_PLIST_POSTPAD;
 };
@@ -50,9 +50,10 @@ struct ddsi_serdata_plist_unpadded {
 #define DDSI_SERDATA_PLIST_PAD(n) (n)
 #endif
 
-struct ddsi_serdata_plist {
+struct ddsi_serdata_plist
+{
   DDSI_SERDATA_PLIST_PREPAD;
-  char pad[DDSI_SERDATA_PLIST_PAD (8 - (offsetof (struct ddsi_serdata_plist_unpadded, data) % 8))];
+  char pad[DDSI_SERDATA_PLIST_PAD(8 - (offsetof(struct ddsi_serdata_plist_unpadded, data) % 8))];
   DDSI_SERDATA_PLIST_POSTPAD;
 };
 
@@ -60,7 +61,8 @@ struct ddsi_serdata_plist {
 #undef DDSI_SERDATA_PLIST_POSTPAD
 #undef DDSI_SERDATA_PLIST_PREPAD
 
-struct ddsi_sertype_plist {
+struct ddsi_sertype_plist
+{
   struct ddsi_sertype c;
   uint16_t encoding_format; /* DDSI_RTPS_CDR_ENC_FORMAT_(PLAIN|DELIMITED|PL) */
   ddsi_parameterid_t keyparam;
@@ -69,7 +71,7 @@ struct ddsi_sertype_plist {
 extern const struct ddsi_sertype_ops ddsi_sertype_ops_plist;
 extern const struct ddsi_serdata_ops ddsi_serdata_ops_plist;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

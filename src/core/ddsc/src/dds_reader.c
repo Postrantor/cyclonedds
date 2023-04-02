@@ -10,6 +10,9 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 
+#include <assert.h>
+#include <string.h>
+
 #include "dds/dds.h"
 #include "dds/ddsc/dds_rhc.h"
 #include "dds/ddsi/ddsi_domaingv.h"
@@ -37,8 +40,6 @@
 #include "dds__statistics.h"
 #include "dds__subscriber.h"
 #include "dds__topic.h"
-#include <assert.h>
-#include <string.h>
 
 #ifdef DDS_HAS_SHM
 #include "dds/ddsi/ddsi_shm_transport.h"
@@ -51,88 +52,83 @@
 #include "iceoryx_binding_c/wait_set.h"
 #endif
 
-// 声明实体锁和解锁的宏
-DECL_ENTITY_LOCK_UNLOCK(dds_reader)
+/**
+ * @file
+ * @brief Cyclone DDS Reader 相关实现
+ */
 
-// 定义DDS阅读器状态掩码
-#define DDS_READER_STATUS_MASK             \
-  (DDS_SAMPLE_REJECTED_STATUS |            \
-   DDS_LIVELINESS_CHANGED_STATUS |         \
-   DDS_REQUESTED_DEADLINE_MISSED_STATUS |  \
-   DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS | \
-   DDS_DATA_AVAILABLE_STATUS |             \
-   DDS_SAMPLE_LOST_STATUS |                \
-   DDS_SUBSCRIPTION_MATCHED_STATUS)
+/**
+ * @def DDS_READER_STATUS_MASK
+ * @brief 读取器状态掩码，用于表示可用的读取器状态
+ */
+#define DDS_READER_STATUS_MASK                                                    \
+  (DDS_SAMPLE_REJECTED_STATUS | DDS_LIVELINESS_CHANGED_STATUS |                   \
+   DDS_REQUESTED_DEADLINE_MISSED_STATUS | DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS | \
+   DDS_DATA_AVAILABLE_STATUS | DDS_SAMPLE_LOST_STATUS | DDS_SUBSCRIPTION_MATCHED_STATUS)
 
-// 声明一个静态函数 dds_reader_close，用于关闭 dds_reader 实体
+/**
+ * @brief 关闭 dds_reader 实体
+ *
+ * @param[in] e 指向要关闭的 dds_entity 的指针
+ */
 static void dds_reader_close(dds_entity *e) ddsrt_nonnull_all;
 
-// 定义 dds_reader_close 函数，关闭 dds_reader 实体
-static void dds_reader_close(dds_entity *e)
-{
+/**
+ * @brief 关闭 dds_reader 实体的实现
+ *
+ * @param[in] e 指向要关闭的 dds_entity 的指针
+ */
+static void dds_reader_close(dds_entity *e) {
   // 将 e 转换为 dds_reader 类型的指针
   struct dds_reader *const rd = (struct dds_reader *)e;
-  // 断言 rd->m_rd 不为空
+
+  // 确保 rd->m_rd 不为空
   assert(rd->m_rd != NULL);
 
 #ifdef DDS_HAS_SHM
-  if (rd->m_iox_sub)
-  {
+  // 如果启用了共享内存支持
+  if (rd->m_iox_sub) {
     // 等待使用此读取器的 iceoryx 订阅者的任何运行回调
     dds_shm_monitor_detach_reader(&rd->m_entity.m_domain->m_shm_monitor, rd);
-    // 从现在开始，将不再对此读取器运行回调
+
+    // 从现在开始，此读取器上将不再运行回调
   }
 #endif
-
-  // 唤醒线程状态
-  ddsi_thread_state_awake(ddsi_lookup_thread_state(), &e->m_domain->gv);
-  // 删除读取器
-  (void)ddsi_delete_reader(&e->m_domain->gv, &e->m_guid);
-  // 线程进入休眠状态
-  ddsi_thread_state_asleep(ddsi_lookup_thread_state());
-
-  // 锁定实体互斥锁
-  ddsrt_mutex_lock(&e->m_mutex);
-  // 当 rd->m_rd 不为空时，等待条件变量
-  while (rd->m_rd != NULL)
-    ddsrt_cond_wait(&e->m_cond, &e->m_mutex);
-  // 解锁实体互斥锁
-  ddsrt_mutex_unlock(&e->m_mutex);
 }
 
-// 声明一个静态函数 dds_reader_delete，用于删除 dds_reader 实体
+/**
+ * @brief 唤醒线程状态并删除读取器
+ *
+ * @param[in] e 读取器实体指针
+ * @return 返回操作结果，成功返回 DDS_RETCODE_OK
+ */
 static dds_return_t dds_reader_delete(dds_entity *e) ddsrt_nonnull_all;
-// 定义静态函数 dds_reader_delete，用于删除数据读取器实体
-static dds_return_t dds_reader_delete(dds_entity *e)
-{
-  // 将 e 转换为 dds_reader 类型的指针
+
+static dds_return_t dds_reader_delete(dds_entity *e) {
+  // 将实体指针转换为读取器指针
   dds_reader *const rd = (dds_reader *)e;
 
-  // 如果存在 m_loan
-  if (rd->m_loan)
-  {
-    // 分配内存空间给 ptrs
+  // 如果存在内存分配，则释放相关资源
+  if (rd->m_loan) {
     void **ptrs = ddsrt_malloc(rd->m_loan_size * sizeof(*ptrs));
-    // 重新分配样本空间
-    ddsi_sertype_realloc_samples(ptrs, rd->m_topic->m_stype, rd->m_loan, rd->m_loan_size, rd->m_loan_size);
-    // 释放样本空间
+    ddsi_sertype_realloc_samples(ptrs, rd->m_topic->m_stype, rd->m_loan, rd->m_loan_size,
+                                 rd->m_loan_size);
     ddsi_sertype_free_samples(rd->m_topic->m_stype, ptrs, rd->m_loan_size, DDS_FREE_ALL);
-    // 释放 ptrs 指向的内存空间
     ddsrt_free(ptrs);
   }
 
   // 唤醒线程状态
   ddsi_thread_state_awake(ddsi_lookup_thread_state(), &e->m_domain->gv);
-  // 释放读者历史缓存
+  // 释放读取器的缓存
   dds_rhc_free(rd->m_rhc);
   // 线程进入休眠状态
   ddsi_thread_state_asleep(ddsi_lookup_thread_state());
 
 #ifdef DDS_HAS_SHM
-  if (rd->m_iox_sub)
-  {
-    // 在不再使用读者缓存之后，删除操作必须在最后进行
-    // 因为需要互斥锁和使用 iceoryx 订阅者释放数据
+  // 如果使用共享内存，则释放相关资源
+  if (rd->m_iox_sub) {
+    // 删除操作必须在读取器缓存不再使用后进行
+    // 因为需要互斥量并且需要使用 iceoryx 订阅者释放数据
     DDS_CLOG(DDS_LC_SHM, &e->m_domain->gv.logconfig, "Release iceoryx's subscriber\n");
     iox_sub_deinit(rd->m_iox_sub);
     iox_sub_context_fini(&rd->m_iox_sub_context);
@@ -141,365 +137,532 @@ static dds_return_t dds_reader_delete(dds_entity *e)
 
   // 减少主题实体的引用计数
   dds_entity_drop_ref(&rd->m_topic->m_entity);
-  // 返回操作成功的返回码
   return DDS_RETCODE_OK;
 }
 
-// 定义静态函数 validate_reader_qos，用于验证读取器的 QoS 设置
-static dds_return_t validate_reader_qos(const dds_qos_t *rqos)
-{
+/**
+ * @brief 验证读取器的QoS设置是否有效。
+ *
+ * @param[in] rqos 读取器的QoS设置指针。
+ * @return 如果验证成功，则返回DDS_RETCODE_OK；否则，返回DDS_RETCODE_BAD_PARAMETER。
+ */
+static dds_return_t validate_reader_qos(const dds_qos_t *rqos) {
 #ifndef DDS_HAS_DEADLINE_MISSED
+  // 如果rqos不为空且包含DEADLINE，并且deadline不等于DDS_INFINITY，则返回错误参数。
   if (rqos != NULL && (rqos->present & DDSI_QP_DEADLINE) && rqos->deadline.deadline != DDS_INFINITY)
     return DDS_RETCODE_BAD_PARAMETER;
 #else
+  // 如果定义了DDS_HAS_DEADLINE_MISSED，则忽略rqos参数。
   DDSRT_UNUSED_ARG(rqos);
 #endif
-  return DDS_RETCODE_OK;
-}
-// 设置读取器的QoS（Quality of Service，服务质量）
-static dds_return_t dds_reader_qos_set(dds_entity *e, const dds_qos_t *qos, bool enabled)
-{
-  // 注意：e->m_qos仍然是旧的QoS，以允许在此处失败
-  dds_return_t ret;
-  // 验证读取器的QoS是否有效
-  if ((ret = validate_reader_qos(qos)) != DDS_RETCODE_OK)
-    return ret;
-  // 如果启用了新的QoS设置
-  if (enabled)
-  {
-    struct ddsi_reader *rd;
-    ddsi_thread_state_awake(ddsi_lookup_thread_state(), &e->m_domain->gv);
-    // 查找并更新读取器的QoS
-    if ((rd = ddsi_entidx_lookup_reader_guid(e->m_domain->gv.entity_index, &e->m_guid)) != NULL)
-      ddsi_update_reader_qos(rd, qos);
-    ddsi_thread_state_asleep(ddsi_lookup_thread_state());
-  }
+  // 返回成功状态。
   return DDS_RETCODE_OK;
 }
 
-// 验证读取器状态掩码是否有效
-static dds_return_t dds_reader_status_validate(uint32_t mask)
-{
+/**
+ * @brief 设置读取器的QoS。
+ *
+ * @param[in] e 读取器实体指针。
+ * @param[in] qos 读取器的QoS设置指针。
+ * @param[in] enabled 是否启用QoS设置。
+ * @return 如果设置成功，则返回DDS_RETCODE_OK；否则，返回其他错误代码。
+ */
+static dds_return_t dds_reader_qos_set(dds_entity *e, const dds_qos_t *qos, bool enabled) {
+  // 注意：e->m_qos仍然是旧的，以允许此处失败。
+  dds_return_t ret;
+  // 验证读取器的QoS设置。
+  if ((ret = validate_reader_qos(qos)) != DDS_RETCODE_OK) return ret;
+  // 如果启用了QoS设置。
+  if (enabled) {
+    struct ddsi_reader *rd;
+    // 唤醒线程状态。
+    ddsi_thread_state_awake(ddsi_lookup_thread_state(), &e->m_domain->gv);
+    // 查找读取器实体。
+    if ((rd = ddsi_entidx_lookup_reader_guid(e->m_domain->gv.entity_index, &e->m_guid)) != NULL)
+      // 更新读取器的QoS设置。
+      ddsi_update_reader_qos(rd, qos);
+    // 设置线程状态为睡眠。
+    ddsi_thread_state_asleep(ddsi_lookup_thread_state());
+  }
+  // 返回成功状态。
+  return DDS_RETCODE_OK;
+}
+
+/**
+ * @brief 验证读取器状态掩码是否有效。
+ *
+ * @param[in] mask 读取器状态掩码。
+ * @return 如果验证成功，则返回DDS_RETCODE_OK；否则，返回DDS_RETCODE_BAD_PARAMETER。
+ */
+static dds_return_t dds_reader_status_validate(uint32_t mask) {
   return (mask & ~DDS_READER_STATUS_MASK) ? DDS_RETCODE_BAD_PARAMETER : DDS_RETCODE_OK;
 }
 
-// 进入数据可用回调监听器独占访问
-static void data_avail_cb_enter_listener_exclusive_access(dds_entity *e)
-{
-  // 假设在进入时持有 e->m_observers_lock
-  // 可能解锁并重新锁定 e->m_observers_lock
-  // 之后 e->m_listener 是稳定的
+/**
+ * @brief 在进入监听器独占访问之前，触发数据可用回调。
+ *
+ * @param[in] e 读取器实体指针。
+ */
+static void data_avail_cb_enter_listener_exclusive_access(dds_entity *e) {
+  // 假设在进入时已经持有e->m_observers_lock。
+  // 可能解锁并重新锁定e->m_observers_lock。
+  // 之后e->m_listener将保持稳定。
   e->m_cb_pending_count++;
-  while (e->m_cb_count > 0)
-    ddsrt_cond_wait(&e->m_observers_cond, &e->m_observers_lock);
+  while (e->m_cb_count > 0) ddsrt_cond_wait(&e->m_observers_cond, &e->m_observers_lock);
   e->m_cb_count++;
 }
 
-// 离开数据可用回调监听器独占访问
-static void data_avail_cb_leave_listener_exclusive_access(dds_entity *e)
-{
-  // 假设在进入时持有 e->m_observers_lock
+/**
+ * @brief 离开监听器独占访问的回调函数
+ *
+ * 假设在进入时已经持有 e->m_observers_lock。
+ *
+ * @param[in] e 实体指针
+ */
+static void data_avail_cb_leave_listener_exclusive_access(dds_entity *e) {
+  // 减少回调计数
   e->m_cb_count--;
+  // 减少待处理回调计数
   e->m_cb_pending_count--;
-  ddsrt_cond_broadcast(&e->m_observers_cond);
-}
-// 定义数据可用回调函数，进入监听器独占访问
-static void data_avail_cb_enter_listener_exclusive_access(dds_entity *e)
-{
-  // 假设在进入时已经持有 e->m_observers_lock
-  // 可能会解锁并重新锁定 e->m_observers_lock
-  // 之后 e->m_listener 是稳定的
-  e->m_cb_pending_count++;
-  while (e->m_cb_count > 0)
-    ddsrt_cond_wait(&e->m_observers_cond, &e->m_observers_lock);
-  e->m_cb_count++;
-}
-
-// 定义数据可用回调函数，离开监听器独占访问
-static void data_avail_cb_leave_listener_exclusive_access(dds_entity *e)
-{
-  // 假设在进入时已经持有 e->m_observers_lock
-  e->m_cb_count--;
-  e->m_cb_pending_count--;
+  // 广播观察者条件变量
   ddsrt_cond_broadcast(&e->m_observers_cond);
 }
 
-// 定义数据可用回调函数，调用 Data On Readers 监听器
-static void data_avail_cb_invoke_dor(dds_entity *sub, const struct dds_listener *lst)
-{
-  // 假设在进入时已经持有 sub->m_observers_lock
-  // 解锁并重新锁定 sub->m_observers_lock
+/**
+ * @brief 调用数据可用回调函数
+ *
+ * 假设在进入时已经持有 sub->m_observers_lock。
+ * 解锁并重新锁定 sub->m_observers_lock。
+ *
+ * @param[in] sub 订阅者实体指针
+ * @param[in] lst 监听器结构指针
+ */
+static void data_avail_cb_invoke_dor(dds_entity *sub, const struct dds_listener *lst) {
+  // 进入监听器独占访问
   data_avail_cb_enter_listener_exclusive_access(sub);
+  // 解锁观察者互斥锁
   ddsrt_mutex_unlock(&sub->m_observers_lock);
+  // 调用 on_data_on_readers 回调函数
   lst->on_data_on_readers(sub->m_hdllink.hdl, lst->on_data_on_readers_arg);
+  // 锁定观察者互斥锁
   ddsrt_mutex_lock(&sub->m_observers_lock);
+  // 离开监听器独占访问
   data_avail_cb_leave_listener_exclusive_access(sub);
 }
 
-// 定义数据可用回调函数，设置状态
-static uint32_t data_avail_cb_set_status(dds_entity *rd, uint32_t status_and_mask)
-{
+/**
+ * @brief 设置数据可用回调状态
+ *
+ * @param[in] rd 数据读取实体指针
+ * @param[in] status_and_mask 状态和掩码值
+ * @return uint32_t 返回设置的状态值
+ */
+static uint32_t data_avail_cb_set_status(dds_entity *rd, uint32_t status_and_mask) {
   uint32_t ret = 0;
-  if (dds_entity_status_set(rd, DDS_DATA_AVAILABLE_STATUS))
-    ret |= DDS_DATA_AVAILABLE_STATUS;
-  if (status_and_mask & (DDS_DATA_ON_READERS_STATUS << SAM_ENABLED_SHIFT))
-  {
+  // 设置数据可用状态
+  if (dds_entity_status_set(rd, DDS_DATA_AVAILABLE_STATUS)) ret |= DDS_DATA_AVAILABLE_STATUS;
+  // 检查并设置数据读取者状态
+  if (status_and_mask & (DDS_DATA_ON_READERS_STATUS << SAM_ENABLED_SHIFT)) {
     if (dds_entity_status_set(rd->m_parent, DDS_DATA_ON_READERS_STATUS))
       ret |= DDS_DATA_ON_READERS_STATUS;
   }
   return ret;
 }
 
-// 定义数据可用回调函数，触发等待集合
-// 触发数据可用回调的等待集函数
-static void data_avail_cb_trigger_waitsets(dds_entity *rd, uint32_t signal)
-{
-  // 如果信号为0，则直接返回
-  if (signal == 0)
-    return;
+/**
+ * @brief 触发等待集合的数据可用回调
+ *
+ * @param[in] rd 数据读取实体指针
+ * @param[in] signal 触发信号
+ */
+static void data_avail_cb_trigger_waitsets(dds_entity *rd, uint32_t signal) {
+  // 如果信号为0，则返回
+  if (signal == 0) return;
 
-  // 如果信号包含DDS_DATA_ON_READERS_STATUS
-  if (signal & DDS_DATA_ON_READERS_STATUS)
-  {
-    // 获取读取器的父实体（订阅者）
+  // 处理数据读取者状态信号
+  if (signal & DDS_DATA_ON_READERS_STATUS) {
     dds_entity *const sub = rd->m_parent;
-    // 锁定订阅者的观察者锁
+    // 锁定观察者互斥锁
     ddsrt_mutex_lock(&sub->m_observers_lock);
-    // 获取订阅者状态和掩码值
+    // 获取状态和掩码值
     const uint32_t sm = ddsrt_atomic_ld32(&sub->m_status.m_status_and_mask);
-    // 如果状态和掩码值中包含DDS_DATA_ON_READERS_STATUS
+    // 检查并触发数据读取者状态信号
     if ((sm & (sm >> SAM_ENABLED_SHIFT)) & DDS_DATA_ON_READERS_STATUS)
-      // 向订阅者的观察者发送DDS_DATA_ON_READERS_STATUS信号
       dds_entity_observers_signal(sub, DDS_DATA_ON_READERS_STATUS);
-    // 解锁订阅者的观察者锁
+    // 解锁观察者互斥锁
     ddsrt_mutex_unlock(&sub->m_observers_lock);
   }
-  // 如果信号包含DDS_DATA_AVAILABLE_STATUS
-  if (signal & DDS_DATA_AVAILABLE_STATUS)
-  {
-    // 获取读取器状态和掩码值
+  // 处理数据可用状态信号
+  if (signal & DDS_DATA_AVAILABLE_STATUS) {
+    // 获取状态和掩码值
     const uint32_t sm = ddsrt_atomic_ld32(&rd->m_status.m_status_and_mask);
-    // 如果状态和掩码值中包含DDS_DATA_AVAILABLE_STATUS
+    // 检查并触发数据可用状态信号
     if ((sm & (sm >> SAM_ENABLED_SHIFT)) & DDS_DATA_AVAILABLE_STATUS)
-      // 向读取器的观察者发送DDS_DATA_AVAILABLE_STATUS信号
       dds_entity_observers_signal(rd, DDS_DATA_AVAILABLE_STATUS);
   }
 }
-void dds_reader_data_available_cb(struct dds_reader *rd)
-{
-  // DATA_AVAILABLE在两个方面是特殊的：首先，它应该首先尝试祖先上的DATA_ON_READERS，
-  // 如果没有消耗，则在订阅者上设置状态；其次，它是唯一一个对开销真正重要的状态。
-  // 否则，它与dds_reader_status_cb非常相似。
+
+/**
+ * @brief 数据可用回调函数，当数据可用时触发。
+ *
+ * DATA_AVAILABLE 有两个特殊之处：首先，它应该首先尝试在祖先行上的 DATA_ON_READERS，
+ * 如果没有消耗，则设置订阅者的状态；其次，它是唯一一个需要考虑开销的。
+ * 否则，它与 dds_reader_status_cb 非常相似。
+ *
+ * @param rd 指向 dds_reader 结构体的指针
+ */
+void dds_reader_data_available_cb(struct dds_reader *rd) {
+  // 获取实体的监听器对象
   struct dds_listener const *const lst = &rd->m_entity.m_listener;
   uint32_t signal = 0;
 
+  // 对实体的观察者锁进行加锁
   ddsrt_mutex_lock(&rd->m_entity.m_observers_lock);
   const uint32_t status_and_mask = ddsrt_atomic_ld32(&rd->m_entity.m_status.m_status_and_mask);
+
+  // 如果 on_data_on_readers 和 on_data_available 都为 0，则设置实体的状态
   if (lst->on_data_on_readers == 0 && lst->on_data_available == 0)
     signal = data_avail_cb_set_status(&rd->m_entity, status_and_mask);
-  else
-  {
-    // “锁定”监听器对象，以便我们可以在不持有m_observers_lock的情况下查看“lst”
+  else {
+    // 锁定监听器对象，以便在不持有 m_observers_lock 的情况下查看 "lst"
     data_avail_cb_enter_listener_exclusive_access(&rd->m_entity);
-    // 判断 lst 的 on_data_on_readers 是否为真
-    if (lst->on_data_on_readers)
-    {
-      // 获取 rd 实体的父实体 sub
+
+    // 如果存在 on_data_on_readers 回调
+    if (lst->on_data_on_readers) {
       dds_entity *const sub = rd->m_entity.m_parent;
-      // 解锁 rd 实体的观察者锁
       ddsrt_mutex_unlock(&rd->m_entity.m_observers_lock);
-      // 锁定 sub 实体的观察者锁
       ddsrt_mutex_lock(&sub->m_observers_lock);
-      // 如果 reset_on_invoke 不包含 DDS_DATA_ON_READERS_STATUS 标志
+
+      // 如果不重置状态，则设置实体的状态
       if (!(lst->reset_on_invoke & DDS_DATA_ON_READERS_STATUS))
-        // 设置 rd 实体的状态，并返回是否需要触发信号
         signal = data_avail_cb_set_status(&rd->m_entity, status_and_mask);
-      // 调用 data_avail_cb_invoke_dor 函数处理 sub 和 lst
+
+      // 调用 on_data_on_readers 回调
       data_avail_cb_invoke_dor(sub, lst);
-      // 解锁 sub 实体的观察者锁
+
       ddsrt_mutex_unlock(&sub->m_observers_lock);
-      // 重新锁定 rd 实体的观察者锁
       ddsrt_mutex_lock(&rd->m_entity.m_observers_lock);
-    }
-    else
-    {
-      // 断言 rd 实体的监听器的 on_data_available 为真
+    } else {
       assert(rd->m_entity.m_listener.on_data_available);
-      // 如果 reset_on_invoke 不包含 DDS_DATA_AVAILABLE_STATUS 标志
+
+      // 如果不重置状态，则设置实体的状态
       if (!(lst->reset_on_invoke & DDS_DATA_AVAILABLE_STATUS))
-        // 设置 rd 实体的状态，并返回是否需要触发信号
         signal = data_avail_cb_set_status(&rd->m_entity, status_and_mask);
-      // 解锁 rd 实体的观察者锁
+
       ddsrt_mutex_unlock(&rd->m_entity.m_observers_lock);
-      // 调用 lst 的 on_data_available 函数处理 rd 实体的句柄和参数
+
+      // 调用 on_data_available 回调
       lst->on_data_available(rd->m_entity.m_hdllink.hdl, lst->on_data_available_arg);
-      // 重新锁定 rd 实体的观察者锁
+
       ddsrt_mutex_lock(&rd->m_entity.m_observers_lock);
     }
-    // 离开监听器独占访问状态
+
+    // 离开监听器独占访问
     data_avail_cb_leave_listener_exclusive_access(&rd->m_entity);
   }
-  // 触发等待集合的信号
+
+  // 触发等待集合
   data_avail_cb_trigger_waitsets(&rd->m_entity, signal);
-  // 解锁 rd 实体的观察者锁
+
+  // 解锁实体的观察者锁
   ddsrt_mutex_unlock(&rd->m_entity.m_observers_lock);
 }
-// 更新请求的截止时间未满足状态
-static void update_requested_deadline_missed(struct dds_requested_deadline_missed_status *__restrict st, const ddsi_status_cb_data_t *data)
-{
+
+/**
+ * @brief 更新请求的截止时间未满足状态
+ *
+ * @param[out] st 请求的截止时间未满足状态指针
+ * @param[in] data 状态回调数据指针
+ */
+static void update_requested_deadline_missed(
+    struct dds_requested_deadline_missed_status *__restrict st, const ddsi_status_cb_data_t *data) {
   // 设置最后一个实例句柄
   st->last_instance_handle = data->handle;
-  // 计算总数并处理溢出情况
+
+  // 计算总数并更新，确保不超过 UINT32_MAX
   uint64_t tmp = (uint64_t)data->extra + (uint64_t)st->total_count;
   st->total_count = tmp > UINT32_MAX ? UINT32_MAX : (uint32_t)tmp;
-  // 始终递增st->total_count_change，然后复制到*lst
-  // 这比最小工作量要多一点，但是这样可以保证在启用监听器后也能得到正确的值
-  //
-  // （对所有这些都有相同的推理）
+
+  // 增加 total_count_change 的值，并确保其在 INT32_MIN 和 INT32_MAX 之间
   int64_t tmp2 = (int64_t)data->extra + (int64_t)st->total_count_change;
-  st->total_count_change = tmp2 > INT32_MAX ? INT32_MAX : tmp2 < INT32_MIN ? INT32_MIN
-                                                                           : (int32_t)tmp2;
+  st->total_count_change = tmp2 > INT32_MAX   ? INT32_MAX
+                           : tmp2 < INT32_MIN ? INT32_MIN
+                                              : (int32_t)tmp2;
 }
 
-// 更新请求的不兼容QoS状态
-static void update_requested_incompatible_qos(struct dds_requested_incompatible_qos_status *__restrict st, const ddsi_status_cb_data_t *data)
-{
-  // 设置最后一个策略ID
+/**
+ * @brief 更新请求的不兼容 QoS 状态
+ *
+ * @param[out] st 请求的不兼容 QoS 状态指针
+ * @param[in] data 状态回调数据指针
+ */
+static void update_requested_incompatible_qos(
+    struct dds_requested_incompatible_qos_status *__restrict st,
+    const ddsi_status_cb_data_t *data) {
+  // 设置最后一个策略 ID
   st->last_policy_id = data->extra;
-  // 总数递增
+
+  // 增加总数和变化计数
   st->total_count++;
-  // 总数变化递增
   st->total_count_change++;
 }
 
-// 更新丢失的样本状态
-static void update_sample_lost(struct dds_sample_lost_status *__restrict st, const ddsi_status_cb_data_t *data)
-{
+/**
+ * @brief 更新样本丢失状态
+ *
+ * @param[out] st 样本丢失状态指针
+ * @param[in] data 状态回调数据指针
+ */
+static void update_sample_lost(struct dds_sample_lost_status *__restrict st,
+                               const ddsi_status_cb_data_t *data) {
   (void)data;
-  // 总数递增
+
+  // 增加总数和变化计数
   st->total_count++;
-  // 总数变化递增
-  st->total_count_change++;
-}
-// 更新被拒绝的样本状态
-static void update_sample_rejected(struct dds_sample_rejected_status *__restrict st, const ddsi_status_cb_data_t *data)
-{
-  // 设置最后一次拒绝的原因
-  st->last_reason = data->extra;
-  // 设置最后一次拒绝的实例句柄
-  st->last_instance_handle = data->handle;
-  // 增加总计数器
-  st->total_count++;
-  // 增加总计数变化
   st->total_count_change++;
 }
 
-// 更新活跃度变化状态
-static void update_liveliness_changed(struct dds_liveliness_changed_status *__restrict st, const ddsi_status_cb_data_t *data)
-{
-  // 静态断言，确保枚举值的顺序和范围正确
-  DDSRT_STATIC_ASSERT((uint32_t)DDSI_LIVELINESS_CHANGED_ADD_ALIVE == 0 &&
-                      DDSI_LIVELINESS_CHANGED_ADD_ALIVE < DDSI_LIVELINESS_CHANGED_ADD_NOT_ALIVE &&
-                      DDSI_LIVELINESS_CHANGED_ADD_NOT_ALIVE < DDSI_LIVELINESS_CHANGED_REMOVE_NOT_ALIVE &&
-                      DDSI_LIVELINESS_CHANGED_REMOVE_NOT_ALIVE < DDSI_LIVELINESS_CHANGED_REMOVE_ALIVE &&
-                      DDSI_LIVELINESS_CHANGED_REMOVE_ALIVE < DDSI_LIVELINESS_CHANGED_ALIVE_TO_NOT_ALIVE &&
-                      DDSI_LIVELINESS_CHANGED_ALIVE_TO_NOT_ALIVE < DDSI_LIVELINESS_CHANGED_NOT_ALIVE_TO_ALIVE &&
-                      (uint32_t)DDSI_LIVELINESS_CHANGED_NOT_ALIVE_TO_ALIVE < UINT32_MAX);
-  // 断言，确保 data->extra 的值在有效范围内
+/**
+ * @brief 更新样本拒绝状态
+ *
+ * @param[out] st 样本拒绝状态指针
+ * @param[in] data 状态回调数据指针
+ */
+static void update_sample_rejected(struct dds_sample_rejected_status *__restrict st,
+                                   const ddsi_status_cb_data_t *data) {
+  // 设置最后一个原因和实例句柄
+  st->last_reason = data->extra;
+  st->last_instance_handle = data->handle;
+
+  // 增加总数和变化计数
+  st->total_count++;
+  st->total_count_change++;
+}
+
+/**
+ * @brief 更新生命周期改变状态 (Update liveliness changed status)
+ *
+ * @param[in,out] st 生命周期改变状态指针 (Pointer to the liveliness changed status)
+ * @param[in] data 状态回调数据 (Status callback data)
+ */
+static void update_liveliness_changed(struct dds_liveliness_changed_status *__restrict st,
+                                      const ddsi_status_cb_data_t *data) {
+  // 静态断言，确保枚举值的顺序正确 (Static assert to ensure correct order of enum values)
+  DDSRT_STATIC_ASSERT(
+      (uint32_t)DDSI_LIVELINESS_CHANGED_ADD_ALIVE == 0 &&
+      DDSI_LIVELINESS_CHANGED_ADD_ALIVE < DDSI_LIVELINESS_CHANGED_ADD_NOT_ALIVE &&
+      DDSI_LIVELINESS_CHANGED_ADD_NOT_ALIVE < DDSI_LIVELINESS_CHANGED_REMOVE_NOT_ALIVE &&
+      DDSI_LIVELINESS_CHANGED_REMOVE_NOT_ALIVE < DDSI_LIVELINESS_CHANGED_REMOVE_ALIVE &&
+      DDSI_LIVELINESS_CHANGED_REMOVE_ALIVE < DDSI_LIVELINESS_CHANGED_ALIVE_TO_NOT_ALIVE &&
+      DDSI_LIVELINESS_CHANGED_ALIVE_TO_NOT_ALIVE < DDSI_LIVELINESS_CHANGED_NOT_ALIVE_TO_ALIVE &&
+      (uint32_t)DDSI_LIVELINESS_CHANGED_NOT_ALIVE_TO_ALIVE < UINT32_MAX);
+
+  // 断言额外数据在有效范围内 (Assert that extra data is within valid range)
   assert(data->extra <= (uint32_t)DDSI_LIVELINESS_CHANGED_NOT_ALIVE_TO_ALIVE);
-  // 设置最后一次出版的句柄
+
+  // 设置最后一个出版物句柄 (Set last publication handle)
   st->last_publication_handle = data->handle;
-  // 根据 data->extra 的值更新活跃度计数器
-  switch ((enum ddsi_liveliness_changed_data_extra)data->extra)
-  {
-  case DDSI_LIVELINESS_CHANGED_ADD_ALIVE:
-    // 增加活跃计数器和活跃计数变化
-    st->alive_count++;
-    st->alive_count_change++;
-    break;
-  case DDSI_LIVELINESS_CHANGED_ADD_NOT_ALIVE:
-    // 增加非活跃计数器和非活跃计数变化
-    st->not_alive_count++;
-    st->not_alive_count_change++;
-    break;
-  case DDSI_LIVELINESS_CHANGED_REMOVE_NOT_ALIVE:
-    // 减少非活跃计数器和非活跃计数变化
-    st->not_alive_count--;
-    st->not_alive_count_change--;
-    break;
-  case DDSI_LIVELINESS_CHANGED_REMOVE_ALIVE:
-    // 减少活跃计数器和活跃计数变化
-    st->alive_count--;
-    st->alive_count_change--;
-    break;
-  case DDSI_LIVELINESS_CHANGED_ALIVE_TO_NOT_ALIVE:
-    // 将活跃状态转为非活跃状态，更新计数器和计数变化
-    st->alive_count--;
-    st->alive_count_change--;
-    st->not_alive_count++;
-    st->not_alive_count_change++;
-    break;
-  case DDSI_LIVELINESS_CHANGED_NOT_ALIVE_TO_ALIVE:
-    // 将非活跃状态转为活跃状态，更新计数器和计数变化
-    st->not_alive_count--;
-    st->not_alive_count_change--;
-    st->alive_count++;
-    st->alive_count_change++;
-    break;
+
+  // 根据额外数据更新生命周期状态 (Update liveliness status based on extra data)
+  switch ((enum ddsi_liveliness_changed_data_extra)data->extra) {
+    case DDSI_LIVELINESS_CHANGED_ADD_ALIVE:
+      st->alive_count++;
+      st->alive_count_change++;
+      break;
+    case DDSI_LIVELINESS_CHANGED_ADD_NOT_ALIVE:
+      st->not_alive_count++;
+      st->not_alive_count_change++;
+      break;
+    case DDSI_LIVELINESS_CHANGED_REMOVE_NOT_ALIVE:
+      st->not_alive_count--;
+      st->not_alive_count_change--;
+      break;
+    case DDSI_LIVELINESS_CHANGED_REMOVE_ALIVE:
+      st->alive_count--;
+      st->alive_count_change--;
+      break;
+    case DDSI_LIVELINESS_CHANGED_ALIVE_TO_NOT_ALIVE:
+      st->alive_count--;
+      st->alive_count_change--;
+      st->not_alive_count++;
+      st->not_alive_count_change++;
+      break;
+    case DDSI_LIVELINESS_CHANGED_NOT_ALIVE_TO_ALIVE:
+      st->not_alive_count--;
+      st->not_alive_count_change--;
+      st->alive_count++;
+      st->alive_count_change++;
+      break;
   }
 }
-// 更新订阅匹配状态
-static void update_subscription_matched(struct dds_subscription_matched_status *__restrict st, const ddsi_status_cb_data_t *data)
-{
-  // 设置最后一个出版物句柄
+
+/**
+ * @brief 更新订阅匹配状态 (Update subscription matched status)
+ *
+ * @param[in,out] st 订阅匹配状态指针 (Pointer to the subscription matched status)
+ * @param[in] data 状态回调数据 (Status callback data)
+ */
+static void update_subscription_matched(struct dds_subscription_matched_status *__restrict st,
+                                        const ddsi_status_cb_data_t *data) {
+  // 设置最后一个出版物句柄 (Set last publication handle)
   st->last_publication_handle = data->handle;
-  // 如果需要添加
-  if (data->add)
-  {
-    // 更新各种计数器
+
+  // 根据是否添加更新订阅匹配状态 (Update subscription matched status based on whether it is added
+  // or not)
+  if (data->add) {
     st->total_count++;
     st->current_count++;
     st->total_count_change++;
     st->current_count_change++;
-  }
-  else
-  {
-    // 更新当前计数器
+  } else {
     st->current_count--;
     st->current_count_change--;
   }
 }
 
-// 确保未被拒绝的值为0
+/*
+在这个例子中，STATUS_CB_IMPL
+宏可能有多个版本，每个版本接受不同数量或类型的参数。通过使用宏定义，我们可以根据传入的参数自动选择合适的实现，从而实现类似于函数重载的功能。
+
+这种方法在 C 语言中是常见的，尤其是在处理不同类型或数量的参数时。
+*/
+/* 重置将所有内容（类型）设置为0，包括原因字段，请验证0是否正确 */
 /* Reset sets everything (type) 0, including the reason field, verify that 0 is correct */
 DDSRT_STATIC_ASSERT((int)DDS_NOT_REJECTED == 0);
 
-// 获取不同状态的宏定义
-DDS_GET_STATUS(reader, subscription_matched, SUBSCRIPTION_MATCHED, total_count_change, current_count_change)
-DDS_GET_STATUS(reader, liveliness_changed, LIVELINESS_CHANGED, alive_count_change, not_alive_count_change)
+/**
+ * @brief 获取订阅匹配状态
+ * @param reader 读取器实例
+ * @param subscription_matched 订阅匹配状态
+ * @param SUBSCRIPTION_MATCHED 状态类型
+ * @param total_count_change 总计数变化
+ * @param current_count_change 当前计数变化
+ */
+DDS_GET_STATUS(
+    reader, subscription_matched, SUBSCRIPTION_MATCHED, total_count_change, current_count_change)
+
+/**
+ * @brief 获取生命周期改变状态
+ * @param reader 读取器实例
+ * @param liveliness_changed 生命周期改变状态
+ * @param LIVELINESS_CHANGED 状态类型
+ * @param alive_count_change 存活计数变化
+ * @param not_alive_count_change 非存活计数变化
+ */
+DDS_GET_STATUS(
+    reader, liveliness_changed, LIVELINESS_CHANGED, alive_count_change, not_alive_count_change)
+
+/**
+ * @brief 获取样本拒绝状态
+ * @param reader 读取器实例
+ * @param sample_rejected 样本拒绝状态
+ * @param SAMPLE_REJECTED 状态类型
+ * @param total_count_change 总计数变化
+ */
 DDS_GET_STATUS(reader, sample_rejected, SAMPLE_REJECTED, total_count_change)
+
+/**
+ * @brief 获取样本丢失状态
+ * @param reader 读取器实例
+ * @param sample_lost 样本丢失状态
+ * @param SAMPLE_LOST 状态类型
+ * @param total_count_change 总计数变化
+ */
 DDS_GET_STATUS(reader, sample_lost, SAMPLE_LOST, total_count_change)
+
+/**
+ * @brief 获取请求截止日期未满足状态
+ * @param reader 读取器实例
+ * @param requested_deadline_missed 请求截止日期未满足状态
+ * @param REQUESTED_DEADLINE_MISSED 状态类型
+ * @param total_count_change 总计数变化
+ */
 DDS_GET_STATUS(reader, requested_deadline_missed, REQUESTED_DEADLINE_MISSED, total_count_change)
+
+/**
+ * @brief 获取请求的不兼容QoS状态
+ * @param reader 读取器实例
+ * @param requested_incompatible_qos 请求的不兼容QoS状态
+ * @param REQUESTED_INCOMPATIBLE_QOS 状态类型
+ * @param total_count_change 总计数变化
+ */
 DDS_GET_STATUS(reader, requested_incompatible_qos, REQUESTED_INCOMPATIBLE_QOS, total_count_change)
 
-// 实现不同状态的回调函数
-STATUS_CB_IMPL(reader, subscription_matched, SUBSCRIPTION_MATCHED, total_count_change, current_count_change)
-STATUS_CB_IMPL(reader, liveliness_changed, LIVELINESS_CHANGED, alive_count_change, not_alive_count_change)
+/* 状态回调函数实现 */
+
+/**
+ * @brief 订阅匹配状态回调函数实现
+ * @param reader 读取器实例
+ * @param subscription_matched 订阅匹配状态
+ * @param SUBSCRIPTION_MATCHED 状态类型
+ * @param total_count_change 总计数变化
+ * @param current_count_change 当前计数变化
+ */
+STATUS_CB_IMPL(
+    reader, subscription_matched, SUBSCRIPTION_MATCHED, total_count_change, current_count_change)
+
+/**
+ * @brief 生命周期改变状态回调函数实现
+ * @param reader 读取器实例
+ * @param liveliness_changed 生命周期改变状态
+ * @param LIVELINESS_CHANGED 状态类型
+ * @param alive_count_change 存活计数变化
+ * @param not_alive_count_change 非存活计数变化
+ */
+STATUS_CB_IMPL(
+    reader, liveliness_changed, LIVELINESS_CHANGED, alive_count_change, not_alive_count_change)
+
+/**
+ * @brief 样本拒绝状态回调函数实现
+ * @param reader 读取器实例
+ * @param sample_rejected 样本拒绝状态
+ * @param SAMPLE_REJECTED 状态类型
+ * @param total_count_change 总计数变化
+ */
 STATUS_CB_IMPL(reader, sample_rejected, SAMPLE_REJECTED, total_count_change)
+
+/**
+ * @brief 样本丢失状态回调函数实现
+ * @param reader 读取器实例
+ * @param sample_lost 样本丢失状态
+ * @param SAMPLE_LOST 状态类型
+ * @param total_count_change 总计数变化
+ */
 STATUS_CB_IMPL(reader, sample_lost, SAMPLE_LOST, total_count_change)
+
+/**
+ * @brief 请求截止日期未满足状态回调函数实现
+ * @param reader 读取器实例
+ * @param requested_deadline_missed 请求截止日期未满足状态
+ * @param REQUESTED_DEADLINE_MISSED 状态类型
+ * @param total_count_change 总计数变化
+ */
 STATUS_CB_IMPL(reader, requested_deadline_missed, REQUESTED_DEADLINE_MISSED, total_count_change)
+
+/**
+ * @brief 请求的不兼容QoS状态回调函数实现
+ * @param reader 读取器实例
+ * @param requested_incompatible_qos 请求的不兼容QoS状态
+ * @param REQUESTED_INCOMPATIBLE_QOS 状态类型
+ * @param total_count_change 总计数变化
+ */
 STATUS_CB_IMPL(reader, requested_incompatible_qos, REQUESTED_INCOMPATIBLE_QOS, total_count_change)
 
-// 读者状态回调函数
-void dds_reader_status_cb(void *ventity, const ddsi_status_cb_data_t *data)
-{
-  // 定义读者实体
+/**
+ * @brief DDS 读取器状态回调函数。
+ *
+ * 当读取器的状态发生变化时，此回调函数将被调用。
+ *
+ * @param[in] ventity 一个指向 dds_reader 结构体的指针。
+ * @param[in] data 包含状态信息的 ddsi_status_cb_data_t 结构体指针。
+ */
+void dds_reader_status_cb(void *ventity, const ddsi_status_cb_data_t *data) {
+  // 将传入的 void 指针转换为 dds_reader 指针
   dds_reader *const rd = ventity;
 
-  // 当数据为NULL时，表示DDSI读者已被删除
-  if (data == NULL)
-  {
-    // 释放创建过程中的初始声明，允许进一步的API删除操作
+  // 当 data 为 NULL 时，表示 DDSI 读取器已被删除
+  if (data == NULL) {
+    // 释放在创建过程中进行的初始声明，这将表示现在可以进行进一步的 API 删除操作
     ddsrt_mutex_lock(&rd->m_entity.m_mutex);
     rd->m_rd = NULL;
     ddsrt_cond_broadcast(&rd->m_entity.m_cond);
@@ -507,80 +670,92 @@ void dds_reader_status_cb(void *ventity, const ddsi_status_cb_data_t *data)
     return;
   }
 
-  // 序列化监听器调用
+  // 序列化监听器调用。这样做的好处是在释放 m_observers_lock 的同时，
+  // 可以安全地递增和/或重置计数器和 "change" 计数器，并在监听器调用期间保持稳定
   ddsrt_mutex_lock(&rd->m_entity.m_observers_lock);
   rd->m_entity.m_cb_pending_count++;
   while (rd->m_entity.m_cb_count > 0)
     ddsrt_cond_wait(&rd->m_entity.m_observers_cond, &rd->m_entity.m_observers_lock);
   rd->m_entity.m_cb_count++;
 
-  // 获取状态ID
+  // 获取状态 ID
   const enum dds_status_id status_id = (enum dds_status_id)data->raw_status_id;
-  // 根据状态ID执行相应的回调函数
-  switch (status_id)
-  {
-  case DDS_REQUESTED_DEADLINE_MISSED_STATUS_ID:
-    status_cb_requested_deadline_missed(rd, data);
-    break;
-  case DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS_ID:
-    status_cb_requested_incompatible_qos(rd, data);
-    break;
-  case DDS_SAMPLE_LOST_STATUS_ID:
-    status_cb_sample_lost(rd, data);
-    break;
-  case DDS_SAMPLE_REJECTED_STATUS_ID:
-    status_cb_sample_rejected(rd, data);
-    break;
-  case DDS_LIVELINESS_CHANGED_STATUS_ID:
-    status_cb_liveliness_changed(rd, data);
-    break;
-  case DDS_SUBSCRIPTION_MATCHED_STATUS_ID:
-    status_cb_subscription_matched(rd, data);
-    break;
-  // 其他未处理的状态ID
-  case DDS_DATA_ON_READERS_STATUS_ID:
-  case DDS_DATA_AVAILABLE_STATUS_ID:
-  case DDS_INCONSISTENT_TOPIC_STATUS_ID:
-  case DDS_LIVELINESS_LOST_STATUS_ID:
-  case DDS_PUBLICATION_MATCHED_STATUS_ID:
-  case DDS_OFFERED_DEADLINE_MISSED_STATUS_ID:
-  case DDS_OFFERED_INCOMPATIBLE_QOS_STATUS_ID:
-    assert(0);
+  switch (status_id) {
+    case DDS_REQUESTED_DEADLINE_MISSED_STATUS_ID:
+      status_cb_requested_deadline_missed(rd, data);
+      break;
+    case DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS_ID:
+      status_cb_requested_incompatible_qos(rd, data);
+      break;
+    case DDS_SAMPLE_LOST_STATUS_ID:
+      status_cb_sample_lost(rd, data);
+      break;
+    case DDS_SAMPLE_REJECTED_STATUS_ID:
+      status_cb_sample_rejected(rd, data);
+      break;
+    case DDS_LIVELINESS_CHANGED_STATUS_ID:
+      status_cb_liveliness_changed(rd, data);
+      break;
+    case DDS_SUBSCRIPTION_MATCHED_STATUS_ID:
+      status_cb_subscription_matched(rd, data);
+      break;
+    case DDS_DATA_ON_READERS_STATUS_ID:
+    case DDS_DATA_AVAILABLE_STATUS_ID:
+    case DDS_INCONSISTENT_TOPIC_STATUS_ID:
+    case DDS_LIVELINESS_LOST_STATUS_ID:
+    case DDS_PUBLICATION_MATCHED_STATUS_ID:
+    case DDS_OFFERED_DEADLINE_MISSED_STATUS_ID:
+    case DDS_OFFERED_INCOMPATIBLE_QOS_STATUS_ID:
+      assert(0);
   }
 
   // 更新回调计数器
   rd->m_entity.m_cb_count--;
   rd->m_entity.m_cb_pending_count--;
+
+  // 发送广播并解锁
   ddsrt_cond_broadcast(&rd->m_entity.m_observers_cond);
   ddsrt_mutex_unlock(&rd->m_entity.m_observers_lock);
 }
-// 定义一个名为dds_reader_statistics_kv的静态常量结构体数组，包含一个键值对
+
+/**
+ * @brief dds_stat_keyvalue_descriptor 结构体数组，用于描述读取器统计信息的键值对。
+ */
 static const struct dds_stat_keyvalue_descriptor dds_reader_statistics_kv[] = {
     {"discarded_bytes", DDS_STAT_KIND_UINT64}};
 
-// 定义一个名为dds_reader_statistics_desc的静态常量结构体，包含两个成员：count和kv
+/**
+ * @brief dds_stat_descriptor 结构体实例，用于描述读取器统计信息。
+ */
 static const struct dds_stat_descriptor dds_reader_statistics_desc = {
     .count = sizeof(dds_reader_statistics_kv) / sizeof(dds_reader_statistics_kv[0]),
     .kv = dds_reader_statistics_kv};
 
-// 定义一个名为dds_reader_create_statistics的静态函数，输入参数为一个指向dds_entity结构体的指针
-static struct dds_statistics *dds_reader_create_statistics(const struct dds_entity *entity)
-{
-  // 调用dds_alloc_statistics函数并返回结果
+/**
+ * @brief 创建一个 dds_statistics 实例，用于存储读取器的统计信息。
+ *
+ * @param entity 指向 dds_entity 的指针。
+ * @return 返回创建的 dds_statistics 实例的指针。
+ */
+static struct dds_statistics *dds_reader_create_statistics(const struct dds_entity *entity) {
   return dds_alloc_statistics(entity, &dds_reader_statistics_desc);
 }
 
-// 定义一个名为dds_reader_refresh_statistics的静态函数，输入参数为一个指向dds_entity结构体的指针和一个指向dds_statistics结构体的指针
-static void dds_reader_refresh_statistics(const struct dds_entity *entity, struct dds_statistics *stat)
-{
-  // 将输入的dds_entity结构体指针强制转换为指向dds_reader结构体的指针
+/**
+ * @brief 刷新读取器的统计信息。
+ *
+ * @param entity 指向 dds_entity 的指针。
+ * @param stat 指向 dds_statistics 的指针，用于存储刷新后的统计信息。
+ */
+static void dds_reader_refresh_statistics(const struct dds_entity *entity,
+                                          struct dds_statistics *stat) {
   const struct dds_reader *rd = (const struct dds_reader *)entity;
-  // 如果rd->m_rd不为空，则调用ddsi_get_reader_stats函数更新stat->kv[0].u.u64的值
-  if (rd->m_rd)
-    ddsi_get_reader_stats(rd->m_rd, &stat->kv[0].u.u64);
+  if (rd->m_rd) ddsi_get_reader_stats(rd->m_rd, &stat->kv[0].u.u64);
 }
 
-// 定义一个名为dds_entity_deriver_reader的静态常量结构体，包含多个函数指针成员
+/**
+ * @brief dds_entity_deriver 结构体实例，包含了与读取器相关的操作函数。
+ */
 const struct dds_entity_deriver dds_entity_deriver_reader = {
     .interrupt = dds_entity_deriver_dummy_interrupt,
     .close = dds_reader_close,
@@ -589,59 +764,62 @@ const struct dds_entity_deriver dds_entity_deriver_reader = {
     .validate_status = dds_reader_status_validate,
     .create_statistics = dds_reader_create_statistics,
     .refresh_statistics = dds_reader_refresh_statistics};
-// 如果定义了DDS_HAS_SHM宏
+
 #ifdef DDS_HAS_SHM
-// 创建iox_sub_options_t结构体的函数，参数为dds_qos_t指针
-static iox_sub_options_t create_iox_sub_options(const dds_qos_t *qos)
-{
-  // 定义一个iox_sub_options_t类型的变量opts
+/**
+ * @brief 创建一个iox_sub_options_t结构体，用于配置Cyclone DDS的共享内存订阅者选项。
+ *
+ * @param[in] qos 指向dds_qos_t结构体的指针，包含了QoS策略信息。
+ * @return 返回一个已配置的iox_sub_options_t结构体。
+ */
+static iox_sub_options_t create_iox_sub_options(const dds_qos_t *qos) {
+  // 初始化iox_sub_options_t结构体
   iox_sub_options_t opts;
-  // 初始化opts
   iox_sub_options_init(&opts);
 
-  // 获取最大的订阅者队列容量
+  // 获取最大订阅者队列容量
   const uint32_t max_sub_queue_capacity = iox_cfg_max_subscriber_queue_capacity();
 
-  // 注意：当接收到history.depth个样本后，我们可能会丢失数据（如果我们没有足够快地从iceoryx队列中获取它们并将它们移动到读取器历史缓存中），
-  // 但这对于volatile来说是有效的行为。然而，如果数据尽可能快地发布，队列可能会很快填满，这可能导致不希望出现的行为。
+  // 注意：在接收到history.depth个样本之后，我们可能会丢失数据（如果我们没有足够快地从iceoryx队列中获取它们并将它们移动到读取器历史缓存中），
+  // 但这对于volatile来说是有效的行为。然而，如果数据尽可能快地发布，队列填充得非常快，这可能导致不希望出现的行为。
   // 注意：如果历史深度大于队列容量，我们仍然使用共享内存，但相应地限制queueCapacity（否则iceoryx会发出警告并自行限制）
 
-  if ((uint32_t)qos->history.depth <= max_sub_queue_capacity)
-  {
+  if ((uint32_t)qos->history.depth <= max_sub_queue_capacity) {
     opts.queueCapacity = (uint64_t)qos->history.depth;
-  }
-  else
-  {
+  } else {
     opts.queueCapacity = max_sub_queue_capacity;
   }
 
   // 对于BEST EFFORT，DDS要求不接收历史数据（无论持久性如何）
   if (qos->reliability.kind == DDS_RELIABILITY_BEST_EFFORT ||
-      qos->durability.kind == DDS_DURABILITY_VOLATILE)
-  {
+      qos->durability.kind == DDS_DURABILITY_VOLATILE) {
     opts.historyRequest = 0;
-  }
-  else
-  {
-    // 对于TRANSIENT LOCAL和更强的持久性
+  } else {
+    // TRANSIENT LOCAL和更强的策略
     opts.historyRequest = (uint64_t)qos->history.depth;
     // 如果发布者不支持历史数据，它将不会被iceoryx连接
     opts.requirePublisherHistorySupport = true;
   }
 
-  // 返回opts结构体
   return opts;
 }
 #endif
-// 定义一个静态函数 dds_create_reader_int，用于创建数据读取器
-static dds_entity_t dds_create_reader_int(
-    dds_entity_t participant_or_subscriber, // 参与者或订阅者实体
-    dds_entity_t topic,                     // 主题实体
-    const dds_qos_t *qos,                   // 服务质量配置
-    const dds_listener_t *listener,         // 监听器
-    struct dds_rhc *rhc)                    // 资源历史缓存
-{
-  // 声明变量
+
+/**
+ * @brief 创建一个数据读取器实例。
+ *
+ * @param[in] participant_or_subscriber 参与者或订阅者实体
+ * @param[in] topic 主题实体
+ * @param[in] qos 读取器的质量服务设置
+ * @param[in] listener 读取器的监听器设置
+ * @param[in] rhc 读取器的缓存，如果为NULL，则使用默认缓存
+ * @return 成功时返回创建的读取器实体，失败时返回错误代码
+ */
+static dds_entity_t dds_create_reader_int(dds_entity_t participant_or_subscriber,
+                                          dds_entity_t topic,
+                                          const dds_qos_t *qos,
+                                          const dds_listener_t *listener,
+                                          struct dds_rhc *rhc) {
   dds_qos_t *rqos;
   dds_subscriber *sub = NULL;
   dds_entity_t subscriber;
@@ -651,439 +829,448 @@ static dds_entity_t dds_create_reader_int(
   bool created_implicit_sub = false;
 
   // 根据主题类型进行处理
-  switch (topic)
-  {
-  case DDS_BUILTIN_TOPIC_DCPSTOPIC:
+  switch (topic) {
+    case DDS_BUILTIN_TOPIC_DCPSTOPIC:
 #ifndef DDS_HAS_TOPIC_DISCOVERY
-    // 如果不支持主题发现，则返回不支持错误码
-    return DDS_RETCODE_UNSUPPORTED;
+      return DDS_RETCODE_UNSUPPORTED;
 #endif
-  case DDS_BUILTIN_TOPIC_DCPSPARTICIPANT:
-  case DDS_BUILTIN_TOPIC_DCPSPUBLICATION:
-  case DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION:
-    // 将提供的伪主题转换为真实主题
-    // 将传入的topic赋值给pseudo_topic
-    pseudo_topic = topic;
-    // 获取内置订阅者，如果获取失败则返回错误码
-    if ((subscriber = dds__get_builtin_subscriber(participant_or_subscriber)) < 0)
-      return subscriber;
-    // 对订阅者进行加锁操作，如果加锁失败则返回错误码
-    if ((rc = dds_subscriber_lock(subscriber, &sub)) != DDS_RETCODE_OK)
-      return rc;
-    // 获取内置主题，并将其赋值给topic变量
-    topic = dds__get_builtin_topic(subscriber, topic);
-    break;
-
-  default:
-  {
-    // 定义一个dds_entity类型的指针p_or_s
-    dds_entity *p_or_s;
-    // 对实体进行加锁操作，如果加锁失败则返回错误码
-    if ((rc = dds_entity_lock(participant_or_subscriber, DDS_KIND_DONTCARE, &p_or_s)) != DDS_RETCODE_OK)
-      return rc;
-    // 根据实体类型进行不同的处理
-    switch (dds_entity_kind(p_or_s))
-    {
-    case DDS_KIND_SUBSCRIBER:
-      // 如果实体类型为订阅者，则将participant_or_subscriber赋值给subscriber，并将p_or_s强制转换为dds_subscriber类型后赋值给sub
-      subscriber = participant_or_subscriber;
-      sub = (dds_subscriber *)p_or_s;
+    case DDS_BUILTIN_TOPIC_DCPSPARTICIPANT:
+    case DDS_BUILTIN_TOPIC_DCPSPUBLICATION:
+    case DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION:
+      /* 将提供的伪主题转换为真实主题 */
+      pseudo_topic = topic;
+      if ((subscriber = dds__get_builtin_subscriber(participant_or_subscriber)) < 0)
+        return subscriber;
+      if ((rc = dds_subscriber_lock(subscriber, &sub)) != DDS_RETCODE_OK) return rc;
+      topic = dds__get_builtin_topic(subscriber, topic);
       break;
-    case DDS_KIND_PARTICIPANT:
-      // 如果实体类型为参与者，则创建一个隐式订阅者并将其赋值给subscriber
-      created_implicit_sub = true;
-      subscriber = dds__create_subscriber_l((dds_participant *)p_or_s, true, qos, NULL);
-      // 解锁实体
-      dds_entity_unlock(p_or_s);
-      // 对新创建的订阅者进行加锁操作，如果加锁失败则返回错误码
-      if ((rc = dds_subscriber_lock(subscriber, &sub)) < 0)
+
+    default: {
+      dds_entity *p_or_s;
+      if ((rc = dds_entity_lock(participant_or_subscriber, DDS_KIND_DONTCARE, &p_or_s)) !=
+          DDS_RETCODE_OK)
         return rc;
+      switch (dds_entity_kind(p_or_s)) {
+        case DDS_KIND_SUBSCRIBER:
+          subscriber = participant_or_subscriber;
+          sub = (dds_subscriber *)p_or_s;
+          break;
+        case DDS_KIND_PARTICIPANT:
+          created_implicit_sub = true;
+          subscriber = dds__create_subscriber_l((dds_participant *)p_or_s, true, qos, NULL);
+          dds_entity_unlock(p_or_s);
+          if ((rc = dds_subscriber_lock(subscriber, &sub)) < 0) return rc;
+          break;
+        default:
+          dds_entity_unlock(p_or_s);
+          return DDS_RETCODE_ILLEGAL_OPERATION;
+      }
       break;
-    default:
-      // 如果实体类型不是订阅者或参与者，则解锁实体并返回非法操作错误码
-      dds_entity_unlock(p_or_s);
-      return DDS_RETCODE_ILLEGAL_OPERATION;
     }
-    break;
   }
+
+  /* 如果pseudo_topic不为0，表示主题并非来自应用程序，我们允许将其固定，尽管它被标记为NO_USER_ACCESS
+   */
+  if ((rc = dds_topic_pin_with_origin(topic, pseudo_topic ? false : true, &tp)) < 0)
+    goto err_pin_topic;
+  assert(tp->m_stype);
+  if (dds_entity_participant(&sub->m_entity) != dds_entity_participant(&tp->m_entity)) {
+    rc = DDS_RETCODE_BAD_PARAMETER;
+    goto err_pp_mismatch;
   }
-}
-// 如果 pseudo_topic 不等于0，表示主题不是由应用程序产生的，我们允许将其固定，
-// 即使它被标记为 NO_USER_ACCESS
-if ((rc = dds_topic_pin_with_origin(topic, pseudo_topic ? false : true, &tp)) < 0)
-  goto err_pin_topic;
-assert(tp->m_stype);
 
-// 检查订阅者和主题的参与者是否相同，如果不同则返回错误代码
-if (dds_entity_participant(&sub->m_entity) != dds_entity_participant(&tp->m_entity))
-{
-  rc = DDS_RETCODE_BAD_PARAMETER;
-  goto err_pp_mismatch;
-}
+  /* 在创建和注册读取器之前，防止在主题上设置qos：我们不能允许在创建读取器之前发生TOPIC_DATA更改，
+     因为那样的更改将不会在发现/内置主题中发布。
 
-// 在创建并注册读取器之前，阻止对主题进行 set_qos 操作：我们不能允许在创建读取器之前发生 TOPIC_DATA 更改，
-// 因为这样的更改将不会在发现/内置主题中发布。
-//
-// 不要保持参与者（保护主题的 QoS）锁定，因为这可能导致死锁，例如在订阅匹配监听器中创建读取器/写入器的应用程序。
-dds_topic_defer_set_qos(tp);
+     不要保持参与者（它保护主题的QoS）锁定，因为这可能导致死锁
+     在订阅匹配监听器中创建读取器/写入器的应用程序（无论监听器中的限制是否合理，
+     它过去曾经起作用，所以不能随意破坏）。 */
+  dds_topic_defer_set_qos(tp);
 
-// 合并主题和订阅者的 qos，dds_copy_qos 只有在传递空参数时才会失败，
-// 但在这里不是这种情况
-struct ddsi_domaingv *gv = &sub->m_entity.m_domain->gv;
-rqos = dds_create_qos();
-if (qos)
-  ddsi_xqos_mergein_missing(rqos, qos, DDS_READER_QOS_MASK);
-if (sub->m_entity.m_qos)
-  ddsi_xqos_mergein_missing(rqos, sub->m_entity.m_qos, ~DDSI_QP_ENTITY_NAME);
-if (tp->m_ktopic->qos)
-  ddsi_xqos_mergein_missing(rqos, tp->m_ktopic->qos, (DDS_READER_QOS_MASK | DDSI_QP_TOPIC_DATA) & ~DDSI_QP_ENTITY_NAME);
-ddsi_xqos_mergein_missing(rqos, &ddsi_default_qos_reader, ~DDSI_QP_DATA_REPRESENTATION);
-dds_apply_entity_naming(rqos, sub->m_entity.m_qos, gv);
+  /* 合并主题和订阅者的qos，dds_copy_qos仅在传递空参数时失败，但在这里不是这种情况 */
+  struct ddsi_domaingv *gv = &sub->m_entity.m_domain->gv;
+  rqos = dds_create_qos();
+  if (qos) ddsi_xqos_mergein_missing(rqos, qos, DDS_READER_QOS_MASK);
+  if (sub->m_entity.m_qos)
+    ddsi_xqos_mergein_missing(rqos, sub->m_entity.m_qos, ~DDSI_QP_ENTITY_NAME);
+  if (tp->m_ktopic->qos)
+    ddsi_xqos_mergein_missing(rqos, tp->m_ktopic->qos,
+                              (DDS_READER_QOS_MASK | DDSI_QP_TOPIC_DATA) & ~DDSI_QP_ENTITY_NAME);
+  ddsi_xqos_mergein_missing(rqos, &ddsi_default_qos_reader, ~DDSI_QP_DATA_REPRESENTATION);
+  dds_apply_entity_naming(rqos, sub->m_entity.m_qos, gv);
 
-// 确保数据表示有效
-if ((rc = dds_ensure_valid_data_representation(rqos, tp->m_stype->allowed_data_representation, false)) != 0)
-  goto err_data_repr;
+  if ((rc = dds_ensure_valid_data_representation(rqos, tp->m_stype->allowed_data_representation,
+                                                 false)) != 0)
+    goto err_data_repr;
 
-// 检查 QoS 是否有效
-if ((rc = ddsi_xqos_valid(&gv->logconfig, rqos)) < 0 || (rc = validate_reader_qos(rqos)) != DDS_RETCODE_OK)
-  goto err_bad_qos;
+  if ((rc = ddsi_xqos_valid(&gv->logconfig, rqos)) < 0 ||
+      (rc = validate_reader_qos(rqos)) != DDS_RETCODE_OK)
+    goto err_bad_qos;
 
-// 对于内置主题需要进行额外的检查：我们不希望在内置主题上遇到资源限制，这是一个不必要的复杂性
-if (pseudo_topic && !dds__validate_builtin_reader_qos(tp->m_entity.m_domain, pseudo_topic, rqos))
-{
-  rc = DDS_RETCODE_INCONSISTENT_POLICY;
-  goto err_bad_qos;
-}
+  /* 内置主题需要额外的检查：我们不希望在内置主题上遇到资源限制，这是一个不必要的复杂性 */
+  if (pseudo_topic &&
+      !dds__validate_builtin_reader_qos(tp->m_entity.m_domain, pseudo_topic, rqos)) {
+    rc = DDS_RETCODE_INCONSISTENT_POLICY;
+    goto err_bad_qos;
+  }
 
-// 唤醒当前线程状态
-ddsi_thread_state_awake(ddsi_lookup_thread_state(), gv);
-// 获取参与者（participant）的GUID
-const struct ddsi_guid *ppguid = dds_entity_participant_guid(&sub->m_entity);
-// 根据GUID查找对应的参与者实体
-struct ddsi_participant *pp = ddsi_entidx_lookup_participant_guid(gv->entity_index, ppguid);
+  ddsi_thread_state_awake(ddsi_lookup_thread_state(), gv);
+  const struct ddsi_guid *ppguid = dds_entity_participant_guid(&sub->m_entity);
+  struct ddsi_participant *pp = ddsi_entidx_lookup_participant_guid(gv->entity_index, ppguid);
 
-// 当删除一个参与者时，子句柄（包括订阅者）会在删除DDSI参与者之前被移除。
-// 因此，在此时，在订阅者锁内，我们可以断言参与者存在。
-assert(pp != NULL);
+  /* 在删除参与者时，在删除DDSI参与者之前，会先移除子句柄（包括订阅者）。
+     因此，在此处，在订阅者锁定内，我们可以断言参与者存在。 */
+  assert(pp != NULL);
 
 #ifdef DDS_HAS_SECURITY
-// 检查DDS安全功能是否启用
-if (ddsi_omg_participant_is_secure(pp))
-{
-  // 向访问控制安全插件请求创建读取器权限
-  if (!ddsi_omg_security_check_create_reader(pp, gv->config.domainId, tp->m_name, rqos))
-  {
-    // 如果没有权限，则返回错误代码
-    rc = DDS_RETCODE_NOT_ALLOWED_BY_SECURITY;
-    // 使当前线程进入休眠状态
-    ddsi_thread_state_asleep(ddsi_lookup_thread_state());
-    // 跳转到错误处理部分
-    goto err_bad_qos;
+  /* 检查是否启用了DDS安全性 */
+  if (ddsi_omg_participant_is_secure(pp)) {
+    /* 向访问控制安全插件请求创建读取器权限 */
+    if (!ddsi_omg_security_check_create_reader(pp, gv->config.domainId, tp->m_name, rqos)) {
+      rc = DDS_RETCODE_NOT_ALLOWED_BY_SECURITY;
+      ddsi_thread_state_asleep(ddsi_lookup_thread_state());
+      goto err_bad_qos;
+    }
   }
-}
 #endif
 
-// 创建读取器和关联的读取缓存（如果调用者没有提供）
-struct dds_reader *const rd = dds_alloc(sizeof(*rd));
-// 初始化读取器实体，并将其添加到订阅者的子实体中
-const dds_entity_t reader = dds_entity_init(&rd->m_entity, &sub->m_entity, DDS_KIND_READER, false, true, rqos, listener, DDS_READER_STATUS_MASK);
-// 假设 DATA_ON_READERS 在订阅者中实现：
-// - 对它的更改在将此读取器添加到订阅者的子节点之后才会传播到此读取器
-// - 一旦调用 `new_reader`，数据就可以到达，需要在实现时提高 DATA_ON_READERS
-// - 如果实际上没有实现 DATA_ON_READERS，则在订阅者上设置 DATA_ON_READERS 没有问题
-ddsrt_atomic_or32(&rd->m_entity.m_status.m_status_and_mask, DDS_DATA_ON_READERS_STATUS << SAM_ENABLED_SHIFT);
-// 设置最后拒绝原因为未拒绝
-rd->m_sample_rejected_status.last_reason = DDS_NOT_REJECTED;
-// 设置主题
-rd->m_topic = tp;
-// 设置读取缓存
-rd->m_rhc = rhc ? rhc : dds_rhc_default_new(rd, tp->m_stype);
-// 关联读取缓存
-if (dds_rhc_associate(rd->m_rhc, rd, tp->m_stype, rd->m_entity.m_domain->gv.m_tkmap) < 0)
-{
-  // 如果关联失败，需要撤销实体初始化
-  abort();
-}
-// 增加主题实体的引用计数
-dds_entity_add_ref_locked(&tp->m_entity);
+  /* 创建读取器和关联的读取缓存（如果未由调用者提供） */
+  struct dds_reader *const rd = dds_alloc(sizeof(*rd));
+  const dds_entity_t reader = dds_entity_init(&rd->m_entity, &sub->m_entity, DDS_KIND_READER, false,
+                                              true, rqos, listener, DDS_READER_STATUS_MASK);
+  // 假设DATA_ON_READERS在订阅者中实现：
+  // - 在将其添加到订阅者的子项之前，不会将更改传播到此读取器
+  // - 一旦调用`new_reader`，数据就可以到达，需要在实现时引发DATA_ON_READERS
+  // - 如果实际上没有实现，那么在订阅者上设置DATA_ON_READERS也没问题
+  ddsrt_atomic_or32(&rd->m_entity.m_status.m_status_and_mask,
+                    DDS_DATA_ON_READERS_STATUS << SAM_ENABLED_SHIFT);
+  rd->m_sample_rejected_status.last_reason = DDS_NOT_REJECTED;
+  rd->m_topic = tp;
+  rd->m_rhc = rhc ? rhc : dds_rhc_default_new(rd, tp->m_stype);
+  if (dds_rhc_associate(rd->m_rhc, rd, tp->m_stype, rd->m_entity.m_domain->gv.m_tkmap) < 0) {
+    /* FIXME: 参见create_querycond，需要能够撤消entity_init */
+    abort();
+  }
+  dds_entity_add_ref_locked(&tp->m_entity);
 
-// 设置监听器可能过早，应根据监听器设置掩码
-// 然后原子地设置监听器，将掩码保存到待处理集合并清除它；
-// 然后调用处于待处理集合中的那些监听器
-dds_entity_init_complete(&rd->m_entity);
+  /* FIXME: 监听器可能来得太早...应根据监听器设置掩码
+     然后原子地设置监听器，将掩码保存到挂起的集合并清除它；
+     然后调用挂起集中的那些监听器 */
+  dds_entity_init_complete(&rd->m_entity);
 
 #ifdef DDS_HAS_SHM
-// 检查共享内存是否兼容
-assert(rqos->present &DDSI_QP_LOCATOR_MASK);
-if (!(gv->config.enable_shm && dds_shm_compatible_qos_and_topic(rqos, tp, true)))
-  rqos->ignore_locator_type |= DDSI_LOCATOR_KIND_SHEM;
+  assert(rqos->present & DDSI_QP_LOCATOR_MASK);
+  if (!(gv->config.enable_shm && dds_shm_compatible_qos_and_topic(rqos, tp, true)))
+    rqos->ignore_locator_type |= DDSI_LOCATOR_KIND_SHEM;
 #endif
 
-// 读取器从主题获取序列化类型，因为读取器使用的序列化数据函数
-// 不是特定于数据表示的（可以从 cdr 头部检索表示）
-rc = ddsi_new_reader(&rd->m_rd, &rd->m_entity.m_guid, NULL, pp, tp->m_name, tp->m_stype, rqos, &rd->m_rhc->common.rhc, dds_reader_status_cb, rd);
-// 检查返回值是否正确（至少可能是资源不足）
-assert(rc == DDS_RETCODE_OK);
-// 将线程状态设置为休眠
-ddsi_thread_state_asleep(ddsi_lookup_thread_state());
-// 如果定义了DDS_HAS_SHM宏
+  /* 读取器从主题获取sertype，因为读取器使用的serdata函数不是特定于数据表示的
+     （可以从cdr头部检索表示） */
+  rc = ddsi_new_reader(&rd->m_rd, &rd->m_entity.m_guid, NULL, pp, tp->m_name, tp->m_stype, rqos,
+                       &rd->m_rhc->common.rhc, dds_reader_status_cb, rd);
+  assert(rc == DDS_RETCODE_OK); /* FIXME: 至少可以是资源不足 */
+  ddsi_thread_state_asleep(ddsi_lookup_thread_state());
+
 #ifdef DDS_HAS_SHM
-// 如果读取器的m_rd成员变量中的has_iceoryx为真
-if (rd->m_rd->has_iceoryx)
-{
-  // 输出日志，显示读取器的主题名称
-  DDS_CLOG(DDS_LC_SHM, &rd->m_entity.m_domain->gv.logconfig, "Reader's topic name will be DDS:Cyclone:%s\n", rd->m_topic->m_name);
+  if (rd->m_rd->has_iceoryx) {
+    DDS_CLOG(DDS_LC_SHM, &rd->m_entity.m_domain->gv.logconfig,
+             "Reader's topic name will be DDS:Cyclone:%s\n", rd->m_topic->m_name);
 
-  // 初始化iox子上下文
-  iox_sub_context_init(&rd->m_iox_sub_context);
+    iox_sub_context_init(&rd->m_iox_sub_context);
 
-  // 创建iox订阅者选项
-  iox_sub_options_t opts = create_iox_sub_options(rqos);
+    iox_sub_options_t opts = create_iox_sub_options(rqos);
 
-  // 快速hack，使分区工作；使用*标记分隔分区名称和主题名称
-  // 因为我们已经知道分区不能再包含*了
-  char *part_topic = dds_shm_partition_topic(rqos, rd->m_topic);
-  assert(part_topic != NULL);
-  // 初始化iox订阅者
-  rd->m_iox_sub = iox_sub_init(&(iox_sub_storage_t){0}, gv->config.iceoryx_service, rd->m_topic->m_stype->type_name, part_topic, &opts);
-  // 释放part_topic内存
-  ddsrt_free(part_topic);
+    // 快速hack以使分区工作；使用*标记分隔分区名称和主题名称
+    // 因为我们已经知道分区不能再包含*了
+    char *part_topic = dds_shm_partition_topic(rqos, rd->m_topic);
+    assert(part_topic != NULL);
+    rd->m_iox_sub = iox_sub_init(&(iox_sub_storage_t){0}, gv->config.iceoryx_service,
+                                 rd->m_topic->m_stype->type_name, part_topic, &opts);
+    ddsrt_free(part_topic);
 
-  // 注意：由于iceoryx结构的存储范式发生了变化
-  // 我们现在在m_iox_sub之前有一个指针8字节
-  // 我们使用这个地址来存储指向上下文的指针。
-  iox_sub_context_t **context = iox_sub_context_ptr(rd->m_iox_sub);
-  *context = &rd->m_iox_sub_context;
+    // NB: 由于iceoryx结构的存储范例更改
+    // 我们现在在m_iox_sub之前有一个指针8字节
+    // 我们使用此地址来存储上下文指针。
+    iox_sub_context_t **context = iox_sub_context_ptr(rd->m_iox_sub);
+    *context = &rd->m_iox_sub_context;
 
-  // 将读取器附加到共享内存监视器
-  rc = dds_shm_monitor_attach_reader(&rd->m_entity.m_domain->m_shm_monitor, rd);
+    rc = dds_shm_monitor_attach_reader(&rd->m_entity.m_domain->m_shm_monitor, rd);
 
-  // 如果返回码不是DDS_RETCODE_OK
-  if (rc != DDS_RETCODE_OK)
-  {
-    // 如果无法附加到监听器，我们将失败（因为我们将无法获取数据）
-    iox_sub_deinit(rd->m_iox_sub);
-    rd->m_iox_sub = NULL;
-    // 输出警告日志
-    DDS_CLOG(DDS_LC_WARNING | DDS_LC_SHM,
-             &rd->m_entity.m_domain->gv.logconfig,
-             "Failed to attach iox subscriber to iox listener\n");
-    // FIXME: 我们需要清理到现在为止创建的所有内容。
-    //        目前只有部分清理，我们需要扩展它。
-    goto err_bad_qos;
+    if (rc != DDS_RETCODE_OK) {
+      // 如果无法附加到监听器（因为我们将无法获取数据），我们将失败
+      iox_sub_deinit(rd->m_iox_sub);
+      rd->m_iox_sub = NULL;
+      DDS_CLOG(DDS_LC_WARNING | DDS_LC_SHM, &rd->m_entity.m_domain->gv.logconfig,
+               "Failed to attach iox subscriber to iox listener\n");
+      // FIXME: 我们需要清理到现在为止创建的所有内容。
+      //        目前只有部分清理，we need to extend it.
+      goto err_bad_qos;
+    }
+
+    // those are set once and never changed
+    // they are used to access reader and monitor from the callback when data is received
+    rd->m_iox_sub_context.monitor = &rd->m_entity.m_domain->m_shm_monitor;
+    rd->m_iox_sub_context.parent_reader = rd;
   }
-
-  // 这些值设置一次，永远不会改变
-  // 当接收到数据时，它们用于从回调访问读取器和监视器
-  rd->m_iox_sub_context.monitor = &rd->m_entity.m_domain->m_shm_monitor;
-  rd->m_iox_sub_context.parent_reader = rd;
-}
 #endif
-// 为 rd->m_entity.m_iid 设置实体实例 ID，使用 ddsi_get_entity_instanceid 函数从域和 GUID 中获取
-rd->m_entity.m_iid = ddsi_get_entity_instanceid(&rd->m_entity.m_domain->gv, &rd->m_entity.m_guid);
 
-// 在订阅者的子实体中注册读取器实体
-dds_entity_register_child(&sub->m_entity, &rd->m_entity);
+  /** @brief 为函数添加参数列表的说明，并逐行添加详细的中文注释
+   *
+   * @param rd 读取器实体指针
+   * @param sub 订阅者实体指针
+   * @param tp 主题实体指针
+   * @param rqos 读取器QoS设置指针
+   * @param subscriber 订阅者实例
+   * @return reader 创建成功返回读取器实例，否则返回错误代码
+   */
+  rd->m_entity.m_iid = ddsi_get_entity_instanceid(
+      &rd->m_entity.m_domain->gv, &rd->m_entity.m_guid);  // 获取实体实例ID并赋值给读取器实体
+  dds_entity_register_child(&sub->m_entity, &rd->m_entity);  // 将读取器实体注册为订阅者实体的子实体
 
-// 在包含读取器作为订阅者子实体之后，订阅者将开始传播 data_on_readers 是否实现。
-// 这里没有考虑到悲观地将其设置为已实现的情况，也没有考虑到在 `dds_entity_register_child` 之前实际上已经实现但不再实现的竞争情况。
-ddsrt_mutex_lock(&rd->m_entity.m_observers_lock);
-ddsrt_mutex_lock(&sub->m_entity.m_observers_lock);
+  // 在将读取器包含在订阅者的子实体中之后，订阅者将开始传播是否实现了data_on_readers。
+  // 这里没有考虑到悲观地将其设置为已实现的情况，也没有考虑到在`dds_entity_register_child`之前实际上已经实现但不再实现的竞争情况。
+  ddsrt_mutex_lock(&rd->m_entity.m_observers_lock);   // 锁定读取器实体的观察者锁
+  ddsrt_mutex_lock(&sub->m_entity.m_observers_lock);  // 锁定订阅者实体的观察者锁
+  if (sub->materialize_data_on_readers == 0)          // 如果订阅者的data_on_readers未实现
+    ddsrt_atomic_and32(&rd->m_entity.m_status.m_status_and_mask,
+                       ~(uint32_t)(DDS_DATA_ON_READERS_STATUS
+                                   << SAM_ENABLED_SHIFT));  // 更新读取器实体的状态和掩码
+  ddsrt_mutex_unlock(&sub->m_entity.m_observers_lock);      // 解锁订阅者实体的观察者锁
+  ddsrt_mutex_unlock(&rd->m_entity.m_observers_lock);       // 解锁读取器实体的观察者锁
 
-// 如果订阅者的 materialize_data_on_readers 为 0，则更新读取器实体的状态和掩码
-if (sub->materialize_data_on_readers == 0)
-  ddsrt_atomic_and32(&rd->m_entity.m_status.m_status_and_mask, ~(uint32_t)(DDS_DATA_ON_READERS_STATUS << SAM_ENABLED_SHIFT));
+  dds_topic_allow_set_qos(tp);                              // 允许设置主题QoS
+  dds_topic_unpin(tp);                                      // 取消固定主题实例
+  dds_subscriber_unlock(sub);                               // 解锁订阅者实例
+  return reader;                                            // 返回创建的读取器实例
 
-// 解锁互斥锁
-ddsrt_mutex_unlock(&sub->m_entity.m_observers_lock);
-ddsrt_mutex_unlock(&rd->m_entity.m_observers_lock);
-
-// 允许设置主题的 QoS
-dds_topic_allow_set_qos(tp);
-
-// 取消固定主题
-dds_topic_unpin(tp);
-
-// 解锁订阅者
-dds_subscriber_unlock(sub);
-
-// 返回读取器实体
-return reader;
-
-// 错误处理部分
-err_bad_qos : err_data_repr : dds_delete_qos(rqos);
-dds_topic_allow_set_qos(tp);
-err_pp_mismatch : dds_topic_unpin(tp);
-err_pin_topic : dds_subscriber_unlock(sub);
-if (created_implicit_sub)
-  (void)dds_delete(subscriber);
-return rc;
+err_bad_qos:
+err_data_repr:
+  dds_delete_qos(rqos);                                    // 删除错误的读取器QoS设置
+  dds_topic_allow_set_qos(tp);                             // 允许设置主题QoS
+err_pp_mismatch:
+  dds_topic_unpin(tp);                                     // 取消固定主题实例
+err_pin_topic:
+  dds_subscriber_unlock(sub);                              // 解锁订阅者实例
+  if (created_implicit_sub) (void)dds_delete(subscriber);  // 如果创建了隐式订阅者，则删除订阅者实例
+  return rc;                                               // 返回错误代码
 }
 
-// 创建读取器实体的函数，接受参与者或订阅者、主题、QoS 和监听器作为参数
-dds_entity_t dds_create_reader(dds_entity_t participant_or_subscriber, dds_entity_t topic, const dds_qos_t *qos, const dds_listener_t *listener)
-{
+/**
+ * @brief 创建一个数据读取器 (Create a data reader)
+ *
+ * @param participant_or_subscriber 参与者或订阅者实体 (Participant or subscriber entity)
+ * @param topic 主题实体 (Topic entity)
+ * @param qos 服务质量设置 (Quality of Service settings)
+ * @param listener 监听器 (Listener)
+ * @return 成功时返回创建的读取器实体，失败时返回错误代码 (Returns the created reader entity on
+ * success, error code on failure)
+ */
+dds_entity_t dds_create_reader(dds_entity_t participant_or_subscriber,
+                               dds_entity_t topic,
+                               const dds_qos_t *qos,
+                               const dds_listener_t *listener) {
+  // 调用内部函数创建读取器 (Call internal function to create reader)
   return dds_create_reader_int(participant_or_subscriber, topic, qos, listener, NULL);
 }
 
-// 创建带有 RHC 的读取器实体的函数，接受参与者或订阅者、主题、QoS、监听器和 RHC 作为参数
-dds_entity_t dds_create_reader_rhc(dds_entity_t participant_or_subscriber, dds_entity_t topic, const dds_qos_t *qos, const dds_listener_t *listener, struct dds_rhc *rhc)
-{
-  // 如果 RHC 为空，则返回错误代码
-  if (rhc == NULL)
-    return DDS_RETCODE_BAD_PARAMETER;
+/**
+ * @brief 创建一个带有资源历史缓存的数据读取器 (Create a data reader with resource history cache)
+ *
+ * @param participant_or_subscriber 参与者或订阅者实体 (Participant or subscriber entity)
+ * @param topic 主题实体 (Topic entity)
+ * @param qos 服务质量设置 (Quality of Service settings)
+ * @param listener 监听器 (Listener)
+ * @param rhc 资源历史缓存 (Resource history cache)
+ * @return 成功时返回创建的读取器实体，失败时返回错误代码 (Returns the created reader entity on
+ * success, error code on failure)
+ */
+dds_entity_t dds_create_reader_rhc(dds_entity_t participant_or_subscriber,
+                                   dds_entity_t topic,
+                                   const dds_qos_t *qos,
+                                   const dds_listener_t *listener,
+                                   struct dds_rhc *rhc) {
+  // 检查资源历史缓存是否为空 (Check if resource history cache is NULL)
+  if (rhc == NULL) return DDS_RETCODE_BAD_PARAMETER;
 
-  // 调用内部创建读取器实体的函数
+  // 调用内部函数创建带有资源历史缓存的读取器 (Call internal function to create reader with resource
+  // history cache)
   return dds_create_reader_int(participant_or_subscriber, topic, qos, listener, rhc);
 }
-// dds_reader_lock_samples 函数用于锁定 reader 中的样本
-uint32_t dds_reader_lock_samples(dds_entity_t reader)
-{
-  // 定义一个 dds_reader 类型的指针 rd
+
+/**
+ * @brief 锁定数据读取器中的样本 (Lock samples in the data reader)
+ *
+ * @param reader 读取器实体 (Reader entity)
+ * @return 返回锁定的样本数量 (Returns the number of locked samples)
+ */
+uint32_t dds_reader_lock_samples(dds_entity_t reader) {
   dds_reader *rd;
-  // 定义一个 uint32_t 类型的变量 n
   uint32_t n;
-  // 如果锁定 reader 失败，返回 0
-  if (dds_reader_lock(reader, &rd) != DDS_RETCODE_OK)
-    return 0;
-  // 锁定 rd 的样本，并将结果赋值给 n
+
+  // 尝试锁定读取器 (Try to lock the reader)
+  if (dds_reader_lock(reader, &rd) != DDS_RETCODE_OK) return 0;
+
+  // 锁定资源历史缓存中的样本 (Lock samples in resource history cache)
   n = dds_rhc_lock_samples(rd->m_rhc);
-  // 解锁 rd
+
+  // 解锁读取器 (Unlock the reader)
   dds_reader_unlock(rd);
-  // 返回 n
+
+  // 返回锁定的样本数量 (Return the number of locked samples)
   return n;
 }
 
-// dds_reader_wait_for_historical_data 函数用于等待历史数据
-dds_return_t dds_reader_wait_for_historical_data(dds_entity_t reader, dds_duration_t max_wait)
-{
-  // 定义一个 dds_reader 类型的指针 rd
+/**
+ * @brief 等待历史数据 (Wait for historical data)
+ *
+ * @param reader 读取器实体 (Reader entity)
+ * @param max_wait 最大等待时间 (Maximum wait time)
+ * @return 返回操作结果 (Returns the operation result)
+ */
+dds_return_t dds_reader_wait_for_historical_data(dds_entity_t reader, dds_duration_t max_wait) {
   dds_reader *rd;
-  // 定义一个 dds_return_t 类型的变量 ret
   dds_return_t ret;
-  // 忽略 max_wait 参数
+
+  // 忽略最大等待时间 (Ignore maximum wait time)
   (void)max_wait;
-  // 如果锁定 reader 失败，返回错误码
-  if ((ret = dds_reader_lock(reader, &rd)) != DDS_RETCODE_OK)
-    return ret;
-  // 根据 rd 的持久性类型进行处理
-  switch (rd->m_entity.m_qos->durability.kind)
-  {
-  case DDS_DURABILITY_VOLATILE:
-    ret = DDS_RETCODE_OK;
-    break;
-  case DDS_DURABILITY_TRANSIENT_LOCAL:
-    break;
-  case DDS_DURABILITY_TRANSIENT:
-  case DDS_DURABILITY_PERSISTENT:
-    break;
+
+  // 尝试锁定读取器 (Try to lock the reader)
+  if ((ret = dds_reader_lock(reader, &rd)) != DDS_RETCODE_OK) return ret;
+
+  // 根据耐久性类型处理历史数据 (Handle historical data based on durability kind)
+  switch (rd->m_entity.m_qos->durability.kind) {
+    case DDS_DURABILITY_VOLATILE:
+      ret = DDS_RETCODE_OK;
+      break;
+    case DDS_DURABILITY_TRANSIENT_LOCAL:
+      break;
+    case DDS_DURABILITY_TRANSIENT:
+    case DDS_DURABILITY_PERSISTENT:
+      break;
   }
-  // 解锁 rd
+
+  // 解锁读取器 (Unlock the reader)
   dds_reader_unlock(rd);
-  // 返回 ret
+
+  // 返回操作结果 (Return the operation result)
   return ret;
 }
 
-// dds_get_subscriber 函数用于获取实体的订阅者
-dds_entity_t dds_get_subscriber(dds_entity_t entity)
-{
-  // 定义一个 dds_entity 类型的指针 e
-  dds_entity *e;
-  // 定义一个 dds_return_t 类型的变量 ret
-  dds_return_t ret;
-  // 如果锁定实体失败，返回错误码
+/**
+ * @brief 获取实体的订阅者 (Get the subscriber of an entity)
+ *
+ * @param[in] entity 要查询的实体 (The entity to query)
+ * @return 订阅者实体，如果出错则返回错误代码 (The subscriber entity, or an error code if there is
+ * an issue)
+ */
+dds_entity_t dds_get_subscriber(dds_entity_t entity) {
+  dds_entity *e;     // 定义一个指向实体的指针 (Define a pointer to an entity)
+  dds_return_t ret;  // 定义一个返回值变量 (Define a return value variable)
+
+  // 尝试获取实体并检查返回值 (Try to get the entity and check the return value)
   if ((ret = dds_entity_pin(entity, &e)) != DDS_RETCODE_OK)
-    return ret;
-  else
-  {
-    // 定义一个 dds_entity_t 类型的变量 subh
-    dds_entity_t subh;
-    // 根据实体类型进行处理
-    // 根据实体类型执行相应操作
-    switch (dds_entity_kind(e))
-    {
-    // 如果实体类型为读取器
-    case DDS_KIND_READER:
-      // 断言实体的父级类型为订阅者
-      assert(dds_entity_kind(e->m_parent) == DDS_KIND_SUBSCRIBER);
-      // 获取父级实体的句柄
-      subh = e->m_parent->m_hdllink.hdl;
-      // 跳出 switch 语句
-      break;
+    return ret;  // 如果返回值不是成功，则直接返回错误代码 (If the return value is not success,
+                 // return the error code directly)
+  else {
+    dds_entity_t subh;  // 定义一个订阅者实体变量 (Define a subscriber entity variable)
 
-    // 如果实体类型为条件读取或条件查询
-    case DDS_KIND_COND_READ:
-    case DDS_KIND_COND_QUERY:
-      // 断言实体的父级类型为读取器
-      assert(dds_entity_kind(e->m_parent) == DDS_KIND_READER);
-      // 断言实体的父级的父级类型为订阅者
-      assert(dds_entity_kind(e->m_parent->m_parent) == DDS_KIND_SUBSCRIBER);
-      // 获取父级实体的父级实体的句柄
-      subh = e->m_parent->m_parent->m_hdllink.hdl;
-      // 跳出 switch 语句
-      break;
-
-    // 其他情况
-    default:
-      // 设置返回代码为非法操作
-      subh = DDS_RETCODE_ILLEGAL_OPERATION;
-      // 跳出 switch 语句
-      break;
+    // 根据实体类型进行处理 (Process according to the entity type)
+    switch (dds_entity_kind(e)) {
+      case DDS_KIND_READER:           // 如果实体类型是读者 (If the entity type is reader)
+        assert(dds_entity_kind(e->m_parent) ==
+               DDS_KIND_SUBSCRIBER);  // 断言其父实体类型为订阅者 (Assert that its parent entity
+                                      // type is subscriber)
+        subh = e->m_parent->m_hdllink.hdl;  // 获取订阅者实体 (Get the subscriber entity)
+        break;
+      case DDS_KIND_COND_READ:  // 如果实体类型是条件读 (If the entity type is conditional read)
+      case DDS_KIND_COND_QUERY:  // 或者实体类型是条件查询 (Or the entity type is conditional query)
+        assert(dds_entity_kind(e->m_parent) ==
+               DDS_KIND_READER);  // 断言其父实体类型为读者 (Assert that its parent entity type is
+                                  // reader)
+        assert(dds_entity_kind(e->m_parent->m_parent) ==
+               DDS_KIND_SUBSCRIBER);  // 断言其祖父实体类型为订阅者 (Assert that its grandparent
+                                      // entity type is subscriber)
+        subh = e->m_parent->m_parent->m_hdllink.hdl;  // 获取订阅者实体 (Get the subscriber entity)
+        break;
+      default:                                        // 其他情况 (Other cases)
+        subh = DDS_RETCODE_ILLEGAL_OPERATION;  // 返回非法操作错误代码 (Return illegal operation
+                                               // error code)
+        break;
     }
-    // 解锁实体
-    dds_entity_unpin(e);
-    // 返回 subh
-    return subh;
+
+    dds_entity_unpin(e);  // 解除实体的引用 (Unpin the entity)
+    return subh;          // 返回订阅者实体 (Return the subscriber entity)
   }
 }
-// 初始化dds_reader的数据分配器
-dds_return_t dds__reader_data_allocator_init(const dds_reader *rd, dds_data_allocator_t *data_allocator)
-{
+
+/**
+ * @brief 初始化数据分配器 (Initialize the data allocator)
+ *
+ * @param[in] rd 读取器指针 (Pointer to the reader)
+ * @param[out] data_allocator 数据分配器指针 (Pointer to the data allocator)
+ * @return 返回操作结果代码 (Return operation result code)
+ */
+dds_return_t dds__reader_data_allocator_init(const dds_reader *rd,
+                                             dds_data_allocator_t *data_allocator) {
 #ifdef DDS_HAS_SHM
-  // 定义一个指向dds_iox_allocator_t类型的指针d，并将其指向data_allocator的opaque字节
+  // 将data_allocator的opaque字节转换为dds_iox_allocator_t类型指针
+  // (Cast the opaque bytes of data_allocator to a pointer of type dds_iox_allocator_t)
   dds_iox_allocator_t *d = (dds_iox_allocator_t *)data_allocator->opaque.bytes;
-  // 初始化互斥锁
+
+  // 初始化互斥锁 (Initialize the mutex)
   ddsrt_mutex_init(&d->mutex);
-  // 如果rd的m_iox_sub成员不为空
-  if (NULL != rd->m_iox_sub)
-  {
-    // 设置d的kind为DDS_IOX_ALLOCATOR_KIND_SUBSCRIBER
+
+  // 判断读取器是否有m_iox_sub成员 (Check if the reader has an m_iox_sub member)
+  if (NULL != rd->m_iox_sub) {
+    // 设置分配器类型为订阅者 (Set the allocator kind to subscriber)
     d->kind = DDS_IOX_ALLOCATOR_KIND_SUBSCRIBER;
-    // 将d的ref.sub设置为rd的m_iox_sub成员
+
+    // 设置订阅者引用 (Set the subscriber reference)
     d->ref.sub = rd->m_iox_sub;
-  }
-  else
-  {
-    // 否则，设置d的kind为DDS_IOX_ALLOCATOR_KIND_NONE
+  } else {
+    // 设置分配器类型为无 (Set the allocator kind to none)
     d->kind = DDS_IOX_ALLOCATOR_KIND_NONE;
   }
-  // 返回DDS_RETCODE_OK
+
+  // 返回操作成功代码 (Return the operation success code)
   return DDS_RETCODE_OK;
 #else
-  // 如果没有定义DDS_HAS_SHM，则忽略rd和data_allocator参数
+  // 忽略未使用的参数 (Ignore unused parameters)
   (void)rd;
   (void)data_allocator;
-  // 返回DDS_RETCODE_OK
+
+  // 返回操作成功代码 (Return the operation success code)
   return DDS_RETCODE_OK;
 #endif
 }
 
-// 销毁dds_reader的数据分配器
-dds_return_t dds__reader_data_allocator_fini(const dds_reader *rd, dds_data_allocator_t *data_allocator)
-{
+/**
+ * @brief 结束数据分配器 (Finalize the data allocator)
+ *
+ * @param[in] rd 读取器指针 (Pointer to the reader)
+ * @param[out] data_allocator 数据分配器指针 (Pointer to the data allocator)
+ * @return 返回操作结果代码 (Return operation result code)
+ */
+dds_return_t dds__reader_data_allocator_fini(const dds_reader *rd,
+                                             dds_data_allocator_t *data_allocator) {
 #ifdef DDS_HAS_SHM
-  // 定义一个指向dds_iox_allocator_t类型的指针d，并将其指向data_allocator的opaque字节
+  // 将data_allocator的opaque字节转换为dds_iox_allocator_t类型指针
+  // (Cast the opaque bytes of data_allocator to a pointer of type dds_iox_allocator_t)
   dds_iox_allocator_t *d = (dds_iox_allocator_t *)data_allocator->opaque.bytes;
-  // 销毁互斥锁
+
+  // 销毁互斥锁 (Destroy the mutex)
   ddsrt_mutex_destroy(&d->mutex);
-  // 设置d的kind为DDS_IOX_ALLOCATOR_KIND_FINI
+
+  // 设置分配器类型为结束 (Set the allocator kind to finalize)
   d->kind = DDS_IOX_ALLOCATOR_KIND_FINI;
 #else
-  // 如果没有定义DDS_HAS_SHM，则忽略data_allocator参数
+  // 忽略未使用的参数 (Ignore unused parameters)
   (void)data_allocator;
 #endif
-  // 忽略rd参数
+
+  // 忽略未使用的参数 (Ignore unused parameters)
   (void)rd;
-  // 返回DDS_RETCODE_OK
+
+  // 返回操作成功代码 (Return the operation success code)
   return DDS_RETCODE_OK;
 }

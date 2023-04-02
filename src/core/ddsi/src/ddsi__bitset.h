@@ -16,54 +16,53 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "dds/export.h"
 #include "dds/ddsi/ddsi_unused.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 /** @component bitset */
-inline int ddsi_bitset_isset (uint32_t numbits, const uint32_t *bits, uint32_t idx)
+inline int ddsi_bitset_isset(uint32_t numbits, const uint32_t * bits, uint32_t idx)
 {
-  return idx < numbits && (bits[idx/32] & (UINT32_C(1) << (31 - (idx%32))));
+  return idx < numbits && (bits[idx / 32] & (UINT32_C(1) << (31 - (idx % 32))));
 }
 
 /** @component bitset */
-inline void ddsi_bitset_set (UNUSED_ARG_NDEBUG (uint32_t numbits), uint32_t *bits, uint32_t idx)
+inline void ddsi_bitset_set(UNUSED_ARG_NDEBUG(uint32_t numbits), uint32_t * bits, uint32_t idx)
 {
-  assert (idx < numbits);
-  bits[idx/32] |= UINT32_C(1) << (31 - (idx%32));
+  assert(idx < numbits);
+  bits[idx / 32] |= UINT32_C(1) << (31 - (idx % 32));
 }
 
 /** @component bitset */
-inline void ddsi_bitset_clear (UNUSED_ARG_NDEBUG (uint32_t numbits), uint32_t *bits, uint32_t idx)
+inline void ddsi_bitset_clear(UNUSED_ARG_NDEBUG(uint32_t numbits), uint32_t * bits, uint32_t idx)
 {
-  assert (idx < numbits);
-  bits[idx/32] &= ~(UINT32_C(1) << (31 - (idx%32)));
+  assert(idx < numbits);
+  bits[idx / 32] &= ~(UINT32_C(1) << (31 - (idx % 32)));
 }
 
 /** @component bitset */
-inline void ddsi_bitset_zero (uint32_t numbits, uint32_t *bits)
+inline void ddsi_bitset_zero(uint32_t numbits, uint32_t * bits)
 {
-  memset (bits, 0, 4 * ((numbits + 31) / 32));
+  memset(bits, 0, 4 * ((numbits + 31) / 32));
 }
 
 /** @component bitset */
-inline void ddsi_bitset_one (uint32_t numbits, uint32_t *bits)
+inline void ddsi_bitset_one(uint32_t numbits, uint32_t * bits)
 {
-  memset (bits, 0xff, 4 * ((numbits + 31) / 32));
+  memset(bits, 0xff, 4 * ((numbits + 31) / 32));
 
   /* clear bits "accidentally" set */
-  if ((numbits % 32) != 0)
-  {
+  if ((numbits % 32) != 0) {
     const uint32_t k = numbits / 32;
     const uint32_t n = numbits % 32;
     bits[k] &= ~(~UINT32_C(0) >> n);
   }
 }
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

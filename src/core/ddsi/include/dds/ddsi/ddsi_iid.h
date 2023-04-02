@@ -12,29 +12,30 @@
 #ifndef _DDS_IID_H_
 #define _DDS_IID_H_
 
-#include "dds/export.h"
 #include "dds/ddsrt/atomics.h"
 #include "dds/ddsrt/sync.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-struct ddsi_iid {
+struct ddsi_iid
+{
   ddsrt_atomic_uint64_t counter;
   uint32_t key[4];
 };
 
 /** @component instance_id */
-void ddsi_iid_init (void);
+void ddsi_iid_init(void);
 
 /** @component instance_id */
-void ddsi_iid_fini (void);
+void ddsi_iid_fini(void);
 
 /** @component instance_id */
-uint64_t ddsi_iid_gen (void);
+uint64_t ddsi_iid_gen(void);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif

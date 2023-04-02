@@ -10,40 +10,39 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 #include <stdlib.h>
+
 #include "CUnit/Test.h"
+#include "common/config_env.h"
+#include "common/test_identity.h"
 #include "dds/dds.h"
 #include "dds/ddsrt/cdtors.h"
 #include "dds/ddsrt/environ.h"
 #include "dds/ddsrt/heap.h"
-#include "ddsi__misc.h"
 #include "dds/security/dds_security_api_defs.h"
-#include "common/config_env.h"
-#include "common/test_identity.h"
+#include "ddsi__misc.h"
 
 static uint32_t found;
 
-static const char *default_config =
-    "<Domain id=\"any\">"
-    "  <Discovery>"
-    "    <Tag>${CYCLONEDDS_PID}</Tag>"
-    "  </Discovery>"
-    "  <Tracing><Verbosity>finest</></>"
-    "</Domain>";
+static const char * default_config =
+  "<Domain id=\"any\">"
+  "  <Discovery>"
+  "    <Tag>${CYCLONEDDS_PID}</Tag>"
+  "  </Discovery>"
+  "  <Tracing><Verbosity>finest</></>"
+  "</Domain>";
 
-static void logger(void *ptr, const dds_log_data_t *data)
+static void logger(void * ptr, const dds_log_data_t * data)
 {
-  char **expected = (char **)ptr;
+  char ** expected = (char **)ptr;
   fputs(data->message, stdout);
-  for (uint32_t i = 0; expected[i] != NULL; i++)
-  {
-    if (ddsi_patmatch(expected[i], data->message))
-    {
+  for (uint32_t i = 0; expected[i] != NULL; i++) {
+    if (ddsi_patmatch(expected[i], data->message)) {
       found |= (uint32_t)(1 << i);
     }
   }
 }
 
-static void set_logger_exp(const void *log_expected)
+static void set_logger_exp(const void * log_expected)
 {
   found = 0;
   dds_set_log_mask(DDS_LC_FATAL | DDS_LC_ERROR | DDS_LC_WARNING | DDS_LC_CONFIG);
@@ -60,9 +59,7 @@ static void reset_logger()
 CU_Test(ddssec_security_plugin_loading, all_ok, .init = ddsrt_init, .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  const char *log_expected[] = {
-      "DDS Security plugins have been loaded*",
-      NULL};
+  const char * log_expected[] = {"DDS Security plugins have been loaded*", NULL};
 
   const char *sec_config =
       "<Domain id=\"any\">"
@@ -106,10 +103,9 @@ CU_Test(ddssec_security_plugin_loading, all_ok, .init = ddsrt_init, .fini = ddsr
 CU_Test(ddssec_security_plugin_loading, missing_finalize, .init = ddsrt_init, .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  const char *log_expected[] = {
-      "Could not find the function: finalize_test_authentication_NON_EXISTING_FUNC*",
-      "Could not load Authentication plugin*",
-      NULL};
+  const char * log_expected[] = {
+    "Could not find the function: finalize_test_authentication_NON_EXISTING_FUNC*",
+    "Could not load Authentication plugin*", NULL};
 
   const char *sec_config =
       "<Domain id=\"any\">"
@@ -149,13 +145,14 @@ CU_Test(ddssec_security_plugin_loading, missing_finalize, .init = ddsrt_init, .f
   CU_ASSERT_FATAL(found == 0x3);
 }
 
-CU_Test(ddssec_security_plugin_loading, authentication_missing_function, .init = ddsrt_init, .fini = ddsrt_fini)
+CU_Test(
+  ddssec_security_plugin_loading, authentication_missing_function, .init = ddsrt_init,
+  .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  const char *log_expected[] = {
-      "Could not find the function for Authentication: get_shared_secret*",
-      "Could not load security*",
-      NULL};
+  const char * log_expected[] = {
+    "Could not find the function for Authentication: get_shared_secret*",
+    "Could not load security*", NULL};
 
   const char *sec_config =
       "<Domain id=\"any\">"
@@ -195,13 +192,14 @@ CU_Test(ddssec_security_plugin_loading, authentication_missing_function, .init =
   CU_ASSERT_FATAL(found == 0x3);
 }
 
-CU_Test(ddssec_security_plugin_loading, access_control_missing_function, .init = ddsrt_init, .fini = ddsrt_fini)
+CU_Test(
+  ddssec_security_plugin_loading, access_control_missing_function, .init = ddsrt_init,
+  .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  const char *log_expected[] = {
-      "Could not find the function for Access Control: check_create_datareader*",
-      "Could not load security*",
-      NULL};
+  const char * log_expected[] = {
+    "Could not find the function for Access Control: check_create_datareader*",
+    "Could not load security*", NULL};
 
   const char *sec_config =
       "<Domain id=\"any\">"
@@ -241,13 +239,14 @@ CU_Test(ddssec_security_plugin_loading, access_control_missing_function, .init =
   CU_ASSERT_FATAL(found == 0x3);
 }
 
-CU_Test(ddssec_security_plugin_loading, cryptography_missing_function, .init = ddsrt_init, .fini = ddsrt_fini)
+CU_Test(
+  ddssec_security_plugin_loading, cryptography_missing_function, .init = ddsrt_init,
+  .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  const char *log_expected[] = {
-      "Could not find the function for Cryptographic: set_remote_participant_crypto_tokens*",
-      "Could not load security*",
-      NULL};
+  const char * log_expected[] = {
+    "Could not find the function for Cryptographic: set_remote_participant_crypto_tokens*",
+    "Could not load security*", NULL};
 
   const char *sec_config =
       "<Domain id=\"any\">"
@@ -339,11 +338,9 @@ CU_Test(ddssec_security_plugin_loading, no_library_in_path, .init = ddsrt_init, 
 CU_Test(ddssec_security_plugin_loading, init_error, .init = ddsrt_init, .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  const char *log_expected[] = {
-      "Error occurred while initializing Authentication plugin*",
-      "Could not load Authentication plugin*",
-      "Could not load security*",
-      NULL};
+  const char * log_expected[] = {
+    "Error occurred while initializing Authentication plugin*",
+    "Could not load Authentication plugin*", "Could not load security*", NULL};
 
   const char *sec_config =
       "<Domain id=\"any\">"
@@ -386,10 +383,8 @@ CU_Test(ddssec_security_plugin_loading, init_error, .init = ddsrt_init, .fini = 
 CU_Test(ddssec_security_plugin_loading, all_ok_with_props, .init = ddsrt_init, .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  dds_qos_t *qos;
-  const char *log_expected[] = {
-      "DDS Security plugins have been loaded*",
-      NULL};
+  dds_qos_t * qos;
+  const char * log_expected[] = {"DDS Security plugins have been loaded*", NULL};
 
   unsigned char bvalue[3] = {0x01, 0x02, 0x03};
   CU_ASSERT_FATAL((qos = dds_create_qos()) != NULL);
@@ -403,13 +398,16 @@ CU_Test(ddssec_security_plugin_loading, all_ok_with_props, .init = ddsrt_init, .
   dds_qset_prop(qos, DDS_SEC_PROP_AUTH_PASSWORD, "testtext_Password_testtext");
   dds_qset_prop(qos, DDS_SEC_PROP_ACCESS_TRUSTED_CA_DIR, "file:/test/dir");
 
-  dds_qset_prop(qos, DDS_SEC_PROP_AUTH_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_authentication_wrapper"));
+  dds_qset_prop(
+    qos, DDS_SEC_PROP_AUTH_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_authentication_wrapper"));
   dds_qset_prop(qos, DDS_SEC_PROP_AUTH_LIBRARY_INIT, "init_test_authentication_all_ok");
   dds_qset_prop(qos, DDS_SEC_PROP_AUTH_LIBRARY_FINALIZE, "finalize_test_authentication_all_ok");
-  dds_qset_prop(qos, DDS_SEC_PROP_CRYPTO_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_cryptography_wrapper"));
+  dds_qset_prop(
+    qos, DDS_SEC_PROP_CRYPTO_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_cryptography_wrapper"));
   dds_qset_prop(qos, DDS_SEC_PROP_CRYPTO_LIBRARY_INIT, "init_test_cryptography_all_ok");
   dds_qset_prop(qos, DDS_SEC_PROP_CRYPTO_LIBRARY_FINALIZE, "finalize_test_cryptography_all_ok");
-  dds_qset_prop(qos, DDS_SEC_PROP_ACCESS_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_access_control_wrapper"));
+  dds_qset_prop(
+    qos, DDS_SEC_PROP_ACCESS_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_access_control_wrapper"));
   dds_qset_prop(qos, DDS_SEC_PROP_ACCESS_LIBRARY_INIT, "init_test_access_control_all_ok");
   dds_qset_prop(qos, DDS_SEC_PROP_ACCESS_LIBRARY_FINALIZE, "finalize_test_access_control_all_ok");
 
@@ -430,14 +428,16 @@ CU_Test(ddssec_security_plugin_loading, all_ok_with_props, .init = ddsrt_init, .
   CU_ASSERT_FATAL(found == 0x1);
 }
 
-CU_Test(ddssec_security_plugin_loading, missing_plugin_property_with_props, .init = ddsrt_init, .fini = ddsrt_fini)
+CU_Test(
+  ddssec_security_plugin_loading, missing_plugin_property_with_props, .init = ddsrt_init,
+  .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  dds_qos_t *qos;
-  const char *log_expected[] = {
-      "*using security settings from QoS*",
-      "*required security property " DDS_SEC_PROP_AUTH_LIBRARY_INIT " missing in Property QoS*",
-      NULL};
+  dds_qos_t * qos;
+  const char * log_expected[] = {
+    "*using security settings from QoS*",
+    "*required security property " DDS_SEC_PROP_AUTH_LIBRARY_INIT " missing in Property QoS*",
+    NULL};
 
   unsigned char bvalue[3] = {0x01, 0x02, 0x03};
   CU_ASSERT_FATAL((qos = dds_create_qos()) != NULL);
@@ -477,14 +477,16 @@ CU_Test(ddssec_security_plugin_loading, missing_plugin_property_with_props, .ini
   CU_ASSERT_FATAL(found == 0x3);
 }
 
-CU_Test(ddssec_security_plugin_loading, empty_plugin_property_with_props, .init = ddsrt_init, .fini = ddsrt_fini)
+CU_Test(
+  ddssec_security_plugin_loading, empty_plugin_property_with_props, .init = ddsrt_init,
+  .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  dds_qos_t *qos;
-  const char *log_expected[] = {
-      "*using security settings from QoS*",
-      "*required security property " DDS_SEC_PROP_AUTH_LIBRARY_FINALIZE " missing in Property QoS*",
-      NULL};
+  dds_qos_t * qos;
+  const char * log_expected[] = {
+    "*using security settings from QoS*",
+    "*required security property " DDS_SEC_PROP_AUTH_LIBRARY_FINALIZE " missing in Property QoS*",
+    NULL};
 
   unsigned char bvalue[3] = {0x01, 0x02, 0x03};
   CU_ASSERT_FATAL((qos = dds_create_qos()) != NULL);
@@ -524,14 +526,16 @@ CU_Test(ddssec_security_plugin_loading, empty_plugin_property_with_props, .init 
   CU_ASSERT_FATAL(found == 0x3);
 }
 
-CU_Test(ddssec_security_plugin_loading, missing_security_property_with_props, .init = ddsrt_init, .fini = ddsrt_fini)
+CU_Test(
+  ddssec_security_plugin_loading, missing_security_property_with_props, .init = ddsrt_init,
+  .fini = ddsrt_fini)
 {
   dds_entity_t domain, participant;
-  dds_qos_t *qos;
-  const char *log_expected[] = {
-      "*using security settings from QoS*",
-      "*required security property " DDS_SEC_PROP_ACCESS_PERMISSIONS " missing in Property QoS*",
-      NULL};
+  dds_qos_t * qos;
+  const char * log_expected[] = {
+    "*using security settings from QoS*",
+    "*required security property " DDS_SEC_PROP_ACCESS_PERMISSIONS " missing in Property QoS*",
+    NULL};
 
   unsigned char bvalue[3] = {0x01, 0x02, 0x03};
   CU_ASSERT_FATAL((qos = dds_create_qos()) != NULL);
@@ -571,16 +575,15 @@ CU_Test(ddssec_security_plugin_loading, missing_security_property_with_props, .i
   CU_ASSERT_FATAL(found == 0x3);
 }
 
-CU_Test(ddssec_security_plugin_loading, multiple_domains_different_config, .init = ddsrt_init, .fini = ddsrt_fini)
+CU_Test(
+  ddssec_security_plugin_loading, multiple_domains_different_config, .init = ddsrt_init,
+  .fini = ddsrt_fini)
 {
   dds_entity_t domain1, domain2, participant1, participant2, participant3;
-  dds_qos_t *qos;
-  const char *log_expected[] = {
-      "*using security settings from configuration*",
-      "*using security settings from QoS*",
-      "DDS Security plugins have been loaded*",
-      "*security is already loaded for this domain*",
-      NULL};
+  dds_qos_t * qos;
+  const char * log_expected[] = {
+    "*using security settings from configuration*", "*using security settings from QoS*",
+    "DDS Security plugins have been loaded*", "*security is already loaded for this domain*", NULL};
 
   const char *sec_config =
       "<Domain id=\"1\">"
@@ -652,14 +655,17 @@ CU_Test(ddssec_security_plugin_loading, multiple_domains_different_config, .init
   dds_qset_prop(qos, DDS_SEC_PROP_AUTH_PASSWORD, "testtext_Password_testtext");
   dds_qset_prop(qos, DDS_SEC_PROP_ACCESS_TRUSTED_CA_DIR, "file:/test/dir");
 
-  dds_qset_prop(qos, DDS_SEC_PROP_AUTH_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_authentication_wrapper"));
+  dds_qset_prop(
+    qos, DDS_SEC_PROP_AUTH_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_authentication_wrapper"));
   dds_qset_prop(qos, DDS_SEC_PROP_AUTH_LIBRARY_INIT, "init_test_authentication_all_ok");
   dds_qset_prop(qos, DDS_SEC_PROP_AUTH_LIBRARY_FINALIZE, "finalize_test_authentication_all_ok");
   dds_qset_prop(qos, DDS_SEC_PROP_AUTH_IDENTITY_CA, "testtext_IdentityCA_testtext");
-  dds_qset_prop(qos, DDS_SEC_PROP_CRYPTO_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_cryptography_wrapper"));
+  dds_qset_prop(
+    qos, DDS_SEC_PROP_CRYPTO_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_cryptography_wrapper"));
   dds_qset_prop(qos, DDS_SEC_PROP_CRYPTO_LIBRARY_INIT, "init_test_cryptography_all_ok");
   dds_qset_prop(qos, DDS_SEC_PROP_CRYPTO_LIBRARY_FINALIZE, "finalize_test_cryptography_all_ok");
-  dds_qset_prop(qos, DDS_SEC_PROP_ACCESS_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_access_control_wrapper"));
+  dds_qset_prop(
+    qos, DDS_SEC_PROP_ACCESS_LIBRARY_PATH, WRAPPERLIB_PATH("dds_security_access_control_wrapper"));
   dds_qset_prop(qos, DDS_SEC_PROP_ACCESS_LIBRARY_INIT, "init_test_access_control_all_ok");
   dds_qset_prop(qos, DDS_SEC_PROP_ACCESS_LIBRARY_FINALIZE, "finalize_test_access_control_all_ok");
 

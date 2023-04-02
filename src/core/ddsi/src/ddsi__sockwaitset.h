@@ -14,7 +14,7 @@
 
 #include "dds/ddsi/ddsi_sockwaitset.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -31,7 +31,7 @@ struct ddsi_tran_conn;
  *
  * @return struct ddsi_sock_waitset*
  */
-struct ddsi_sock_waitset * ddsi_sock_waitset_new (void);
+struct ddsi_sock_waitset * ddsi_sock_waitset_new(void);
 
 /**
  * @brief Frees the waitset
@@ -41,7 +41,7 @@ struct ddsi_sock_waitset * ddsi_sock_waitset_new (void);
  *
  * @param ws    The socket waitset
  */
-void ddsi_sock_waitset_free (struct ddsi_sock_waitset * ws);
+void ddsi_sock_waitset_free(struct ddsi_sock_waitset * ws);
 
 /**
  * @brief Triggers the waitset
@@ -63,7 +63,7 @@ void ddsi_sock_waitset_free (struct ddsi_sock_waitset * ws);
  *
  * @param ws    The socket waitset
  */
-void ddsi_sock_waitset_trigger (struct ddsi_sock_waitset * ws);
+void ddsi_sock_waitset_trigger(struct ddsi_sock_waitset * ws);
 
 /**
  * @component socket_waitset
@@ -79,7 +79,7 @@ void ddsi_sock_waitset_trigger (struct ddsi_sock_waitset * ws);
  * @param conn  Connection
  * @returns Returns < 0 on error, 0 if already present, 1 if added
  */
-int ddsi_sock_waitset_add (struct ddsi_sock_waitset * ws, struct ddsi_tran_conn * conn);
+int ddsi_sock_waitset_add(struct ddsi_sock_waitset * ws, struct ddsi_tran_conn * conn);
 
 /**
  * @brief Drops all connections from the waitset from index onwards.
@@ -92,7 +92,7 @@ int ddsi_sock_waitset_add (struct ddsi_sock_waitset * ws, struct ddsi_tran_conn 
  * @param ws        The socket waitset
  * @param index     Index of first connection to be dropped
  */
-void ddsi_sock_waitset_purge (struct ddsi_sock_waitset * ws, unsigned index);
+void ddsi_sock_waitset_purge(struct ddsi_sock_waitset * ws, unsigned index);
 
 /**
  * @brief Waits until some of the connections in WS have data to be read.
@@ -110,7 +110,7 @@ void ddsi_sock_waitset_purge (struct ddsi_sock_waitset * ws, unsigned index);
  * @param ws The socket waitset
  * @return struct ddsi_sock_waitset_ctx*
  */
-struct ddsi_sock_waitset_ctx * ddsi_sock_waitset_wait (struct ddsi_sock_waitset * ws);
+struct ddsi_sock_waitset_ctx * ddsi_sock_waitset_wait(struct ddsi_sock_waitset * ws);
 
 /**
  * @component socket_waitset
@@ -130,7 +130,7 @@ struct ddsi_sock_waitset_ctx * ddsi_sock_waitset_wait (struct ddsi_sock_waitset 
  * @param conn  Connection
  * @return int
  */
-int ddsi_sock_waitset_next_event (struct ddsi_sock_waitset_ctx * ctx, struct ddsi_tran_conn ** conn);
+int ddsi_sock_waitset_next_event(struct ddsi_sock_waitset_ctx * ctx, struct ddsi_tran_conn ** conn);
 
 /**
  * @brief Remove connection
@@ -139,9 +139,9 @@ int ddsi_sock_waitset_next_event (struct ddsi_sock_waitset_ctx * ctx, struct dds
  * @param ws    The socket waitset
  * @param conn  Connection
  */
-void ddsi_sock_waitset_remove (struct ddsi_sock_waitset * ws, struct ddsi_tran_conn * conn);
+void ddsi_sock_waitset_remove(struct ddsi_sock_waitset * ws, struct ddsi_tran_conn * conn);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif /* DDSI__SOCKWAITSET_H */

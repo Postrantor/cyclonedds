@@ -12,10 +12,10 @@
 #ifndef DDSI_XEVENT_H
 #define DDSI_XEVENT_H
 
-#include "dds/ddsrt/retcode.h"
 #include "dds/ddsi/ddsi_guid.h"
+#include "dds/ddsrt/retcode.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -27,21 +27,21 @@ struct ddsi_xeventq;
  * @remark: locks EVQ for the duration of the operation
  * @param ev the event
  */
-void ddsi_delete_xevent (struct ddsi_xevent *ev);
+void ddsi_delete_xevent(struct ddsi_xevent * ev);
 
 /**
  * @component timed_events
  * @remark: locks EVQ for the duration of the operation
  * @param ev the event
  */
-void ddsi_delete_xevent_callback (struct ddsi_xevent *ev);
+void ddsi_delete_xevent_callback(struct ddsi_xevent * ev);
 
 /**
  * @component timed_events
  * @remark: locks EVQ for the duration of the operation
  * @param ev the event
  */
-int ddsi_resched_xevent_if_earlier (struct ddsi_xevent *ev, ddsrt_mtime_t tsched);
+int ddsi_resched_xevent_if_earlier(struct ddsi_xevent * ev, ddsrt_mtime_t tsched);
 
 /**
  * @component timed_events
@@ -54,9 +54,11 @@ int ddsi_resched_xevent_if_earlier (struct ddsi_xevent *ev, ddsrt_mtime_t tsched
  * @param arg       arguments for the callback
  * @return struct ddsi_xevent*
  */
-struct ddsi_xevent *ddsi_qxev_callback (struct ddsi_xeventq *evq, ddsrt_mtime_t tsched, void (*cb) (struct ddsi_xevent *xev, void *arg, ddsrt_mtime_t now), void *arg);
+struct ddsi_xevent * ddsi_qxev_callback(
+  struct ddsi_xeventq * evq, ddsrt_mtime_t tsched,
+  void (*cb)(struct ddsi_xevent * xev, void * arg, ddsrt_mtime_t now), void * arg);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif /* DDSI_XEVENT_H */

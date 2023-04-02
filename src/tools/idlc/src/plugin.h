@@ -15,14 +15,15 @@
 #include "idlc/generator.h"
 
 typedef struct idlc_generator_plugin idlc_generator_plugin_t;
-struct idlc_generator_plugin {
-  void *handle;
-  idlc_generator_options_t generator_options; /* optional */
+struct idlc_generator_plugin
+{
+  void * handle;
+  idlc_generator_options_t generator_options;         /* optional */
   idlc_generator_annotations_t generator_annotations; /* optional */
   idlc_generate_t generate;
 };
 
-int idlc_load_generator(idlc_generator_plugin_t *gen, const char *lang);
-void idlc_unload_generator(idlc_generator_plugin_t *gen);
+int idlc_load_generator(idlc_generator_plugin_t * gen, const char * lang);
+void idlc_unload_generator(idlc_generator_plugin_t * gen);
 
 #endif /* PLUGIN_H */

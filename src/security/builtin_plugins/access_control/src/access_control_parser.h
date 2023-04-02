@@ -15,8 +15,7 @@
 #include "dds/ddsrt/types.h"
 #include "dds/security/dds_security_api.h"
 
-typedef enum
-{
+typedef enum {
   ELEMENT_KIND_UNDEFINED,
   ELEMENT_KIND_DDS,
   ELEMENT_KIND_DOMAIN_ACCESS_RULES,
@@ -47,23 +46,15 @@ typedef enum
   ELEMENT_KIND_IGNORED
 } element_kind;
 
-typedef enum
-{
-  SUBSCRIBE_CRITERIA,
-  PUBLISH_CRITERIA
-} permission_criteria_type;
+typedef enum { SUBSCRIBE_CRITERIA, PUBLISH_CRITERIA } permission_criteria_type;
 
-typedef enum
-{
-  ALLOW_RULE,
-  DENY_RULE
-} permission_rule_type;
+typedef enum { ALLOW_RULE, DENY_RULE } permission_rule_type;
 
 typedef struct element
 {
-  struct element *parent;
+  struct element * parent;
   element_kind kind;
-  struct element *next; /*used in case of string list usage */
+  struct element * next; /*used in case of string list usage */
 } xml_element;
 
 /* TODO: Change the value nodes for specific nodes for
@@ -72,7 +63,7 @@ typedef struct element
 typedef struct string_value
 {
   struct element node;
-  char *value;
+  char * value;
 } xml_string_value;
 
 typedef struct boolean_value
@@ -102,134 +93,139 @@ typedef struct basicprotection_kind_value
 typedef struct domain_id_set
 {
   struct element node;
-  struct integer_value *min;
-  struct integer_value *max;
+  struct integer_value * min;
+  struct integer_value * max;
 } xml_domain_id_set;
 
 typedef struct domains
 {
   struct element node;
-  struct domain_id_set *domain_id_set; /*linked list*/
+  struct domain_id_set * domain_id_set; /*linked list*/
 } xml_domains;
 
 typedef struct topic_rule
 {
   struct element node;
-  struct string_value *topic_expression;
-  struct boolean_value *enable_discovery_protection;
-  struct boolean_value *enable_liveliness_protection;
-  struct boolean_value *enable_read_access_control;
-  struct boolean_value *enable_write_access_control;
-  struct protection_kind_value *metadata_protection_kind;
-  struct basicprotection_kind_value *data_protection_kind;
+  struct string_value * topic_expression;
+  struct boolean_value * enable_discovery_protection;
+  struct boolean_value * enable_liveliness_protection;
+  struct boolean_value * enable_read_access_control;
+  struct boolean_value * enable_write_access_control;
+  struct protection_kind_value * metadata_protection_kind;
+  struct basicprotection_kind_value * data_protection_kind;
 } xml_topic_rule;
 
 typedef struct topic_access_rules
 {
   struct element node;
-  struct topic_rule *topic_rule; /*linked_list*/
+  struct topic_rule * topic_rule; /*linked_list*/
 } xml_topic_access_rules;
 
 typedef struct domain_rule
 {
   struct element node;
-  struct domains *domains;
-  struct boolean_value *allow_unauthenticated_participants;
-  struct boolean_value *enable_join_access_control;
-  struct protection_kind_value *discovery_protection_kind;
-  struct protection_kind_value *liveliness_protection_kind;
-  struct protection_kind_value *rtps_protection_kind;
-  struct topic_access_rules *topic_access_rules;
+  struct domains * domains;
+  struct boolean_value * allow_unauthenticated_participants;
+  struct boolean_value * enable_join_access_control;
+  struct protection_kind_value * discovery_protection_kind;
+  struct protection_kind_value * liveliness_protection_kind;
+  struct protection_kind_value * rtps_protection_kind;
+  struct topic_access_rules * topic_access_rules;
 } xml_domain_rule;
 
 typedef struct domain_access_rules
 {
   struct element node;
-  struct domain_rule *domain_rule;
+  struct domain_rule * domain_rule;
 } xml_domain_access_rules;
 
 typedef struct governance_dds
 {
   struct element node;
-  struct domain_access_rules *domain_access_rules;
+  struct domain_access_rules * domain_access_rules;
 } xml_governance_dds;
 
 typedef struct governance_parser
 {
-  struct governance_dds *dds;
-  struct element *current;
+  struct governance_dds * dds;
+  struct element * current;
 } governance_parser;
 
 /* permissions file specific types */
 typedef struct validity
 {
   struct element node;
-  struct string_value *not_before;
-  struct string_value *not_after;
+  struct string_value * not_before;
+  struct string_value * not_after;
 } xml_validity;
 
 typedef struct topics
 {
   struct element node;
-  struct string_value *topic;
+  struct string_value * topic;
 } xml_topics;
 
 typedef struct partitions
 {
   struct element node;
-  struct string_value *partition;
+  struct string_value * partition;
 } xml_partitions;
 
 typedef struct criteria
 {
   struct element node;
   permission_criteria_type criteria_type;
-  struct topics *topics;
-  struct partitions *partitions;
+  struct topics * topics;
+  struct partitions * partitions;
 } xml_criteria;
 
 typedef struct allow_deny_rule
 {
   struct element node;
   permission_rule_type rule_type;
-  struct domains *domains;
-  struct criteria *criteria;
+  struct domains * domains;
+  struct criteria * criteria;
 } xml_allow_deny_rule;
 
 typedef struct grant
 {
   struct element node;
-  char *name;
-  struct string_value *subject_name;
-  struct validity *validity;
-  struct allow_deny_rule *allow_deny_rule;
-  struct string_value *default_action;
+  char * name;
+  struct string_value * subject_name;
+  struct validity * validity;
+  struct allow_deny_rule * allow_deny_rule;
+  struct string_value * default_action;
 } xml_grant;
 
 typedef struct permissions
 {
   struct element node;
-  struct grant *grant;
+  struct grant * grant;
 } xml_permissions;
 
 typedef struct permissions_dds
 {
   struct element node;
-  struct permissions *permissions;
+  struct permissions * permissions;
 } xml_permissions_dds;
 
 typedef struct permissions_parser
 {
-  struct permissions_dds *dds;
-  struct element *current;
+  struct permissions_dds * dds;
+  struct element * current;
 } permissions_parser;
 
-bool ac_parse_governance_xml(const char *xml, struct governance_parser **governance_tree, DDS_Security_SecurityException *ex);
-bool ac_parse_permissions_xml(const char *xml, struct permissions_parser **permissions_tree, DDS_Security_SecurityException *ex);
-void ac_return_governance_tree(struct governance_parser *parser);
-void ac_return_permissions_tree(struct permissions_parser *parser);
+bool ac_parse_governance_xml(
+  const char * xml, struct governance_parser ** governance_tree,
+  DDS_Security_SecurityException * ex);
+bool ac_parse_permissions_xml(
+  const char * xml, struct permissions_parser ** permissions_tree,
+  DDS_Security_SecurityException * ex);
+void ac_return_governance_tree(struct governance_parser * parser);
+void ac_return_permissions_tree(struct permissions_parser * parser);
 
-#define DDS_SECURITY_DEFAULT_GOVERNANCE "<?xml version=\"1.0\" encoding=\"utf-8\"?> \
+#define DDS_SECURITY_DEFAULT_GOVERNANCE \
+  "<?xml version=\"1.0\" encoding=\"utf-8\"?> \
 <dds xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" \
     xsi:noNamespaceSchemaLocation=\"https://www.omg.org/spec/DDS-SECURITY/20170901/omg_shared_ca_governance.xsd\"> \
     <domain_access_rules>                                                                                               \
@@ -262,7 +258,8 @@ void ac_return_permissions_tree(struct permissions_parser *parser);
     </domain_access_rules>                                                                                              \
 </dds>                                      "
 
-#define DDS_SECURITY_DEFAULT_PERMISSIONS "<?xml version=\"1.0\" encoding=\"utf-8\"?>                                    \
+#define DDS_SECURITY_DEFAULT_PERMISSIONS \
+  "<?xml version=\"1.0\" encoding=\"utf-8\"?>                                    \
 <dds xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"                                                            \
     xsi:noNamespaceSchemaLocation=\"https://www.omg.org/spec/DDS-SECURITY/20170901/omg_shared_ca_permissions.xsd\">      \
     <permissions>                                                                                                       \

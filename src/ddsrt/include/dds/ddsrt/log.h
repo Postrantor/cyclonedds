@@ -24,10 +24,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "dds/export.h"
 #include "dds/ddsrt/attributes.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -80,33 +80,31 @@ extern "C" {
 /** Debug/trace messages related to SHMEM */
 #define DDS_LC_SHM (262144u)
 /** All common trace categories. */
-#define DDS_LC_ALL \
-    (DDS_LC_FATAL | DDS_LC_ERROR | DDS_LC_WARNING | DDS_LC_INFO | \
-     DDS_LC_CONFIG | DDS_LC_DISCOVERY | DDS_LC_DATA | DDS_LC_TRACE | \
-     DDS_LC_TIMING | DDS_LC_TRAFFIC | DDS_LC_TCP | DDS_LC_THROTTLE | \
-     DDS_LC_CONTENT | DDS_LC_SHM)
+#define DDS_LC_ALL                                                                                 \
+  (DDS_LC_FATAL | DDS_LC_ERROR | DDS_LC_WARNING | DDS_LC_INFO | DDS_LC_CONFIG | DDS_LC_DISCOVERY | \
+   DDS_LC_DATA | DDS_LC_TRACE | DDS_LC_TIMING | DDS_LC_TRAFFIC | DDS_LC_TCP | DDS_LC_THROTTLE |    \
+   DDS_LC_CONTENT | DDS_LC_SHM)
 /** @}*/
 
-#define DDS_LOG_MASK \
-    (DDS_LC_FATAL | DDS_LC_ERROR | DDS_LC_WARNING | DDS_LC_INFO)
+#define DDS_LOG_MASK (DDS_LC_FATAL | DDS_LC_ERROR | DDS_LC_WARNING | DDS_LC_INFO)
 
-#define DDS_TRACE_MASK \
-    (~DDS_LOG_MASK)
+#define DDS_TRACE_MASK (~DDS_LOG_MASK)
 
 /** Structure with log message and meta data passed to callbacks. */
-typedef struct {
+typedef struct
+{
   /** Log category the message falls into. */
   uint32_t priority;
   /** Log domain id, UINT32_MAX is global. */
   uint32_t domid;
   /** Filename where message was generated. */
-  const char *file;
+  const char * file;
   /** Line number in file where message was generated. */
   uint32_t line;
   /** Name of function message where message was generated. */
-  const char *function;
+  const char * function;
   /** Log message. */
-  const char *message;
+  const char * message;
   /** Size of log message. */
   size_t size;
   /** Default log message header length */
@@ -114,10 +112,11 @@ typedef struct {
 } dds_log_data_t;
 
 /** Function signature that log and trace callbacks must adhere too. */
-typedef void (*dds_log_write_fn_t) (void *, const dds_log_data_t *);
+typedef void (*dds_log_write_fn_t)(void *, const dds_log_data_t *);
 
 /** Semi-opaque type for log/trace configuration. */
-struct ddsrt_log_cfg_common {
+struct ddsrt_log_cfg_common
+{
   /** Mask for testing whether the xLOG macro should forward to the
       function (and so incur the cost of constructing the parameters).
       Messages in DDS_LOG_MASK are rare, so the overhead of calling
@@ -132,51 +131,42 @@ struct ddsrt_log_cfg_common {
   uint32_t domid;
 };
 
-typedef struct ddsrt_log_cfg {
+typedef struct ddsrt_log_cfg
+{
   struct ddsrt_log_cfg_common c;
   union {
     dds_log_write_fn_t fnptr;
-    void *ptr;
+    void * ptr;
     uint32_t u32;
     unsigned char pad[72];
   } u;
 } ddsrt_log_cfg_t;
 
-extern uint32_t *const dds_log_mask;
+extern uint32_t * const dds_log_mask;
 
 /**
  * @brief Get currently enabled log and trace categories.
  *
  * @returns A uint32_t with enabled categories set.
  */
-inline uint32_t
-dds_get_log_mask(void)
-{
-    return *dds_log_mask;
-}
+inline uint32_t dds_get_log_mask(void) { return *dds_log_mask; }
 
 /**
  * @brief Set enabled log and trace categories.
  *
  * @param[in]  cats  Log and trace categories to enable.
  */
-DDS_EXPORT void
-dds_set_log_mask(
-    uint32_t cats);
+DDS_EXPORT void dds_set_log_mask(uint32_t cats);
 
 /**
  * @private
  */
-void
-dds_set_log_file(
-    FILE *file);
+void dds_set_log_file(FILE * file);
 
 /**
  * @private
  */
-void
-dds_set_trace_file(
-    FILE *file);
+void dds_set_trace_file(FILE * file);
 
 /**
  * @brief Register callback to receive log messages
@@ -194,10 +184,7 @@ dds_set_trace_file(
  * @param[in]  userdata  User specified data passed along with each invocation
  *                       of callback.
  */
-void
-dds_set_log_sink(
-    dds_log_write_fn_t callback,
-    void *userdata);
+void dds_set_log_sink(dds_log_write_fn_t callback, void * userdata);
 
 /**
  * @brief Register callback to receive trace messages
@@ -215,10 +202,7 @@ dds_set_log_sink(
  * @param[in]  userdata  User specified data passed along with each invocation
  *                       of callback.
  */
-void
-dds_set_trace_sink(
-    dds_log_write_fn_t callback,
-    void *userdata);
+void dds_set_trace_sink(dds_log_write_fn_t callback, void * userdata);
 
 /**
  * @brief Initialize a struct ddsrt_log_cfg for use with dds_log_cfg
@@ -244,13 +228,8 @@ dds_set_trace_sink(
  * @param[in]  log_fp         File for default sink.
  * @param[in]  trace_fp       File for default sink.
  */
-void
-dds_log_cfg_init(
-    struct ddsrt_log_cfg *cfg,
-    uint32_t domid,
-    uint32_t tracemask,
-    FILE *log_fp,
-    FILE *trace_fp);
+void dds_log_cfg_init(
+  struct ddsrt_log_cfg * cfg, uint32_t domid, uint32_t tracemask, FILE * log_fp, FILE * trace_fp);
 
 /**
  * @brief Write a log or trace message for a specific logging configuraiton
@@ -259,16 +238,9 @@ dds_log_cfg_init(
  * Direct use of #dds_log is discouraged. Use #DDS_CINFO, #DDS_CWARNING,
  * #DDS_CERROR, #DDS_CTRACE or #DDS_CLOG instead.
  */
-void
-dds_log_cfg(
-    const struct ddsrt_log_cfg *cfg,
-    uint32_t prio,
-    const char *file,
-    uint32_t line,
-    const char *func,
-    const char *fmt,
-    ...)
-  ddsrt_attribute_format_printf(6, 7);
+void dds_log_cfg(
+  const struct ddsrt_log_cfg * cfg, uint32_t prio, const char * file, uint32_t line,
+  const char * func, const char * fmt, ...) ddsrt_attribute_format_printf(6, 7);
 
 /**
  * @brief Write a log or trace message to the global configuration but with
@@ -279,16 +251,9 @@ dds_log_cfg(
  *
  * Direct use of #dds_log_id is discouraged. Use #DDS_ILOG instead.
  */
-void
-dds_log_id(
-    uint32_t prio,
-    uint32_t domid,
-    const char *file,
-    uint32_t line,
-    const char *func,
-    const char *fmt,
-    ...)
-  ddsrt_attribute_format_printf(6, 7);
+void dds_log_id(
+  uint32_t prio, uint32_t domid, const char * file, uint32_t line, const char * func,
+  const char * fmt, ...) ddsrt_attribute_format_printf(6, 7);
 
 /**
  * @brief Write a log or trace message to the global log/trace.
@@ -298,14 +263,8 @@ dds_log_id(
  * Direct use of #dds_log is discouraged. Use #DDS_INFO, #DDS_WARNING,
  * #DDS_ERROR, #DDS_FATAL or #DDS_LOG instead.
  */
-DDS_EXPORT void
-dds_log(
-    uint32_t prio,
-    const char *file,
-    uint32_t line,
-    const char *func,
-    const char *fmt,
-    ...)
+DDS_EXPORT void dds_log(
+  uint32_t prio, const char * file, uint32_t line, const char * func, const char * fmt, ...)
   ddsrt_attribute_format_printf(5, 6);
 
 /**
@@ -316,30 +275,30 @@ dds_log(
  * implemented as either a string literal or a constant variable.
  */
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901)
-#   define DDS_FUNCTION __func__
+#define DDS_FUNCTION __func__
 #elif defined(__cplusplus) && (__cplusplus >= 201103)
-#   define DDS_FUNCTION __func__
+#define DDS_FUNCTION __func__
 #elif defined(__GNUC__)
-#   define DDS_FUNCTION __FUNCTION__
+#define DDS_FUNCTION __FUNCTION__
 #elif defined(__clang__)
-#   define DDS_FUNCTION __FUNCTION__
+#define DDS_FUNCTION __FUNCTION__
 #elif defined(__ghs__)
-#   define DDS_FUNCTION __FUNCTION__
+#define DDS_FUNCTION __FUNCTION__
 #elif (defined(__SUNPRO_C) || defined(__SUNPRO_CC))
 /* Solaris Studio had support for __func__ before it supported __FUNCTION__.
    Compiler flag -features=extensions is required on older versions. */
-#   define DDS_FUNCTION __func__
+#define DDS_FUNCTION __func__
 #elif defined(__FUNCTION__)
 /* Visual Studio */
-#   define DDS_FUNCTION __FUNCTION__
+#define DDS_FUNCTION __FUNCTION__
 #elif defined(__vxworks)
 /* At least versions 2.9.6 and 3.3.4 of the GNU C Preprocessor only define
    __GNUC__ if the entire GNU C compiler is in use. VxWorks 5.5 targets invoke
    the preprocessor separately resulting in __GNUC__ not being defined. */
-#   define DDS_FUNCTION __FUNCTION__
+#define DDS_FUNCTION __FUNCTION__
 #else
-#   warning "DDS_FUNCTION is not supported"
-#   define DDS_FUNCTION ""
+#warning "DDS_FUNCTION is not supported"
+#define DDS_FUNCTION ""
 #endif
 
 /**
@@ -348,26 +307,26 @@ dds_log(
  * See comments on DDS_FUNCTION for details.
  */
 #if defined(__GNUC__)
-#   define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #elif defined(__clang__)
-#   define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #elif defined(__ghs__)
-#   define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #elif (defined(__SUNPRO_C) && __SUNPRO_C >= 0x5100)
 /* Solaris Studio supports __PRETTY_FUNCTION__ in C since version 12.1 */
-#   define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #elif (defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x5120)
 /* Solaris Studio supports __PRETTY_FUNCTION__ in C++ since version 12.3 */
-#   define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #elif defined(__FUNCSIG__)
 /* Visual Studio */
-#   define DDS_PRETTY_FUNCTION __FUNCSIG__
+#define DDS_PRETTY_FUNCTION __FUNCSIG__
 #elif defined(__vxworks)
 /* See comments on __vxworks macro above. */
-#   define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#define DDS_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #else
 /* Fall back to DDS_FUNCTION. */
-#   define DDS_PRETTY_FUNCTION DDS_FUNCTION
+#define DDS_PRETTY_FUNCTION DDS_FUNCTION
 #endif
 
 /**
@@ -383,8 +342,7 @@ dds_log(
  * separate from logging, if only cosmetic.
  */
 #define DDS_LOG(cat, ...) \
-    ((dds_get_log_mask() & (cat)) ? \
-      dds_log((cat), __FILE__, __LINE__, DDS_FUNCTION, __VA_ARGS__) : 0)
+  ((dds_get_log_mask() & (cat)) ? dds_log((cat), __FILE__, __LINE__, DDS_FUNCTION, __VA_ARGS__) : 0)
 
 /**
  * @brief Write a log message with a domain id override.
@@ -398,9 +356,10 @@ dds_log(
  * passed just as easily, they are rejected so that tracing is kept entirely
  * separate from logging, if only cosmetic.
  */
-#define DDS_ILOG(cat, domid, ...) \
-    ((dds_get_log_mask() & (cat)) ? \
-      dds_log_id((cat), (domid), __FILE__, __LINE__, DDS_FUNCTION, __VA_ARGS__) : 0)
+#define DDS_ILOG(cat, domid, ...)                                                \
+  ((dds_get_log_mask() & (cat))                                                  \
+     ? dds_log_id((cat), (domid), __FILE__, __LINE__, DDS_FUNCTION, __VA_ARGS__) \
+     : 0)
 
 /**
  * @brief Write a log message using a specific config.
@@ -414,22 +373,19 @@ dds_log(
  * passed just as easily, they are rejected so that tracing is kept entirely
  * separate from logging, if only cosmetic.
  */
-#define DDS_CLOG(cat, cfg, ...) \
-    (((cfg)->c.mask & (cat)) ? \
-      dds_log_cfg((cfg), (cat), __FILE__, __LINE__, DDS_FUNCTION, __VA_ARGS__) : 0)
+#define DDS_CLOG(cat, cfg, ...)                                                 \
+  (((cfg)->c.mask & (cat))                                                      \
+     ? dds_log_cfg((cfg), (cat), __FILE__, __LINE__, DDS_FUNCTION, __VA_ARGS__) \
+     : 0)
 
 /** Write a log message of type #DDS_LC_INFO into global log. */
-#define DDS_INFO(...) \
-  DDS_LOG(DDS_LC_INFO, __VA_ARGS__)
+#define DDS_INFO(...) DDS_LOG(DDS_LC_INFO, __VA_ARGS__)
 /** Write a log message of type #DDS_LC_WARNING into global log. */
-#define DDS_WARNING(...) \
-  DDS_LOG(DDS_LC_WARNING, __VA_ARGS__)
+#define DDS_WARNING(...) DDS_LOG(DDS_LC_WARNING, __VA_ARGS__)
 /** Write a log message of type #DDS_LC_ERROR into global log. */
-#define DDS_ERROR(...) \
-  DDS_LOG(DDS_LC_ERROR, __VA_ARGS__)
+#define DDS_ERROR(...) DDS_LOG(DDS_LC_ERROR, __VA_ARGS__)
 /** Write a log message of type #DDS_LC_ERROR into global log and abort. */
-#define DDS_FATAL(...) \
-  dds_log(DDS_LC_FATAL, __FILE__, __LINE__, DDS_FUNCTION, __VA_ARGS__)
+#define DDS_FATAL(...) dds_log(DDS_LC_FATAL, __FILE__, __LINE__, DDS_FUNCTION, __VA_ARGS__)
 
 /* MSVC mishandles __VA_ARGS__ while claiming to be conforming -- and even
    if they have a defensible implement, they still differ from every other
@@ -437,19 +393,15 @@ dds_log(
 #define DDS_CLOG_MSVC_WORKAROUND(x) x
 
 /** Write a log message of type #DDS_LC_INFO using specific logging config. */
-#define DDS_CINFO(...) \
-  DDS_CLOG_MSVC_WORKAROUND(DDS_CLOG(DDS_LC_INFO, __VA_ARGS__))
+#define DDS_CINFO(...) DDS_CLOG_MSVC_WORKAROUND(DDS_CLOG(DDS_LC_INFO, __VA_ARGS__))
 /** Write a log message of type #DDS_LC_WARNING using specific logging config. */
-#define DDS_CWARNING(...) \
-  DDS_CLOG_MSVC_WORKAROUND(DDS_CLOG(DDS_LC_WARNING, __VA_ARGS__))
+#define DDS_CWARNING(...) DDS_CLOG_MSVC_WORKAROUND(DDS_CLOG(DDS_LC_WARNING, __VA_ARGS__))
 /** Write a log message of type #DDS_LC_ERROR using specific logging config. */
-#define DDS_CERROR(...) \
-  DDS_CLOG_MSVC_WORKAROUND(DDS_CLOG(DDS_LC_ERROR, __VA_ARGS__))
+#define DDS_CERROR(...) DDS_CLOG_MSVC_WORKAROUND(DDS_CLOG(DDS_LC_ERROR, __VA_ARGS__))
 /** Write a #DDS_LC_TRACE message using specific logging config. */
-#define DDS_CTRACE(...) \
-  DDS_CLOG_MSVC_WORKAROUND(DDS_CLOG(DDS_LC_TRACE, __VA_ARGS__))
+#define DDS_CTRACE(...) DDS_CLOG_MSVC_WORKAROUND(DDS_CLOG(DDS_LC_TRACE, __VA_ARGS__))
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

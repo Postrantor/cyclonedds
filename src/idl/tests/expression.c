@@ -9,41 +9,38 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "expression.h"
+
 #include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <inttypes.h>
+#include <stdio.h>
+#include <stdlib.h>
 
+#include "CUnit/Test.h"
 #include "idl/processor.h"
 #include "idl/retcode.h"
 #include "idl/tree.h"
-#include "expression.h"
 #include "tree.h"
 
-#include "CUnit/Test.h"
-
-#define SYMBOL { \
-    .location = { { NULL, NULL, 0, 0 }, { NULL, NULL, 0, 0 } } \
+#define SYMBOL                                             \
+  {                                                        \
+    .location = { {NULL, NULL, 0, 0}, {NULL, NULL, 0, 0} } \
   }
 
-#define NODE(type) { \
-    .symbol = SYMBOL, \
-    .mask = (IDL_LITERAL|type), \
-    .destructor = 0, \
-    .iterate = 0, \
-    .describe = 0, \
-    .references = 0, \
-    .annotations = NULL, \
-    .declaration = NULL, \
-    .parent = NULL, \
-    .previous = NULL, \
-    .next = NULL \
+#define NODE(type)                                                                                \
+  {                                                                                               \
+    .symbol = SYMBOL, .mask = (IDL_LITERAL | type), .destructor = 0, .iterate = 0, .describe = 0, \
+    .references = 0, .annotations = NULL, .declaration = NULL, .parent = NULL, .previous = NULL,  \
+    .next = NULL                                                                                  \
   }
 
-#define LITERAL(type, assignment) \
-  (idl_literal_t){ .node = NODE(type), .value = { assignment } }
+#define LITERAL(type, assignment)               \
+  (idl_literal_t)                               \
+  {                                             \
+    .node = NODE(type), .value = { assignment } \
+  }
 
 #define CHAR(value) LITERAL(IDL_CHAR, .chr = (value))
 #define BOOL(value) LITERAL(IDL_BOOL, .bln = (value))
@@ -63,16 +60,12 @@
 #define INT64(value) LITERAL(IDL_INT64, .int64 = (value))
 #define UINT64(value) LITERAL(IDL_UINT64, .uint64 = (value))
 
-static void
-test_expr(
-  const char *str,
-  const idl_retcode_t ret,
-  const idl_literal_t *exp)
+static void test_expr(const char * str, const idl_retcode_t ret, const idl_literal_t * exp)
 {
   idl_retcode_t r;
-  idl_pstate_t *pstate = NULL;
-  idl_const_t *c;
-  idl_literal_t *cv;
+  idl_pstate_t * pstate = NULL;
+  idl_const_t * c;
+  idl_literal_t * cv;
 
   r = idl_create_pstate(0u, NULL, &pstate);
   CU_ASSERT_EQUAL_FATAL(r, IDL_RETCODE_OK);
@@ -86,8 +79,7 @@ test_expr(
   assert(pstate);
   c = (void *)pstate->root;
   do {
-    if (idl_is_const(c) && strcmp(idl_identifier(c), "x") == 0)
-      break;
+    if (idl_is_const(c) && strcmp(idl_identifier(c), "x") == 0) break;
     c = idl_next(c);
   } while (c);
   CU_ASSERT_FATAL(idl_is_const(c));
@@ -98,55 +90,52 @@ test_expr(
   idl_delete_pstate(pstate);
 }
 
-#define ok                 (IDL_RETCODE_OK)
-#define semantic_error     (IDL_RETCODE_SEMANTIC_ERROR)
+#define ok (IDL_RETCODE_OK)
+#define semantic_error (IDL_RETCODE_SEMANTIC_ERROR)
 #define illegal_expression (IDL_RETCODE_ILLEGAL_EXPRESSION)
-#define out_of_range       (IDL_RETCODE_OUT_OF_RANGE)
+#define out_of_range (IDL_RETCODE_OUT_OF_RANGE)
 
-struct expr {
-  const char *str;
+struct expr
+{
+  const char * str;
   const idl_retcode_t ret;
-  const idl_literal_t *val;
+  const idl_literal_t * val;
 };
 
 #define x "const char x"
 static struct expr chr_exprs[] = {
-  {  x " = 'c';",    ok,                  &CHAR('c')  },
-  {  x " = '\\n';",  ok,                  &CHAR('\n') },
-  {  x " = \"c\";",  illegal_expression,   NULL       }
-};
+  {x " = 'c';", ok, &CHAR('c')},
+  {x " = '\\n';", ok, &CHAR('\n')},
+  {x " = \"c\";", illegal_expression, NULL}};
 #undef x
 
 CU_Test(idl_expression, character)
 {
-  const size_t n = (sizeof(chr_exprs)/sizeof(chr_exprs[0]));
-  for (size_t i=0; i < n; i++)
-    test_expr(chr_exprs[i].str, chr_exprs[i].ret, chr_exprs[i].val);
+  const size_t n = (sizeof(chr_exprs) / sizeof(chr_exprs[0]));
+  for (size_t i = 0; i < n; i++) test_expr(chr_exprs[i].str, chr_exprs[i].ret, chr_exprs[i].val);
 }
 
 #define x "const octet x"
 #define y "const octet y"
 static struct expr oct_exprs[] = {
-  {  x " = +1;",                   ok,            &OCTET(1)    },
-  {  x " = -1;",                   out_of_range,   NULL        },
-  {  x " = -1 - -1;",              ok,            &OCTET(0)    },
-  {  x " = -1 * -1;",              ok,            &OCTET(1)    },
-  {  x " = (65535 * 0) / 1;",      ok,            &OCTET(0)    },
-  {  x " = (65535 * 1) / 65535;",  ok,            &OCTET(1)    },
-  {  y " = 1; " x " = y;",         ok,            &OCTET(1)    },
-  {  x " = 1 - 2;",                out_of_range,   NULL        },
-  {  x " = 255;",                  ok,            &OCTET(255)  },
-  {  x " = 256;",                  out_of_range,   NULL        },
-  {  x " = 256 - 1;",              ok,            &OCTET(255)  },
-  {  x " = 1 << 1;",               ok,            &OCTET(2)    },
-  {  x " = 1 >> 1;",               ok,            &OCTET(0)    }
-};
+  {x " = +1;", ok, &OCTET(1)},
+  {x " = -1;", out_of_range, NULL},
+  {x " = -1 - -1;", ok, &OCTET(0)},
+  {x " = -1 * -1;", ok, &OCTET(1)},
+  {x " = (65535 * 0) / 1;", ok, &OCTET(0)},
+  {x " = (65535 * 1) / 65535;", ok, &OCTET(1)},
+  {y " = 1; " x " = y;", ok, &OCTET(1)},
+  {x " = 1 - 2;", out_of_range, NULL},
+  {x " = 255;", ok, &OCTET(255)},
+  {x " = 256;", out_of_range, NULL},
+  {x " = 256 - 1;", ok, &OCTET(255)},
+  {x " = 1 << 1;", ok, &OCTET(2)},
+  {x " = 1 >> 1;", ok, &OCTET(0)}};
 #undef x
 #undef y
 
 CU_Test(idl_expression, octet)
 {
-  const size_t n = (sizeof(oct_exprs)/sizeof(oct_exprs[0]));
-  for (size_t i=0; i < n; i++)
-    test_expr(oct_exprs[i].str, oct_exprs[i].ret, oct_exprs[i].val);
+  const size_t n = (sizeof(oct_exprs) / sizeof(oct_exprs[0]));
+  for (size_t i = 0; i < n; i++) test_expr(oct_exprs[i].str, oct_exprs[i].ret, oct_exprs[i].val);
 }

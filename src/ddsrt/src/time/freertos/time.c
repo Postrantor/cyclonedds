@@ -33,23 +33,20 @@ dds_time_t dds_time(void)
 
 #define NSECS_PER_TICK (DDS_NSECS_IN_SEC / configTICK_RATE_HZ)
 
-ddsrt_wctime_t ddsrt_time_wallclock (void)
+ddsrt_wctime_t ddsrt_time_wallclock(void) { return (ddsrt_wctime_t){dds_time()}; }
+
+ddsrt_mtime_t ddsrt_time_monotonic(void)
 {
-  return (ddsrt_wctime_t) { dds_time() };
+  return (ddsrt_mtime_t){xTaskGetTickCount() * NSECS_PER_TICK};
 }
 
-ddsrt_mtime_t ddsrt_time_monotonic (void)
-{
-  return (ddsrt_mtime_t) { xTaskGetTickCount() * NSECS_PER_TICK };
-}
-
-ddsrt_etime_t ddsrt_time_elapsed (void)
+ddsrt_etime_t ddsrt_time_elapsed(void)
 {
   /* Elapsed time clock not (yet) supported on this platform. */
-  return (ddsrt_etime_t) { xTaskGetTickCount() * NSECS_PER_TICK };
+  return (ddsrt_etime_t){xTaskGetTickCount() * NSECS_PER_TICK};
 }
 
-void dds_sleepfor (dds_duration_t reltime)
+void dds_sleepfor(dds_duration_t reltime)
 {
   TickType_t ticks;
 

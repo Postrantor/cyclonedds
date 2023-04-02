@@ -9,30 +9,29 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/ifaddrs.h"
+
 #include <assert.h>
 #include <string.h>
-
 #include <zephyr/net/net_if.h>
 
 #include "dds/ddsrt/heap.h"
 #include "dds/ddsrt/io.h"
-#include "dds/ddsrt/ifaddrs.h"
 #include "dds/ddsrt/retcode.h"
 #include "dds/ddsrt/string.h"
 
-extern const int *const os_supp_afs;
+extern const int * const os_supp_afs;
 
-struct ifaddrs_data {
-  ddsrt_ifaddrs_t *first;
-  ddsrt_ifaddrs_t *prev;
+struct ifaddrs_data
+{
+  ddsrt_ifaddrs_t * first;
+  ddsrt_ifaddrs_t * prev;
   int getv4;
   int getv6;
   dds_return_t rc;
 };
 
-static uint32_t
-getflags(
-  struct net_if *iface)
+static uint32_t getflags(struct net_if * iface)
 {
   uint32_t flags = 0;
 
@@ -54,33 +53,34 @@ getflags(
   return flags;
 }
 
-static void netif_callback(struct net_if *iface, void *cb_data)
+static void netif_callback(struct net_if * iface, void * cb_data)
 {
-  ddsrt_ifaddrs_t *ifa;
-  struct ifaddrs_data *data = (struct ifaddrs_data*)cb_data;
+  ddsrt_ifaddrs_t * ifa;
+  struct ifaddrs_data * data = (struct ifaddrs_data *)cb_data;
 
-
-  if ((data->rc != DDS_RETCODE_OK)
+  if (
+    (data->rc != DDS_RETCODE_OK)
 #if defined(CONFIG_NET_L2_ETHERNET) && defined(CONFIG_NET_L2_DUMMY)
-    || ((net_if_l2(iface) != &NET_L2_GET_NAME(ETHERNET)) && (net_if_l2(iface) != &NET_L2_GET_NAME(DUMMY)))
+    || ((net_if_l2(iface) != &NET_L2_GET_NAME(ETHERNET)) &&
+        (net_if_l2(iface) != &NET_L2_GET_NAME(DUMMY)))
 #elif defined(CONFIG_NET_L2_ETHERNET)
     || (net_if_l2(iface) != &NET_L2_GET_NAME(ETHERNET))
 #elif defined(CONFIG_NET_L2_DUMMY)
     || (net_if_l2(iface) != &NET_L2_GET_NAME(DUMMY))
 #endif
-    ) {
+  ) {
     /* Skip on previous error or unsupported interface type */
     return;
   }
 
   if (data->getv4 && iface->config.ip.ipv4) {
-    struct net_if_ipv4 *cfg = iface->config.ip.ipv4;
-    struct net_if_addr *addr = NULL;
+    struct net_if_ipv4 * cfg = iface->config.ip.ipv4;
+    struct net_if_addr * addr = NULL;
     int i;
     for (i = 0; i < NET_IF_MAX_IPV4_ADDR && !addr; i++) {
-      if (cfg->unicast[i].is_used &&
-          cfg->unicast[i].addr_state == NET_ADDR_PREFERRED &&
-          cfg->unicast[i].address.family == AF_INET) {
+      if (
+        cfg->unicast[i].is_used && cfg->unicast[i].addr_state == NET_ADDR_PREFERRED &&
+        cfg->unicast[i].address.family == AF_INET) {
         addr = &cfg->unicast[i];
       }
     }
@@ -109,7 +109,9 @@ static void netif_callback(struct net_if *iface, void *cb_data)
           net_ipaddr_copy(&(net_sin(ifa->netmask)->sin_addr), &(cfg->netmask));
           ifa->netmask->sa_family = AF_INET;
 
-          ((struct sockaddr_in*)ifa->broadaddr)->sin_addr.s_addr = (net_sin(ifa->addr)->sin_addr.s_addr & net_sin(ifa->netmask)->sin_addr.s_addr) | ~net_sin(ifa->netmask)->sin_addr.s_addr;
+          ((struct sockaddr_in *)ifa->broadaddr)->sin_addr.s_addr =
+            (net_sin(ifa->addr)->sin_addr.s_addr & net_sin(ifa->netmask)->sin_addr.s_addr) |
+            ~net_sin(ifa->netmask)->sin_addr.s_addr;
           ifa->broadaddr->sa_family = AF_INET;
         }
       }
@@ -129,14 +131,14 @@ static void netif_callback(struct net_if *iface, void *cb_data)
 
 #if DDSRT_HAVE_IPV6
   if (data->getv6 && iface->config.ip.ipv6) {
-    struct net_if_ipv6 *cfg = iface->config.ip.ipv6;
-    struct net_if_addr *addr = NULL;
+    struct net_if_ipv6 * cfg = iface->config.ip.ipv6;
+    struct net_if_addr * addr = NULL;
     int i;
     for (i = 0; i < NET_IF_MAX_IPV6_ADDR; i++) {
-      if (cfg->unicast[i].is_used &&
-          cfg->unicast[i].addr_state == NET_ADDR_PREFERRED &&
-          cfg->unicast[i].address.family == AF_INET6 &&
-          !net_ipv6_is_ll_addr(&cfg->unicast[i].address.in6_addr)) {
+      if (
+        cfg->unicast[i].is_used && cfg->unicast[i].addr_state == NET_ADDR_PREFERRED &&
+        cfg->unicast[i].address.family == AF_INET6 &&
+        !net_ipv6_is_ll_addr(&cfg->unicast[i].address.in6_addr)) {
         addr = &cfg->unicast[i];
       }
     }
@@ -179,10 +181,7 @@ static void netif_callback(struct net_if *iface, void *cb_data)
   return;
 }
 
-dds_return_t
-ddsrt_getifaddrs(
-  ddsrt_ifaddrs_t **ifap,
-  const int *afs)
+dds_return_t ddsrt_getifaddrs(ddsrt_ifaddrs_t ** ifap, const int * afs)
 {
   struct ifaddrs_data data;
 
@@ -216,6 +215,6 @@ ddsrt_getifaddrs(
   } else {
     ddsrt_freeifaddrs(data.first);
   }
-  
+
   return data.rc;
 }

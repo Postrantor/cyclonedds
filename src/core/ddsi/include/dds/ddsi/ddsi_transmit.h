@@ -12,7 +12,7 @@
 #ifndef DDSI_TRANSMIT_H
 #define DDSI_TRANSMIT_H
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -36,7 +36,9 @@ struct ddsi_thread_state;
  * @param tk        key-instance map instance
  * @return int
  */
-int ddsi_write_sample_gc (struct ddsi_thread_state * const thrst, struct ddsi_xpack *xp, struct ddsi_writer *wr, struct ddsi_serdata *serdata, struct ddsi_tkmap_instance *tk);
+int ddsi_write_sample_gc(
+  struct ddsi_thread_state * const thrst, struct ddsi_xpack * xp, struct ddsi_writer * wr,
+  struct ddsi_serdata * serdata, struct ddsi_tkmap_instance * tk);
 
 /**
  * @component outgoing_rtps
@@ -48,9 +50,10 @@ int ddsi_write_sample_gc (struct ddsi_thread_state * const thrst, struct ddsi_xp
  * @param xp        xpack
  * @return dds_return_t
  */
-dds_return_t ddsi_write_hb_liveliness (struct ddsi_domaingv * const gv, struct ddsi_guid *wr_guid, struct ddsi_xpack *xp);
+dds_return_t ddsi_write_hb_liveliness(
+  struct ddsi_domaingv * const gv, struct ddsi_guid * wr_guid, struct ddsi_xpack * xp);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

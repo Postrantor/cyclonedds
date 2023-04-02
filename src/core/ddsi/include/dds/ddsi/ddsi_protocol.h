@@ -12,21 +12,21 @@
 #ifndef DDSI_PROTOCOL_H
 #define DDSI_PROTOCOL_H
 
+#include "dds/ddsi/ddsi_feature_check.h"
+#include "dds/ddsi/ddsi_guid.h"
+#include "dds/ddsi/ddsi_locator.h"
 #include "dds/ddsrt/endian.h"
 #include "dds/ddsrt/misc.h"
-#include "dds/ddsi/ddsi_feature_check.h"
-#include "dds/ddsi/ddsi_locator.h"
-#include "dds/ddsi/ddsi_guid.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-#define DDSI_STATUSINFO_DISPOSE      0x1u
-#define DDSI_STATUSINFO_UNREGISTER   0x2u
+#define DDSI_STATUSINFO_DISPOSE 0x1u
+#define DDSI_STATUSINFO_UNREGISTER 0x2u
 #define DDSI_STATUSINFO_STANDARDIZED (DDSI_STATUSINFO_DISPOSE | DDSI_STATUSINFO_UNREGISTER)
-#define DDSI_STATUSINFO_OSPL_AUTO    0x10000000u /* OSPL extension, not on the wire */
-#define DDSI_STATUSINFOX_OSPL_AUTO   0x1         /* statusinfo word 2, OSPL L_AUTO flag on the wire */
+#define DDSI_STATUSINFO_OSPL_AUTO 0x10000000u /* OSPL extension, not on the wire */
+#define DDSI_STATUSINFOX_OSPL_AUTO 0x1        /* statusinfo word 2, OSPL L_AUTO flag on the wire */
 
 #define DDSI_LOCATOR_KIND_INVALID -1
 #define DDSI_LOCATOR_KIND_RESERVED 0
@@ -49,7 +49,7 @@ typedef uint64_t ddsi_seqno_t;
 #define DDSI_MAX_SEQ_NUMBER INT64_MAX
 
 #define PGUIDPREFIX(gp) (gp).u[0], (gp).u[1], (gp).u[2]
-#define PGUID(g) PGUIDPREFIX ((g).prefix), (g).entityid.u
+#define PGUID(g) PGUIDPREFIX((g).prefix), (g).entityid.u
 #define PGUIDPREFIXFMT "%" PRIx32 ":%" PRIx32 ":%" PRIx32
 #define PGUIDFMT PGUIDPREFIXFMT ":%" PRIx32
 
@@ -67,14 +67,14 @@ typedef struct ddsi_rtps_header {
   ddsi_vendorid_t vendorid;
   ddsi_guid_prefix_t guid_prefix;
 } ddsi_rtps_header_t;
-#define DDSI_RTPS_MESSAGE_HEADER_SIZE (sizeof (ddsi_rtps_header_t))
+#define DDSI_RTPS_MESSAGE_HEADER_SIZE (sizeof(ddsi_rtps_header_t))
 
 typedef struct ddsi_rtps_submessage_header {
   uint8_t submessageId;
   uint8_t flags;
   uint16_t octetsToNextHeader;
 } ddsi_rtps_submessage_header_t;
-#define DDSI_RTPS_SUBMESSAGE_HEADER_SIZE (sizeof (ddsi_rtps_submessage_header_t))
+#define DDSI_RTPS_SUBMESSAGE_HEADER_SIZE (sizeof(ddsi_rtps_submessage_header_t))
 #define DDSI_RTPS_SUBMESSAGE_FLAG_ENDIANNESS 0x01u
 
 typedef enum ddsi_rtps_submessage_kind {
@@ -112,38 +112,40 @@ typedef struct ddsi_rtps_info_src {
 
 #if DDSRT_ENDIAN == DDSRT_LITTLE_ENDIAN
 
-#define DDSI_RTPS_CDR_BE      0x0000u
-#define DDSI_RTPS_CDR_LE      0x0100u
-#define DDSI_RTPS_PL_CDR_BE   0x0200u
-#define DDSI_RTPS_PL_CDR_LE   0x0300u
-#define DDSI_RTPS_CDR2_BE     0x0600u
-#define DDSI_RTPS_CDR2_LE     0x0700u
-#define DDSI_RTPS_D_CDR2_BE   0x0800u
-#define DDSI_RTPS_D_CDR2_LE   0x0900u
-#define DDSI_RTPS_PL_CDR2_BE  0x0a00u
-#define DDSI_RTPS_PL_CDR2_LE  0x0b00u
+#define DDSI_RTPS_CDR_BE 0x0000u
+#define DDSI_RTPS_CDR_LE 0x0100u
+#define DDSI_RTPS_PL_CDR_BE 0x0200u
+#define DDSI_RTPS_PL_CDR_LE 0x0300u
+#define DDSI_RTPS_CDR2_BE 0x0600u
+#define DDSI_RTPS_CDR2_LE 0x0700u
+#define DDSI_RTPS_D_CDR2_BE 0x0800u
+#define DDSI_RTPS_D_CDR2_LE 0x0900u
+#define DDSI_RTPS_PL_CDR2_BE 0x0a00u
+#define DDSI_RTPS_PL_CDR2_LE 0x0b00u
 
-#define DDSI_RTPS_CDR_ENC_LE(x) (((x) & 0x0100) == 0x0100)
-#define DDSI_RTPS_CDR_ENC_IS_NATIVE(x) (DDSI_RTPS_CDR_ENC_LE ((x)))
-#define DDSI_RTPS_CDR_ENC_IS_VALID(x) (!((x) > DDSI_RTPS_PL_CDR2_LE || (x) == 0x0400 || (x) == 0x0500))
+#define DDSI_RTPS_CDR_ENC_LE(x) (((x)&0x0100) == 0x0100)
+#define DDSI_RTPS_CDR_ENC_IS_NATIVE(x) (DDSI_RTPS_CDR_ENC_LE((x)))
+#define DDSI_RTPS_CDR_ENC_IS_VALID(x) \
+  (!((x) > DDSI_RTPS_PL_CDR2_LE || (x) == 0x0400 || (x) == 0x0500))
 #define DDSI_RTPS_CDR_ENC_TO_NATIVE(x) ((x) | 0x0100)
 
 #else
 
-#define DDSI_RTPS_CDR_BE      0x0000u
-#define DDSI_RTPS_CDR_LE      0x0001u
-#define DDSI_RTPS_PL_CDR_BE   0x0002u
-#define DDSI_RTPS_PL_CDR_LE   0x0003u
-#define DDSI_RTPS_CDR2_BE     0x0006u
-#define DDSI_RTPS_CDR2_LE     0x0007u
-#define DDSI_RTPS_D_CDR2_BE   0x0008u
-#define DDSI_RTPS_D_CDR2_LE   0x0009u
-#define DDSI_RTPS_PL_CDR2_BE  0x000au
-#define DDSI_RTPS_PL_CDR2_LE  0x000bu
+#define DDSI_RTPS_CDR_BE 0x0000u
+#define DDSI_RTPS_CDR_LE 0x0001u
+#define DDSI_RTPS_PL_CDR_BE 0x0002u
+#define DDSI_RTPS_PL_CDR_LE 0x0003u
+#define DDSI_RTPS_CDR2_BE 0x0006u
+#define DDSI_RTPS_CDR2_LE 0x0007u
+#define DDSI_RTPS_D_CDR2_BE 0x0008u
+#define DDSI_RTPS_D_CDR2_LE 0x0009u
+#define DDSI_RTPS_PL_CDR2_BE 0x000au
+#define DDSI_RTPS_PL_CDR2_LE 0x000bu
 
-#define DDSI_RTPS_CDR_ENC_LE(x) (((x) & 0x0001) == 0x0001)
-#define DDSI_RTPS_CDR_ENC_IS_NATIVE(x) (!DDSI_RTPS_CDR_ENC_LE ((x)))
-#define DDSI_RTPS_CDR_ENC_IS_VALID(x) (!((x) > DDSI_RTPS_PL_CDR2_LE || (x) == 0x0004 || (x) == 0x0005))
+#define DDSI_RTPS_CDR_ENC_LE(x) (((x)&0x0001) == 0x0001)
+#define DDSI_RTPS_CDR_ENC_IS_NATIVE(x) (!DDSI_RTPS_CDR_ENC_LE((x)))
+#define DDSI_RTPS_CDR_ENC_IS_VALID(x) \
+  (!((x) > DDSI_RTPS_PL_CDR2_LE || (x) == 0x0004 || (x) == 0x0005))
 #define DDSI_RTPS_CDR_ENC_TO_NATIVE(x) ((x) & ~0x0001)
 
 #endif
@@ -210,7 +212,6 @@ typedef struct ddsi_rtps_msg_len {
 
 #define DDSI_ENTITYID_ALLOCSTEP 0x100
 
-
 /* Names of the built-in topics */
 #define DDS_BUILTIN_TOPIC_PARTICIPANT_NAME "DCPSParticipant"
 #define DDS_BUILTIN_TOPIC_PUBLICATION_NAME "DCPSPublication"
@@ -224,7 +225,8 @@ typedef struct ddsi_rtps_msg_len {
 #define DDS_BUILTIN_TOPIC_SUBSCRIPTION_SECURE_NAME "DCPSSubscriptionsSecure"
 #define DDS_BUILTIN_TOPIC_PARTICIPANT_MESSAGE_SECURE_NAME "DCPSParticipantMessageSecure"
 #define DDS_BUILTIN_TOPIC_PARTICIPANT_STATELESS_MESSAGE_NAME "DCPSParticipantStatelessMessage"
-#define DDS_BUILTIN_TOPIC_PARTICIPANT_VOLATILE_MESSAGE_SECURE_NAME "DCPSParticipantVolatileMessageSecure"
+#define DDS_BUILTIN_TOPIC_PARTICIPANT_VOLATILE_MESSAGE_SECURE_NAME \
+  "DCPSParticipantVolatileMessageSecure"
 
 /* Participant built-in topic qos properties */
 #define DDS_BUILTIN_TOPIC_PARTICIPANT_PROPERTY_PROCESS_NAME "__ProcessName"
@@ -234,7 +236,7 @@ typedef struct ddsi_rtps_msg_len {
 #define DDS_BUILTIN_TOPIC_PARTICIPANT_DEBUG_MONITOR "__DebugMonitor"
 #define DDS_BUILTIN_TOPIC_NULL_NAME NULL
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

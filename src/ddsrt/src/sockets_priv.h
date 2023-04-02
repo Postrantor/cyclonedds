@@ -16,8 +16,8 @@
 
 #include "dds/ddsrt/misc.h"
 #include "dds/ddsrt/sockets.h"
-#include "dds/ddsrt/time.h"
 #include "dds/ddsrt/static_assert.h"
+#include "dds/ddsrt/time.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -38,8 +38,7 @@ typedef time_t ddsrt_tv_sec_t;
  *
  * @returns NULL if @reltime was @DDS_INFINITY, the value of @tv otherwise.
  */
-inline struct timeval *
-ddsrt_duration_to_timeval_ceil(dds_duration_t reltime, struct timeval *tv)
+inline struct timeval * ddsrt_duration_to_timeval_ceil(dds_duration_t reltime, struct timeval * tv)
 {
   DDSRT_WARNING_MSVC_OFF(6326)
   assert(tv != NULL);
@@ -50,8 +49,9 @@ ddsrt_duration_to_timeval_ceil(dds_duration_t reltime, struct timeval *tv)
     return NULL;
   } else if (reltime > 0) {
     dds_duration_t max_nsecs;
-    DDSRT_STATIC_ASSERT (CHAR_BIT * sizeof (ddsrt_tv_sec_t) == 32 || CHAR_BIT * sizeof (ddsrt_tv_sec_t) == 64);
-    if (CHAR_BIT * sizeof (ddsrt_tv_sec_t) == 32)
+    DDSRT_STATIC_ASSERT(
+      CHAR_BIT * sizeof(ddsrt_tv_sec_t) == 32 || CHAR_BIT * sizeof(ddsrt_tv_sec_t) == 64);
+    if (CHAR_BIT * sizeof(ddsrt_tv_sec_t) == 32)
       max_nsecs = INT32_MAX * DDS_NSECS_IN_SEC;
     else
       max_nsecs = INT64_MAX / DDS_NSECS_IN_SEC;
@@ -61,10 +61,10 @@ ddsrt_duration_to_timeval_ceil(dds_duration_t reltime, struct timeval *tv)
       tv->tv_sec = (ddsrt_tv_sec_t)(reltime / DDS_NSECS_IN_SEC);
       tv->tv_usec = (int)((reltime % DDS_NSECS_IN_SEC) / DDS_NSECS_IN_USEC);
     } else {
-      if (CHAR_BIT * sizeof (ddsrt_tv_sec_t) == 32)
-        tv->tv_sec = (ddsrt_tv_sec_t) INT32_MAX;
+      if (CHAR_BIT * sizeof(ddsrt_tv_sec_t) == 32)
+        tv->tv_sec = (ddsrt_tv_sec_t)INT32_MAX;
       else
-        tv->tv_sec = (ddsrt_tv_sec_t) INT64_MAX;
+        tv->tv_sec = (ddsrt_tv_sec_t)INT64_MAX;
       tv->tv_usec = 999999;
     }
   } else {

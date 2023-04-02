@@ -9,6 +9,10 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include <assert.h>
+#include <stddef.h>
+#include <string.h>
+
 #include "dds/ddsi/ddsi_serdata.h"
 #include "dds/ddsrt/avl.h"
 #include "dds/ddsrt/cdtors.h"
@@ -18,9 +22,6 @@
 #include "dds/ddsrt/misc.h"
 #include "dds/ddsrt/sync.h"
 #include "dds/features.h"
-#include <assert.h>
-#include <stddef.h>
-#include <string.h>
 #ifdef DDS_HAS_LIFESPAN
 #include "dds/ddsi/ddsi_lifespan.h"
 #endif
@@ -39,111 +40,107 @@
 #define USE_EHH 0
 
 // 定义 dds_whc_default_node 结构体
-struct dds_whc_default_node
-{
-  struct ddsi_whc_node common;           // 公共节点结构体
-  struct dds_whc_default_node *next_seq; // 本区间内的下一个节点
-  struct dds_whc_default_node *prev_seq; // 本区间内的上一个节点
-  struct whc_idxnode *idxnode;           // 索引中的节点，如果不在索引中则为 NULL
-  uint32_t idxnode_pos;                  // idxnode.hist 中的索引位置
-  uint64_t total_bytes;                  // 包括此节点在内的累计字节数
+struct dds_whc_default_node {
+  struct ddsi_whc_node common;            // 公共节点结构体
+  struct dds_whc_default_node *next_seq;  // 本区间内的下一个节点
+  struct dds_whc_default_node *prev_seq;  // 本区间内的上一个节点
+  struct whc_idxnode *idxnode;            // 索引中的节点，如果不在索引中则为 NULL
+  uint32_t idxnode_pos;                   // idxnode.hist 中的索引位置
+  uint64_t total_bytes;                   // 包括此节点在内的累计字节数
   size_t size;
-  unsigned unacked : 1;         // 当值为 1 时，在 whc::unacked_bytes 中计数
-  unsigned borrowed : 1;        // 任何时候最多只有一个可以借用它
-  ddsrt_mtime_t last_rexmit_ts; // 最后一次重传时间戳
-  uint32_t rexmit_count;        // 重传计数
+  unsigned unacked : 1;                   // 当值为 1 时，在 whc::unacked_bytes 中计数
+  unsigned borrowed : 1;                  // 任何时候最多只有一个可以借用它
+  ddsrt_mtime_t last_rexmit_ts;           // 最后一次重传时间戳
+  uint32_t rexmit_count;                  // 重传计数
 #ifdef DDS_HAS_LIFESPAN
-  struct ddsi_lifespan_fhnode lifespan; // 生命周期的 fibheap 节点
+  struct ddsi_lifespan_fhnode lifespan;   // 生命周期的 fibheap 节点
 #endif
-  struct ddsi_serdata *serdata; // 序列化数据指针
+  struct ddsi_serdata *serdata;           // 序列化数据指针
 };
 
 // 静态断言，检查 dds_whc_default_node 结构体中 common 成员的偏移量是否为 0
 DDSRT_STATIC_ASSERT(offsetof(struct dds_whc_default_node, common) == 0);
 
 // 定义 whc_intvnode 结构体
-struct whc_intvnode
-{
-  ddsrt_avl_node_t avlnode;           // AVL 树节点
-  ddsi_seqno_t min;                   // 最小序列号
-  ddsi_seqno_t maxp1;                 // 最大序列号加 1
-  struct dds_whc_default_node *first; // 连续序列号 [min,maxp1) 的链表中的第一个节点
-  struct dds_whc_default_node *last;  // 当 first != NULL 时有效
+struct whc_intvnode {
+  ddsrt_avl_node_t avlnode;            // AVL 树节点
+  ddsi_seqno_t min;                    // 最小序列号
+  ddsi_seqno_t maxp1;                  // 最大序列号加 1
+  struct dds_whc_default_node *first;  // 连续序列号 [min,maxp1) 的链表中的第一个节点
+  struct dds_whc_default_node *last;   // 当 first != NULL 时有效
 };
 
 // 定义 whc_idxnode 结构体
-struct whc_idxnode
-{
-  uint64_t iid;                   // 实例标识符
-  ddsi_seqno_t prune_seq;         // 裁剪序列号
-  struct ddsi_tkmap_instance *tk; // tkmap 实例指针
-  uint32_t headidx;               // 头索引
+struct whc_idxnode {
+  uint64_t iid;                         // 实例标识符
+  ddsi_seqno_t prune_seq;               // 裁剪序列号
+  struct ddsi_tkmap_instance *tk;       // tkmap 实例指针
+  uint32_t headidx;                     // 头索引
 #ifdef DDS_HAS_DEADLINE_MISSED
-  struct deadline_elem deadline; // 错过截止日期的列表元素
+  struct deadline_elem deadline;        // 错过截止日期的列表元素
 #endif
-  struct dds_whc_default_node *hist[]; // 历史记录数组
+  struct dds_whc_default_node *hist[];  // 历史记录数组
 };
 // 如果使用 EHH（Elastic Hash Heap）
 #if USE_EHH
 // 定义 whc_seq_entry 结构体
-struct whc_seq_entry
-{
-  ddsi_seqno_t seq;                  // 序列号
-  struct dds_whc_default_node *whcn; // 指向 dds_whc_default_node 的指针
+struct whc_seq_entry {
+  ddsi_seqno_t seq;                   // 序列号
+  struct dds_whc_default_node *whcn;  // 指向 dds_whc_default_node 的指针
 };
 #endif
 
 // 定义 whc_writer_info 结构体
-struct whc_writer_info
-{
-  dds_writer *writer;              // 写入器指针，可以为 NULL，例如在内置写入器的 whc 中
-  unsigned is_transient_local : 1; // 是否为瞬态本地
-  unsigned has_deadline : 1;       // 是否有截止日期
-  uint32_t hdepth;                 // 历史深度，0 表示无限制
-  uint32_t tldepth;                // 瞬态本地深度，0 表示禁用/无限制（如果 KEEP_ALL <=> is_transient_local + tldepth=0，则无需维护索引）
-  uint32_t idxdepth;               // 索引深度，等于 max(hdepth, tldepth)
+struct whc_writer_info {
+  dds_writer *writer;  // 写入器指针，可以为 NULL，例如在内置写入器的 whc 中
+  unsigned is_transient_local : 1;  // 是否为瞬态本地
+  unsigned has_deadline : 1;        // 是否有截止日期
+  uint32_t hdepth;                  // 历史深度，0 表示无限制
+  uint32_t tldepth;  // 瞬态本地深度，0 表示禁用/无限制（如果 KEEP_ALL <=> is_transient_local +
+                     // tldepth=0，则无需维护索引）
+  uint32_t idxdepth;  // 索引深度，等于 max(hdepth, tldepth)
 };
 
 // 定义 whc_impl 结构体
-struct whc_impl
-{
-  struct ddsi_whc common;                   // 公共 whc 结构体
-  ddsrt_mutex_t lock;                       // 互斥锁
-  uint32_t seq_size;                        // 序列大小
-  size_t unacked_bytes;                     // 未确认的字节数
-  size_t sample_overhead;                   // 样本开销
-  uint32_t fragment_size;                   // 分片大小
-  uint64_t total_bytes;                     // 推入的总字节数
-  unsigned xchecks : 1;                     // 检查标志
-  struct ddsi_domaingv *gv;                 // 域全局变量指针
-  struct ddsi_tkmap *tkmap;                 // tkmap 指针
-  struct whc_writer_info wrinfo;            // 写入器信息结构体
-  ddsi_seqno_t max_drop_seq;                // 序列号 <= max_drop_seq 的样本在 whc 中表示为瞬态本地
-  struct whc_intvnode *open_intv;           // 下一个样本通常会进入的区间（通常）
-  struct dds_whc_default_node *maxseq_node; // 如果为空，则为空；如果不在 open_intv 中，open_intv 为空
+struct whc_impl {
+  struct ddsi_whc common;         // 公共 whc 结构体
+  ddsrt_mutex_t lock;             // 互斥锁
+  uint32_t seq_size;              // 序列大小
+  size_t unacked_bytes;           // 未确认的字节数
+  size_t sample_overhead;         // 样本开销
+  uint32_t fragment_size;         // 分片大小
+  uint64_t total_bytes;           // 推入的总字节数
+  unsigned xchecks : 1;           // 检查标志
+  struct ddsi_domaingv *gv;       // 域全局变量指针
+  struct ddsi_tkmap *tkmap;       // tkmap 指针
+  struct whc_writer_info wrinfo;  // 写入器信息结构体
+  ddsi_seqno_t max_drop_seq;  // 序列号 <= max_drop_seq 的样本在 whc 中表示为瞬态本地
+  struct whc_intvnode *open_intv;  // 下一个样本通常会进入的区间（通常）
+  struct dds_whc_default_node
+      *maxseq_node;  // 如果为空，则为空；如果不在 open_intv 中，open_intv 为空
 #if USE_EHH
-  struct ddsrt_ehh *seq_hash; // Elastic Hash Heap 序列哈希表
+  struct ddsrt_ehh *seq_hash;  // Elastic Hash Heap 序列哈希表
 #else
-  struct ddsrt_hh *seq_hash; // 哈希表序列
+  struct ddsrt_hh *seq_hash;  // 哈希表序列
 #endif
-  struct ddsrt_hh *idx_hash; // 索引哈希表
-  ddsrt_avl_tree_t seq;      // AVL 树序列
+  struct ddsrt_hh *idx_hash;          // 索引哈希表
+  ddsrt_avl_tree_t seq;               // AVL 树序列
 #ifdef DDS_HAS_LIFESPAN
-  struct ddsi_lifespan_adm lifespan; // 生命周期管理
+  struct ddsi_lifespan_adm lifespan;  // 生命周期管理
 #endif
 #ifdef DDS_HAS_DEADLINE_MISSED
-  struct ddsi_deadline_adm deadline; // 错过截止日期管理
+  struct ddsi_deadline_adm deadline;  // 错过截止日期管理
 #endif
 };
 // 定义结构体ddsi_whc_sample_iter_impl
-struct ddsi_whc_sample_iter_impl
-{
-  struct ddsi_whc_sample_iter_base c; // 基本迭代器类型
-  bool first;                         // 是否为第一个元素的标志
+struct ddsi_whc_sample_iter_impl {
+  struct ddsi_whc_sample_iter_base c;  // 基本迭代器类型
+  bool first;                          // 是否为第一个元素的标志
 };
 
 // 静态断言，检查我们定义的whc_sample_iter是否适合调用者分配的类型大小
-DDSRT_STATIC_ASSERT(sizeof(struct ddsi_whc_sample_iter_impl) <= sizeof(struct ddsi_whc_sample_iter));
+DDSRT_STATIC_ASSERT(sizeof(struct ddsi_whc_sample_iter_impl) <=
+                    sizeof(struct ddsi_whc_sample_iter));
 
 /*
  * Hash + interval tree adminitration of samples-by-sequence number
@@ -188,58 +185,78 @@ static void free_deferred_free_list(struct dds_whc_default_node *deferred_free_l
 static void get_state_locked(const struct whc_impl *whc, struct ddsi_whc_state *st);
 
 // 删除 whc 中已确认的消息，返回删除的消息数量
-static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc, ddsi_seqno_t max_drop_seq, struct ddsi_whc_node **deferred_free_list);
+static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc,
+                                                       ddsi_seqno_t max_drop_seq,
+                                                       struct ddsi_whc_node **deferred_free_list);
 
 // 删除 whc 中已确认的消息，并更新 whc 状态
-static uint32_t whc_default_remove_acked_messages(struct ddsi_whc *whc, ddsi_seqno_t max_drop_seq, struct ddsi_whc_state *whcst, struct ddsi_whc_node **deferred_free_list);
+static uint32_t whc_default_remove_acked_messages(struct ddsi_whc *whc,
+                                                  ddsi_seqno_t max_drop_seq,
+                                                  struct ddsi_whc_state *whcst,
+                                                  struct ddsi_whc_node **deferred_free_list);
 
 // 释放 whc 中的延迟释放列表
-static void whc_default_free_deferred_free_list(struct ddsi_whc *whc, struct ddsi_whc_node *deferred_free_list);
+static void whc_default_free_deferred_free_list(struct ddsi_whc *whc,
+                                                struct ddsi_whc_node *deferred_free_list);
 
 // 获取 whc 的状态并存储在 st 结构体中
 static void whc_default_get_state(const struct ddsi_whc *whc, struct ddsi_whc_state *st);
 
 // 将序列号、过期时间、序列化数据和 tkmap 实例插入到 whc 中
-static int whc_default_insert(struct ddsi_whc *whc, ddsi_seqno_t max_drop_seq, ddsi_seqno_t seq, ddsrt_mtime_t exp, struct ddsi_serdata *serdata, struct ddsi_tkmap_instance *tk);
+static int whc_default_insert(struct ddsi_whc *whc,
+                              ddsi_seqno_t max_drop_seq,
+                              ddsi_seqno_t seq,
+                              ddsrt_mtime_t exp,
+                              struct ddsi_serdata *serdata,
+                              struct ddsi_tkmap_instance *tk);
 
 // 获取 whc 中下一个序列号
 static ddsi_seqno_t whc_default_next_seq(const struct ddsi_whc *whc, ddsi_seqno_t seq);
 
 // 借用 whc 中指定序列号的样本
-static bool whc_default_borrow_sample(const struct ddsi_whc *whc, ddsi_seqno_t seq, struct ddsi_whc_borrowed_sample *sample);
+static bool whc_default_borrow_sample(const struct ddsi_whc *whc,
+                                      ddsi_seqno_t seq,
+                                      struct ddsi_whc_borrowed_sample *sample);
 
 // 根据 serdata_key 借用 whc 中的样本
-static bool whc_default_borrow_sample_key(const struct ddsi_whc *whc, const struct ddsi_serdata *serdata_key, struct ddsi_whc_borrowed_sample *sample);
+static bool whc_default_borrow_sample_key(const struct ddsi_whc *whc,
+                                          const struct ddsi_serdata *serdata_key,
+                                          struct ddsi_whc_borrowed_sample *sample);
 
 // 归还借用的样本，并根据 update_retransmit_info 参数决定是否更新重传信息
-static void whc_default_return_sample(struct ddsi_whc *whc, struct ddsi_whc_borrowed_sample *sample, bool update_retransmit_info);
+static void whc_default_return_sample(struct ddsi_whc *whc,
+                                      struct ddsi_whc_borrowed_sample *sample,
+                                      bool update_retransmit_info);
 
 // 初始化 whc 的样本迭代器
-static void whc_default_sample_iter_init(const struct ddsi_whc *whc, struct ddsi_whc_sample_iter *opaque_it);
+static void whc_default_sample_iter_init(const struct ddsi_whc *whc,
+                                         struct ddsi_whc_sample_iter *opaque_it);
 
 // 借用迭代器中的下一个样本
-static bool whc_default_sample_iter_borrow_next(struct ddsi_whc_sample_iter *opaque_it, struct ddsi_whc_borrowed_sample *sample);
+static bool whc_default_sample_iter_borrow_next(struct ddsi_whc_sample_iter *opaque_it,
+                                                struct ddsi_whc_borrowed_sample *sample);
 
 // 释放 whc 结构体
 static void whc_default_free(struct ddsi_whc *whc);
 
 // 定义 whc_seq_treedef，用于比较序列号大小
-static const ddsrt_avl_treedef_t whc_seq_treedef =
-    DDSRT_AVL_TREEDEF_INITIALIZER(offsetof(struct whc_intvnode, avlnode), offsetof(struct whc_intvnode, min), compare_seq, 0);
+static const ddsrt_avl_treedef_t whc_seq_treedef = DDSRT_AVL_TREEDEF_INITIALIZER(
+    offsetof(struct whc_intvnode, avlnode), offsetof(struct whc_intvnode, min), compare_seq, 0);
 
 // 定义一个名为ddsi_whc_ops的结构体常量whc_ops，用于存储各种操作函数的指针
 static const struct ddsi_whc_ops whc_ops = {
-    .insert = whc_default_insert,                                   // 插入操作的默认实现
-    .remove_acked_messages = whc_default_remove_acked_messages,     // 移除已确认消息的默认实现
-    .free_deferred_free_list = whc_default_free_deferred_free_list, // 释放延迟释放列表的默认实现
-    .get_state = whc_default_get_state,                             // 获取状态的默认实现
-    .next_seq = whc_default_next_seq,                               // 获取下一个序列号的默认实现
-    .borrow_sample = whc_default_borrow_sample,                     // 借用样本的默认实现
-    .borrow_sample_key = whc_default_borrow_sample_key,             // 借用样本键的默认实现
-    .return_sample = whc_default_return_sample,                     // 归还样本的默认实现
-    .sample_iter_init = whc_default_sample_iter_init,               // 初始化样本迭代器的默认实现
-    .sample_iter_borrow_next = whc_default_sample_iter_borrow_next, // 借用下一个样本迭代器的默认实现
-    .free = whc_default_free                                        // 释放操作的默认实现
+    .insert = whc_default_insert,                                // 插入操作的默认实现
+    .remove_acked_messages = whc_default_remove_acked_messages,  // 移除已确认消息的默认实现
+    .free_deferred_free_list = whc_default_free_deferred_free_list,  // 释放延迟释放列表的默认实现
+    .get_state = whc_default_get_state,                              // 获取状态的默认实现
+    .next_seq = whc_default_next_seq,                    // 获取下一个序列号的默认实现
+    .borrow_sample = whc_default_borrow_sample,          // 借用样本的默认实现
+    .borrow_sample_key = whc_default_borrow_sample_key,  // 借用样本键的默认实现
+    .return_sample = whc_default_return_sample,          // 归还样本的默认实现
+    .sample_iter_init = whc_default_sample_iter_init,    // 初始化样本迭代器的默认实现
+    .sample_iter_borrow_next =
+        whc_default_sample_iter_borrow_next,  // 借用下一个样本迭代器的默认实现
+    .free = whc_default_free                  // 释放操作的默认实现
 };
 
 // 定义一个宏TRACE，用于记录WHC相关的日志信息
@@ -255,13 +272,12 @@ static const struct ddsi_whc_ops whc_ops = {
  * 8192个条目似乎是满足最小样本、最大消息大小和短往返时间所需的大致数量。
  */
 #define MAX_FREELIST_SIZE 8192
-static uint32_t whc_count;                     // 实例化的WHC数量
-static struct ddsi_freelist whc_node_freelist; // WHC节点的全局自由列表
+static uint32_t whc_count;                      // 实例化的WHC数量
+static struct ddsi_freelist whc_node_freelist;  // WHC节点的全局自由列表
 
 #if USE_EHH
 // 计算 whc_seq_entry 结构的哈希值
-static uint32_t whc_seq_entry_hash(const void *vn)
-{
+static uint32_t whc_seq_entry_hash(const void *vn) {
   // 将传入的指针转换为 whc_seq_entry 结构指针
   const struct whc_seq_entry *n = vn;
   /* 我们对低 32 位进行哈希，假设在 40 亿个样本之间不会有显著的相关性 */
@@ -273,8 +289,7 @@ static uint32_t whc_seq_entry_hash(const void *vn)
 }
 
 // 比较两个 whc_seq_entry 结构是否相等
-static int whc_seq_entry_eq(const void *va, const void *vb)
-{
+static int whc_seq_entry_eq(const void *va, const void *vb) {
   // 将传入的指针转换为 whc_seq_entry 结构指针
   const struct whc_seq_entry *a = va;
   const struct whc_seq_entry *b = vb;
@@ -283,8 +298,7 @@ static int whc_seq_entry_eq(const void *va, const void *vb)
 }
 #else
 // 计算 dds_whc_default_node 结构的哈希值
-static uint32_t whc_node_hash(const void *vn)
-{
+static uint32_t whc_node_hash(const void *vn) {
   // 将传入的指针转换为 dds_whc_default_node 结构指针
   const struct dds_whc_default_node *n = vn;
   /* 我们对低 32 位进行哈希，假设在 40 亿个样本之间不会有显著的相关性 */
@@ -296,8 +310,7 @@ static uint32_t whc_node_hash(const void *vn)
 }
 
 // 比较两个 dds_whc_default_node 结构是否相等
-static int whc_node_eq(const void *va, const void *vb)
-{
+static int whc_node_eq(const void *va, const void *vb) {
   // 将传入的指针转换为 dds_whc_default_node 结构指针
   const struct dds_whc_default_node *a = va;
   const struct dds_whc_default_node *b = vb;
@@ -307,8 +320,7 @@ static int whc_node_eq(const void *va, const void *vb)
 #endif
 
 // 计算 whc_idxnode 结构的哈希值
-static uint32_t whc_idxnode_hash_key(const void *vn)
-{
+static uint32_t whc_idxnode_hash_key(const void *vn) {
   // 将传入的指针转换为 whc_idxnode 结构指针
   const struct whc_idxnode *n = vn;
   // 返回实例标识符作为哈希值
@@ -316,8 +328,7 @@ static uint32_t whc_idxnode_hash_key(const void *vn)
 }
 
 // 比较两个 whc_idxnode 结构是否相等
-static int whc_idxnode_eq_key(const void *va, const void *vb)
-{
+static int whc_idxnode_eq_key(const void *va, const void *vb) {
   // 将传入的指针转换为 whc_idxnode 结构指针
   const struct whc_idxnode *a = va;
   const struct whc_idxnode *b = vb;
@@ -332,12 +343,10 @@ static int whc_idxnode_eq_key(const void *va, const void *vb)
 //   如果 *a == *b, 返回 0
 //   如果 *a < *b, 返回 -1
 //   否则返回 1
-static int compare_seq(const void *va, const void *vb)
-{
+static int compare_seq(const void *va, const void *vb) {
   const ddsi_seqno_t *a = va;
   const ddsi_seqno_t *b = vb;
-  return (*a == *b) ? 0 : (*a < *b) ? -1
-                                    : 1;
+  return (*a == *b) ? 0 : (*a < *b) ? -1 : 1;
 }
 
 // 在 whc 中找到最大的序列号节点
@@ -346,17 +355,13 @@ static int compare_seq(const void *va, const void *vb)
 // 返回值:
 //   如果找到了最大的序列号节点，返回该节点的指针
 //   否则返回 NULL
-static struct dds_whc_default_node *whc_findmax_procedurally(const struct whc_impl *whc)
-{
+static struct dds_whc_default_node *whc_findmax_procedurally(const struct whc_impl *whc) {
   if (whc->seq_size == 0)
     return NULL;
-  else if (whc->open_intv->first)
-  {
+  else if (whc->open_intv->first) {
     // last 只在 first 不为 NULL 时有效
     return whc->open_intv->last;
-  }
-  else
-  {
+  } else {
     struct whc_intvnode *intv = ddsrt_avl_find_pred(&whc_seq_treedef, &whc->seq, whc->open_intv);
     assert(intv && intv->first);
     return intv->last;
@@ -366,8 +371,7 @@ static struct dds_whc_default_node *whc_findmax_procedurally(const struct whc_im
 // 检查 whc 的一致性
 // 参数:
 //   whc: 指向 whc_impl 结构体的指针
-static void check_whc(const struct whc_impl *whc)
-{
+static void check_whc(const struct whc_impl *whc) {
   // 可以检查更多内容，但是很快就会变得非常昂贵：
   // 所有节点（除了 open_intv）都是非空的、不重叠的且不连续的；
   // 区间的 min 和 maxp1 是正确的；
@@ -383,15 +387,13 @@ static void check_whc(const struct whc_impl *whc)
   assert(ddsrt_avl_find_succ(&whc_seq_treedef, &whc->seq, whc->open_intv) == NULL);
 
   // 如果 whc->maxseq_node 存在
-  if (whc->maxseq_node)
-  {
+  if (whc->maxseq_node) {
     // 确保 whc->maxseq_node 的 next_seq 为 NULL
     assert(whc->maxseq_node->next_seq == NULL);
   }
 
   // 如果 whc->open_intv->first 存在
-  if (whc->open_intv->first)
-  {
+  if (whc->open_intv->first) {
     // 确保 whc->open_intv->last 存在
     assert(whc->open_intv->last);
     // 确保 whc->maxseq_node 等于 whc->open_intv->last
@@ -400,9 +402,7 @@ static void check_whc(const struct whc_impl *whc)
     assert(whc->open_intv->min < whc->open_intv->maxp1);
     // 确保 whc->maxseq_node->common.seq + 1 等于 whc->open_intv->maxp1
     assert(whc->maxseq_node->common.seq + 1 == whc->open_intv->maxp1);
-  }
-  else
-  {
+  } else {
     // 确保 whc->open_intv->min 等于 whc->open_intv->maxp1
     assert(whc->open_intv->min == whc->open_intv->maxp1);
   }
@@ -412,8 +412,7 @@ static void check_whc(const struct whc_impl *whc)
 
 // 如果 NDEBUG 没有定义，执行以下代码块
 #if !defined(NDEBUG)
-  if (whc->xchecks)
-  {
+  if (whc->xchecks) {
     struct whc_intvnode *firstintv;
     struct dds_whc_default_node *cur;
     ddsi_seqno_t prevseq = 0;
@@ -425,8 +424,7 @@ static void check_whc(const struct whc_impl *whc)
 
     // 遍历 whc->seq 中的所有节点
     cur = firstintv->first;
-    while (cur)
-    {
+    while (cur) {
       // 确保当前节点的序列号大于前一个节点的序列号
       assert(cur->common.seq > prevseq);
       prevseq = cur->common.seq;
@@ -442,15 +440,13 @@ static void check_whc(const struct whc_impl *whc)
 // 参数:
 //   whc: 指向 whc_impl 结构体的指针
 //   whcn: 指向 dds_whc_default_node 结构体的指针
-static void insert_whcn_in_hash(struct whc_impl *whc, struct dds_whc_default_node *whcn)
-{
+static void insert_whcn_in_hash(struct whc_impl *whc, struct dds_whc_default_node *whcn) {
   // 前提条件：whcn 不在哈希表中
 #if USE_EHH
   // 使用 ehh 数据结构
   struct whc_seq_entry e = {.seq = whcn->common.seq, .whcn = whcn};
   // 尝试将 e 添加到哈希表中，如果失败则触发断言
-  if (!ddsrt_ehh_add(whc->seq_hash, &e))
-    assert(0);
+  if (!ddsrt_ehh_add(whc->seq_hash, &e)) assert(0);
 #else
   // 使用 hh 数据结构
   ddsrt_hh_add_absent(whc->seq_hash, whcn);
@@ -461,15 +457,13 @@ static void insert_whcn_in_hash(struct whc_impl *whc, struct dds_whc_default_nod
 // 参数:
 //   whc: 指向 whc_impl 结构体的指针
 //   whcn: 指向 dds_whc_default_node 结构体的指针
-static void remove_whcn_from_hash(struct whc_impl *whc, struct dds_whc_default_node *whcn)
-{
+static void remove_whcn_from_hash(struct whc_impl *whc, struct dds_whc_default_node *whcn) {
   // 前提条件：whcn 在哈希表中
 #if USE_EHH
   // 使用 ehh 数据结构
   struct whc_seq_entry e = {.seq = whcn->common.seq};
   // 尝试从哈希表中移除 e，如果失败则触发断言
-  if (!ddsrt_ehh_remove(whc->seq_hash, &e))
-    assert(0);
+  if (!ddsrt_ehh_remove(whc->seq_hash, &e)) assert(0);
 #else
   // 使用 hh 数据结构
   ddsrt_hh_remove_present(whc->seq_hash, whcn);
@@ -482,16 +476,15 @@ static void remove_whcn_from_hash(struct whc_impl *whc, struct dds_whc_default_n
 //   seq: 要查找的序列号
 // 返回值:
 //   如果找到具有给定序列号的节点，则返回指向该节点的指针；否则返回 NULL
-static struct dds_whc_default_node *whc_findseq(const struct whc_impl *whc, ddsi_seqno_t seq)
-{
+static struct dds_whc_default_node *whc_findseq(const struct whc_impl *whc, ddsi_seqno_t seq) {
 #if USE_EHH
   // 使用 ehh 数据结构
   struct whc_seq_entry e = {.seq = seq}, *r;
   // 查找具有给定序列号的节点
   if ((r = ddsrt_ehh_lookup(whc->seq_hash, &e)) != NULL)
-    return r->whcn; // 找到节点，返回指针
+    return r->whcn;  // 找到节点，返回指针
   else
-    return NULL; // 未找到节点，返回 NULL
+    return NULL;     // 未找到节点，返回 NULL
 #else
   // 使用 hh 数据结构
   struct dds_whc_default_node template;
@@ -507,11 +500,10 @@ static struct dds_whc_default_node *whc_findseq(const struct whc_impl *whc, ddsi
  * @param serdata_key 指向 ddsi_serdata 结构体的指针，表示要查找的键
  * @return 如果找到具有给定键的节点，则返回指向该节点的指针；否则返回 NULL
  */
-static struct dds_whc_default_node *whc_findkey(const struct whc_impl *whc, const struct ddsi_serdata *serdata_key)
-{
+static struct dds_whc_default_node *whc_findkey(const struct whc_impl *whc,
+                                                const struct ddsi_serdata *serdata_key) {
   // 定义一个联合体，包含一个 whc_idxnode 结构体和一个额外的指针大小的空间
-  union
-  {
+  union {
     struct whc_idxnode idxn;
     char pad[sizeof(struct whc_idxnode) + sizeof(struct dds_whc_default_node *)];
   } template;
@@ -528,9 +520,8 @@ static struct dds_whc_default_node *whc_findkey(const struct whc_impl *whc, cons
 
   // 判断是否找到节点
   if (n == NULL)
-    return NULL; // 未找到节点，返回 NULL
-  else
-  {
+    return NULL;  // 未找到节点，返回 NULL
+  else {
     // 找到节点，确保其历史记录不为空
     assert(n->hist[n->headidx]);
     // 返回找到的节点
@@ -546,8 +537,7 @@ static struct dds_whc_default_node *whc_findkey(const struct whc_impl *whc, cons
  * @param tnow 当前时间
  * @return 下一个过期时间
  */
-static ddsrt_mtime_t whc_sample_expired_cb(void *hc, ddsrt_mtime_t tnow)
-{
+static ddsrt_mtime_t whc_sample_expired_cb(void *hc, ddsrt_mtime_t tnow) {
   struct whc_impl *whc = hc;
   void *sample;
   ddsrt_mtime_t tnext;
@@ -577,8 +567,7 @@ static ddsrt_mtime_t whc_sample_expired_cb(void *hc, ddsrt_mtime_t tnow)
  * @param tnow 当前时间
  * @return 下一个过期时间
  */
-static ddsrt_mtime_t whc_deadline_missed_cb(void *hc, ddsrt_mtime_t tnow)
-{
+static ddsrt_mtime_t whc_deadline_missed_cb(void *hc, ddsrt_mtime_t tnow) {
   struct whc_impl *whc = hc;
   void *vidxnode;
   ddsrt_mtime_t tnext;
@@ -587,11 +576,12 @@ static ddsrt_mtime_t whc_deadline_missed_cb(void *hc, ddsrt_mtime_t tnow)
   ddsrt_mutex_lock(&whc->lock);
 
   // 遍历并处理所有已错过 deadline 的实例
-  while ((tnext = ddsi_deadline_next_missed_locked(&whc->deadline, tnow, &vidxnode)).v == 0)
-  {
+  while ((tnext = ddsi_deadline_next_missed_locked(&whc->deadline, tnow, &vidxnode)).v == 0) {
     struct whc_idxnode *idxnode = vidxnode;
     // 计算已过期的 deadline 数量
-    uint32_t deadlines_expired = idxnode->deadline.deadlines_missed + (uint32_t)((tnow.v - idxnode->deadline.t_last_update.v) / whc->deadline.dur);
+    uint32_t deadlines_expired =
+        idxnode->deadline.deadlines_missed +
+        (uint32_t)((tnow.v - idxnode->deadline.t_last_update.v) / whc->deadline.dur);
     // 重新注册实例的 deadline
     ddsi_deadline_reregister_instance_locked(&whc->deadline, &idxnode->deadline, tnow);
 
@@ -629,8 +619,7 @@ static ddsrt_mtime_t whc_deadline_missed_cb(void *hc, ddsrt_mtime_t tnow)
  * @param qos 一个 dds_qos_t 指针，表示质量服务参数
  * @return 返回一个 whc_writer_info 结构体指针
  */
-struct whc_writer_info *dds_whc_make_wrinfo(struct dds_writer *wr, const dds_qos_t *qos)
-{
+struct whc_writer_info *dds_whc_make_wrinfo(struct dds_writer *wr, const dds_qos_t *qos) {
   // 分配内存空间给 whc_writer_info 结构体
   struct whc_writer_info *wrinfo = ddsrt_malloc(sizeof(*wrinfo));
 
@@ -662,7 +651,9 @@ struct whc_writer_info *dds_whc_make_wrinfo(struct dds_writer *wr, const dds_qos
   if (!wrinfo->is_transient_local)
     wrinfo->tldepth = 0;
   else
-    wrinfo->tldepth = (qos->durability_service.history.kind == DDS_HISTORY_KEEP_ALL) ? 0 : (unsigned)qos->durability_service.history.depth;
+    wrinfo->tldepth = (qos->durability_service.history.kind == DDS_HISTORY_KEEP_ALL)
+                          ? 0
+                          : (unsigned)qos->durability_service.history.depth;
 
   // 设置 idxdepth 字段为 hdepth 和 tldepth 中的较大值
   wrinfo->idxdepth = wrinfo->hdepth > wrinfo->tldepth ? wrinfo->hdepth : wrinfo->tldepth;
@@ -676,8 +667,7 @@ struct whc_writer_info *dds_whc_make_wrinfo(struct dds_writer *wr, const dds_qos
  *
  * @param wrinfo 一个 whc_writer_info 指针，表示要释放的结构体实例
  */
-void dds_whc_free_wrinfo(struct whc_writer_info *wrinfo)
-{
+void dds_whc_free_wrinfo(struct whc_writer_info *wrinfo) {
   // 释放 whc_writer_info 结构体实例的内存空间
   ddsrt_free(wrinfo);
 }
@@ -688,8 +678,7 @@ void dds_whc_free_wrinfo(struct whc_writer_info *wrinfo)
  * @param wrinfo 一个 whc_writer_info 指针，表示写入器信息
  * @return 返回一个 ddsi_whc 结构体指针
  */
-struct ddsi_whc *dds_whc_new(struct ddsi_domaingv *gv, const struct whc_writer_info *wrinfo)
-{
+struct ddsi_whc *dds_whc_new(struct ddsi_domaingv *gv, const struct whc_writer_info *wrinfo) {
   // 样本开销估计值
   size_t sample_overhead = 80; /* INFO_TS, DATA (estimate), inline QoS */
 
@@ -722,7 +711,8 @@ struct ddsi_whc *dds_whc_new(struct ddsi_domaingv *gv, const struct whc_writer_i
 
 #if USE_EHH
   // 初始化 seq_hash 字段（使用 ehh）
-  whc->seq_hash = ddsrt_ehh_new(sizeof(struct whc_seq_entry), 32, whc_seq_entry_hash, whc_seq_entry_eq);
+  whc->seq_hash =
+      ddsrt_ehh_new(sizeof(struct whc_seq_entry), 32, whc_seq_entry_hash, whc_seq_entry_eq);
 #else
   // 初始化 seq_hash 字段（不使用 ehh）
   whc->seq_hash = ddsrt_hh_new(1, whc_node_hash, whc_node_eq);
@@ -730,13 +720,16 @@ struct ddsi_whc *dds_whc_new(struct ddsi_domaingv *gv, const struct whc_writer_i
 
 #ifdef DDS_HAS_LIFESPAN
   // 初始化 lifespan 字段
-  ddsi_lifespan_init(gv, &whc->lifespan, offsetof(struct whc_impl, lifespan), offsetof(struct dds_whc_default_node, lifespan), whc_sample_expired_cb);
+  ddsi_lifespan_init(gv, &whc->lifespan, offsetof(struct whc_impl, lifespan),
+                     offsetof(struct dds_whc_default_node, lifespan), whc_sample_expired_cb);
 #endif
 
 #ifdef DDS_HAS_DEADLINE_MISSED
   // 初始化 deadline 字段
-  whc->deadline.dur = (wrinfo->writer != NULL) ? wrinfo->writer->m_entity.m_qos->deadline.deadline : DDS_INFINITY;
-  ddsi_deadline_init(gv, &whc->deadline, offsetof(struct whc_impl, deadline), offsetof(struct whc_idxnode, deadline), whc_deadline_missed_cb);
+  whc->deadline.dur =
+      (wrinfo->writer != NULL) ? wrinfo->writer->m_entity.m_qos->deadline.deadline : DDS_INFINITY;
+  ddsi_deadline_init(gv, &whc->deadline, offsetof(struct whc_impl, deadline),
+                     offsetof(struct whc_idxnode, deadline), whc_deadline_missed_cb);
 #endif
 
   // 初始化 seq interval tree，并创建一个 "open" 节点
@@ -751,7 +744,8 @@ struct ddsi_whc *dds_whc_new(struct ddsi_domaingv *gv, const struct whc_writer_i
   // 初始化 whc_node_freelist
   ddsrt_mutex_lock(ddsrt_get_singleton_mutex());
   if (whc_count++ == 0)
-    ddsi_freelist_init(&whc_node_freelist, MAX_FREELIST_SIZE, offsetof(struct dds_whc_default_node, next_seq));
+    ddsi_freelist_init(&whc_node_freelist, MAX_FREELIST_SIZE,
+                       offsetof(struct dds_whc_default_node, next_seq));
   ddsrt_mutex_unlock(ddsrt_get_singleton_mutex());
 
   // 检查 whc 结构体实例
@@ -765,8 +759,7 @@ struct ddsi_whc *dds_whc_new(struct ddsi_domaingv *gv, const struct whc_writer_i
  *
  * @param whcn 一个 dds_whc_default_node 指针，表示要释放内容的节点
  */
-static void free_whc_node_contents(struct dds_whc_default_node *whcn)
-{
+static void free_whc_node_contents(struct dds_whc_default_node *whcn) {
   // 取消对序列化数据的引用
   ddsi_serdata_unref(whcn->serdata);
 }
@@ -776,8 +769,7 @@ static void free_whc_node_contents(struct dds_whc_default_node *whcn)
  *
  * @param whc_generic 一个 ddsi_whc 指针，表示要释放的结构体实例
  */
-void whc_default_free(struct ddsi_whc *whc_generic)
-{
+void whc_default_free(struct ddsi_whc *whc_generic) {
   // 不考虑维护数据结构，直接释放资源
   struct whc_impl *const whc = (struct whc_impl *)whc_generic;
   check_whc(whc);
@@ -800,8 +792,8 @@ void whc_default_free(struct ddsi_whc *whc_generic)
   // 遍历并释放 idx_hash 中的节点
   struct ddsrt_hh_iter it;
   struct whc_idxnode *idxn;
-  for (idxn = ddsrt_hh_iter_first(whc->idx_hash, &it); idxn != NULL; idxn = ddsrt_hh_iter_next(&it))
-  {
+  for (idxn = ddsrt_hh_iter_first(whc->idx_hash, &it); idxn != NULL;
+       idxn = ddsrt_hh_iter_next(&it)) {
     ddsi_tkmap_instance_unref(whc->tkmap, idxn->tk);
     ddsrt_free(idxn);
   }
@@ -811,8 +803,7 @@ void whc_default_free(struct ddsi_whc *whc_generic)
   // 释放 maxseq_node 链表中的节点
   {
     struct dds_whc_default_node *whcn = whc->maxseq_node;
-    while (whcn)
-    {
+    while (whcn) {
       struct dds_whc_default_node *tmp = whcn;
       /* The compiler doesn't realize that whcn->prev_seq is always initialized. */
       DDSRT_WARNING_MSVC_OFF(6001);
@@ -836,8 +827,7 @@ ddsrt_avl_free(&whc_seq_treedef, &whc->seq, ddsrt_free);
 ddsrt_mutex_lock(ddsrt_get_singleton_mutex());
 
 // 如果 whc_count 减少到 0，则释放 whc_node_freelist
-if (--whc_count == 0)
-  ddsi_freelist_fini(&whc_node_freelist, ddsrt_free);
+if (--whc_count == 0) ddsi_freelist_fini(&whc_node_freelist, ddsrt_free);
 
 // 解锁全局单例互斥锁
 ddsrt_mutex_unlock(ddsrt_get_singleton_mutex());
@@ -863,17 +853,24 @@ AVL树（Adelson-Velsky和Landis发明）是一种自平衡二叉搜索树。在
 
 以下是AVL树的一些关键特性：
 
-1. **平衡因子**：每个节点的平衡因子是其左子树的高度减去右子树的高度。平衡因子的取值范围为{-1, 0, 1}。
-2. **旋转**：当插入或删除节点导致AVL树失去平衡时，需要通过旋转操作来恢复平衡。有四种基本旋转：左旋、右旋、左右旋和右左旋。
+1. **平衡因子**：每个节点的平衡因子是其左子树的高度减去右子树的高度。平衡因子的取值范围为{-1, 0,
+1}。
+2.
+**旋转**：当插入或删除节点导致AVL树失去平衡时，需要通过旋转操作来恢复平衡。有四种基本旋转：左旋、右旋、左右旋和右左旋。
    - 左旋（LL）：当一个节点的右子树比左子树高度大2时，将该节点向左旋转。
    - 右旋（RR）：当一个节点的左子树比右子树高度大2时，将该节点向右旋转。
-   - 左右旋（LR）：当一个节点的左子树的右子树高度大于左子树的左子树时，先对该节点的左子树进行左旋，然后再对该节点进行右旋。
-   - 右左旋（RL）：当一个节点的右子树的左子树高度大于右子树的右子树时，先对该节点的右子树进行右旋，然后再对该节点进行左旋。
-3. **插入**：在AVL树中插入一个新节点时，首先按照二叉搜索树的规则找到合适的位置。然后，更新祖先节点的高度并检查平衡因子。如果有节点失去平衡，执行相应的旋转操作来恢复平衡。
-4. **删除**：从AVL树中删除一个节点时，首先按照二叉搜索树的规则删除节点。然后，更新祖先节点的高度并检查平衡因子。如果有节点失去平衡，执行相应的旋转操作来恢复平衡。
+   -
+左右旋（LR）：当一个节点的左子树的右子树高度大于左子树的左子树时，先对该节点的左子树进行左旋，然后再对该节点进行右旋。
+   -
+右左旋（RL）：当一个节点的右子树的左子树高度大于右子树的右子树时，先对该节点的右子树进行右旋，然后再对该节点进行左旋。
+3.
+**插入**：在AVL树中插入一个新节点时，首先按照二叉搜索树的规则找到合适的位置。然后，更新祖先节点的高度并检查平衡因子。如果有节点失去平衡，执行相应的旋转操作来恢复平衡。
+4.
+**删除**：从AVL树中删除一个节点时，首先按照二叉搜索树的规则删除节点。然后，更新祖先节点的高度并检查平衡因子。如果有节点失去平衡，执行相应的旋转操作来恢复平衡。
 5. **查找**：由于AVL树是一种二叉搜索树，查找操作与普通二叉搜索树相同。
 
-AVL树的主要优点是它能够在插入、删除和查找操作中保持较低的树高，从而提高了操作效率。在最坏情况下，AVL树的时间复杂度为O(log N)，其中N是树中节点的数量。这使得AVL树在需要频繁执行这些操作的场景中非常有用，例如数据库和文件系统。
+AVL树的主要优点是它能够在插入、删除和查找操作中保持较低的树高，从而提高了操作效率。在最坏情况下，AVL树的时间复杂度为O(log
+N)，其中N是树中节点的数量。这使得AVL树在需要频繁执行这些操作的场景中非常有用，例如数据库和文件系统。
 */
 
 /**
@@ -881,17 +878,13 @@ AVL树的主要优点是它能够在插入、删除和查找操作中保持较�
  * @param[in] whc 指向 whc_impl 结构体的指针。
  * @param[out] st 用于存储状态信息的 ddsi_whc_state 结构体指针。
  */
-static void get_state_locked(const struct whc_impl *whc, struct ddsi_whc_state *st)
-{
+static void get_state_locked(const struct whc_impl *whc, struct ddsi_whc_state *st) {
   // 如果 whc->seq_size 为 0，表示序列为空
-  if (whc->seq_size == 0)
-  {
+  if (whc->seq_size == 0) {
     // 设置最小序列号、最大序列号和未确认字节数为 0
     st->min_seq = st->max_seq = 0;
     st->unacked_bytes = 0;
-  }
-  else
-  {
+  } else {
     const struct whc_intvnode *intv;
     // 查找 whc->seq 中的最小节点
     intv = ddsrt_avl_find_min(&whc_seq_treedef, &whc->seq);
@@ -912,8 +905,7 @@ static void get_state_locked(const struct whc_impl *whc, struct ddsi_whc_state *
  * @param[in] whc_generic 指向 ddsi_whc 结构体的指针。
  * @param[out] st 用于存储状态信息的 ddsi_whc_state 结构体指针。
  */
-static void whc_default_get_state(const struct ddsi_whc *whc_generic, struct ddsi_whc_state *st)
-{
+static void whc_default_get_state(const struct ddsi_whc *whc_generic, struct ddsi_whc_state *st) {
   // 将通用 whc 结构体转换为 whc_impl 结构体
   const struct whc_impl *const whc = (const struct whc_impl *)whc_generic;
 
@@ -938,15 +930,15 @@ static void whc_default_get_state(const struct ddsi_whc *whc_generic, struct dds
  * @param[in] seq 要查找的序列号
  * @return 返回找到的dds_whc_default_node，如果没有找到则返回NULL
  */
-static struct dds_whc_default_node *find_nextseq_intv(struct whc_intvnode **p_intv, const struct whc_impl *whc, ddsi_seqno_t seq)
-{
+static struct dds_whc_default_node *find_nextseq_intv(struct whc_intvnode **p_intv,
+                                                      const struct whc_impl *whc,
+                                                      ddsi_seqno_t seq) {
   // 定义节点和间隔变量
   struct dds_whc_default_node *n;
   struct whc_intvnode *intv;
 
   // 查找给定序列号的节点，如果找不到则返回NULL
-  if ((n = whc_findseq(whc, seq)) == NULL)
-  {
+  if ((n = whc_findseq(whc, seq)) == NULL) {
     /* 不知道序列号 => 查找具有 min > seq 的间隔（间隔是连续的，
        所以如果我们不知道序列号，就不能存在一个间隔 [X,Y) 使得 X < SEQ < Y） */
 #ifndef NDEBUG
@@ -956,34 +948,29 @@ static struct dds_whc_default_node *find_nextseq_intv(struct whc_intvnode **p_in
     }
 #endif
     // 查找大于等于给定序列号的最小间隔节点
-    if ((intv = ddsrt_avl_lookup_succ_eq(&whc_seq_treedef, &whc->seq, &seq)) == NULL)
-    {
+    if ((intv = ddsrt_avl_lookup_succ_eq(&whc_seq_treedef, &whc->seq, &seq)) == NULL) {
       assert(ddsrt_avl_lookup_pred_eq(&whc_seq_treedef, &whc->seq, &seq) == whc->open_intv);
       return NULL;
     }
     // 如果间隔不为空，则返回第一个节点
-    else if (intv->min < intv->maxp1)
-    { /* 只有在非空间隔的情况下 */
+    else if (intv->min < intv->maxp1) { /* 只有在非空间隔的情况下 */
       assert(intv->min > seq);
       *p_intv = intv;
       return intv->first;
     }
     // 如果间隔为空，只有 open_intv 可能为空
-    else
-    {
+    else {
       assert(intv == whc->open_intv);
       return NULL;
     }
   }
   // 如果找到了序列号对应的节点，但没有下一个序列节点，则返回NULL
-  else if (n->next_seq == NULL)
-  {
+  else if (n->next_seq == NULL) {
     assert(n == whc->maxseq_node);
     return NULL;
   }
   // 如果有下一个序列节点，查找并返回它
-  else
-  {
+  else {
     assert(whc->maxseq_node != NULL);
     assert(n->common.seq < whc->maxseq_node->common.seq);
     n = n->next_seq;
@@ -998,8 +985,7 @@ static struct dds_whc_default_node *find_nextseq_intv(struct whc_intvnode **p_in
  * @param seq 当前序列号
  * @return ddsi_seqno_t 下一个序列号
  */
-static ddsi_seqno_t whc_default_next_seq(const struct ddsi_whc *whc_generic, ddsi_seqno_t seq)
-{
+static ddsi_seqno_t whc_default_next_seq(const struct ddsi_whc *whc_generic, ddsi_seqno_t seq) {
   // 将通用的写历史缓存指针转换为具体实现类型的指针
   const struct whc_impl *const whc = (const struct whc_impl *)whc_generic;
   struct dds_whc_default_node *n;
@@ -1014,9 +1000,9 @@ static ddsi_seqno_t whc_default_next_seq(const struct ddsi_whc *whc_generic, dds
 
   // 查找下一个序列号所在的区间
   if ((n = find_nextseq_intv(&intv, whc, seq)) == NULL)
-    nseq = DDSI_MAX_SEQ_NUMBER; // 如果没有找到，则返回最大序列号
+    nseq = DDSI_MAX_SEQ_NUMBER;  // 如果没有找到，则返回最大序列号
   else
-    nseq = n->common.seq; // 否则返回找到的序列号
+    nseq = n->common.seq;        // 否则返回找到的序列号
 
   // 对写历史缓存解锁
   ddsrt_mutex_unlock((ddsrt_mutex_t *)&whc->lock);
@@ -1029,8 +1015,7 @@ static ddsi_seqno_t whc_default_next_seq(const struct ddsi_whc *whc_generic, dds
  *
  * @param whcn 要删除的默认节点指针
  */
-static void delete_one_sample_from_idx(struct dds_whc_default_node *whcn)
-{
+static void delete_one_sample_from_idx(struct dds_whc_default_node *whcn) {
   struct whc_idxnode *const idxn = whcn->idxnode;
 
   // 断言检查
@@ -1050,21 +1035,19 @@ static void delete_one_sample_from_idx(struct dds_whc_default_node *whcn)
  * @param max_drop_seq 最大丢弃序列号
  * @param idxn 索引节点指针
  */
-static void free_one_instance_from_idx(struct whc_impl *whc, ddsi_seqno_t max_drop_seq, struct whc_idxnode *idxn)
-{
+static void free_one_instance_from_idx(struct whc_impl *whc,
+                                       ddsi_seqno_t max_drop_seq,
+                                       struct whc_idxnode *idxn) {
   // 遍历写历史缓存的索引深度
-  for (uint32_t i = 0; i < whc->wrinfo.idxdepth; i++)
-  {
-    if (idxn->hist[i])
-    {
+  for (uint32_t i = 0; i < whc->wrinfo.idxdepth; i++) {
+    if (idxn->hist[i]) {
       struct dds_whc_default_node *oldn = idxn->hist[i];
 
       // 将旧节点的索引节点指针置空
       oldn->idxnode = NULL;
 
       // 如果旧节点的序列号小于等于最大丢弃序列号，则删除该节点
-      if (oldn->common.seq <= max_drop_seq)
-      {
+      if (oldn->common.seq <= max_drop_seq) {
         TRACE("  prune tl whcn %p\n", (void *)oldn);
         assert(oldn != whc->maxseq_node);
         whc_delete_one(whc, oldn);
@@ -1081,8 +1064,9 @@ static void free_one_instance_from_idx(struct whc_impl *whc, ddsi_seqno_t max_dr
  *  @param[in] max_drop_seq 最大丢弃序列号
  *  @param[in] idxn 指向whc_idxnode结构体的指针
  */
-static void delete_one_instance_from_idx(struct whc_impl *whc, ddsi_seqno_t max_drop_seq, struct whc_idxnode *idxn)
-{
+static void delete_one_instance_from_idx(struct whc_impl *whc,
+                                         ddsi_seqno_t max_drop_seq,
+                                         struct whc_idxnode *idxn) {
   // 从哈希表中移除当前实例
   ddsrt_hh_remove_present(whc->idx_hash, idxn);
 
@@ -1101,12 +1085,10 @@ static void delete_one_instance_from_idx(struct whc_impl *whc, ddsi_seqno_t max_
  *  @param[in] pos 位置
  *  @return 如果实例在时间线索引中，返回1，否则返回0
  */
-static int whcn_in_tlidx(const struct whc_impl *whc, const struct whc_idxnode *idxn, uint32_t pos)
-{
+static int whcn_in_tlidx(const struct whc_impl *whc, const struct whc_idxnode *idxn, uint32_t pos) {
   if (idxn == NULL)
     return 0;
-  else
-  {
+  else {
     // 计算距离
     uint32_t d = (idxn->headidx + (pos > idxn->headidx ? whc->wrinfo.idxdepth : 0)) - pos;
     // 断言距离小于索引深度
@@ -1121,8 +1103,7 @@ static int whcn_in_tlidx(const struct whc_impl *whc, const struct whc_idxnode *i
  *  @param[in] whcn 指向dds_whc_default_node结构体的指针
  *  @return 返回whcn的大小
  */
-static size_t whcn_size(const struct whc_impl *whc, const struct dds_whc_default_node *whcn)
-{
+static size_t whcn_size(const struct whc_impl *whc, const struct dds_whc_default_node *whcn) {
   // 计算序列化数据的大小
   size_t sz = ddsi_serdata_size(whcn->serdata);
   // 计算并返回whcn的总大小
@@ -1142,8 +1123,9 @@ static size_t whcn_size(const struct whc_impl *whc, const struct dds_whc_default
  * - 0 如果删除失败（唯一可能的原因是内存耗尽），此时 *p_intv 和 *p_whcn 未定义；
  * - 1 如果成功，则 *p_intv 和 *p_whcn 设置正确，按序列号顺序进入下一个样本
  */
-static void whc_delete_one_intv(struct whc_impl *whc, struct whc_intvnode **p_intv, struct dds_whc_default_node **p_whcn)
-{
+static void whc_delete_one_intv(struct whc_impl *whc,
+                                struct whc_intvnode **p_intv,
+                                struct dds_whc_default_node **p_whcn) {
   // 获取 whc_intvnode 和 dds_whc_default_node 的实际结构体
   struct whc_intvnode *intv = *p_intv;
   struct dds_whc_default_node *whcn = *p_whcn;
@@ -1155,12 +1137,10 @@ static void whc_delete_one_intv(struct whc_impl *whc, struct whc_intvnode **p_in
   *p_whcn = whcn->next_seq;
 
   // 如果它在 tlidx 中，将其移除。Transient-local 数据不会到这里
-  if (whcn->idxnode)
-    delete_one_sample_from_idx(whcn);
+  if (whcn->idxnode) delete_one_sample_from_idx(whcn);
 
   // 如果 whcn 未被确认，则更新 whc 的 unacked_bytes 并将 whcn 的 unacked 设为 0
-  if (whcn->unacked)
-  {
+  if (whcn->unacked) {
     assert(whc->unacked_bytes >= whcn->size);
     whc->unacked_bytes -= whcn->size;
     whcn->unacked = 0;
@@ -1174,27 +1154,21 @@ static void whc_delete_one_intv(struct whc_impl *whc, struct whc_intvnode **p_in
   remove_whcn_from_hash(whc, whcn);
 
   // 我们可能引入了一个空洞并且必须拆分区间节点，或者我们可能削减了第一个，甚至是最后一个
-  if (whcn == intv->first)
-  {
-    if (whcn == intv->last && intv != whc->open_intv)
-    {
+  if (whcn == intv->first) {
+    if (whcn == intv->last && intv != whc->open_intv) {
       struct whc_intvnode *tmp = intv;
       *p_intv = ddsrt_avl_find_succ(&whc_seq_treedef, &whc->seq, intv);
       // 只有样本在区间内且不是开放区间 => 删除区间
       ddsrt_avl_delete(&whc_seq_treedef, &whc->seq, tmp);
       ddsrt_free(tmp);
-    }
-    else
-    {
+    } else {
       intv->first = whcn->next_seq;
       intv->min++;
       assert(intv->first != NULL || intv == whc->open_intv);
       assert(intv->min < intv->maxp1 || intv == whc->open_intv);
       assert((intv->first == NULL) == (intv->min == intv->maxp1));
     }
-  }
-  else if (whcn == intv->last)
-  {
+  } else if (whcn == intv->last) {
     // 至少它不是第一个，所以区间仍然非空，我们不必删除区间
     assert(intv->min < whcn->common.seq);
     assert(whcn->prev_seq);
@@ -1202,9 +1176,7 @@ static void whc_delete_one_intv(struct whc_impl *whc, struct whc_intvnode **p_in
     intv->last = whcn->prev_seq;
     intv->maxp1--;
     *p_intv = ddsrt_avl_find_succ(&whc_seq_treedef, &whc->seq, intv);
-  }
-  else
-  {
+  } else {
     // 在中间的某个地方 => 拆分区间（理想情况下，会懒惰地拆分它，但这实际上只是一个瞬态本地问题，
     // 因此我们可以（暂时）贪婪地拆分它）
     struct whc_intvnode *new_intv;
@@ -1229,8 +1201,7 @@ static void whc_delete_one_intv(struct whc_impl *whc, struct whc_intvnode **p_in
       assert(0);
     ddsrt_avl_insert_ipath(&whc_seq_treedef, &whc->seq, new_intv, &path);
 
-    if (intv == whc->open_intv)
-      whc->open_intv = new_intv;
+    if (intv == whc->open_intv) whc->open_intv = new_intv;
     *p_intv = new_intv;
   }
 }
@@ -1240,8 +1211,7 @@ static void whc_delete_one_intv(struct whc_impl *whc, struct whc_intvnode **p_in
  * @param[in] whc 指向 whc_impl 结构体的指针
  * @param[in] whcn 指向 dds_whc_default_node 结构体的指针
  */
-static void whc_delete_one(struct whc_impl *whc, struct dds_whc_default_node *whcn)
-{
+static void whc_delete_one(struct whc_impl *whc, struct dds_whc_default_node *whcn) {
   // 定义一个指向 whc_intvnode 结构体的指针
   struct whc_intvnode *intv;
   // 定义一个临时指针，指向 whcn
@@ -1253,11 +1223,9 @@ static void whc_delete_one(struct whc_impl *whc, struct dds_whc_default_node *wh
   // 删除一个 whc 节点
   whc_delete_one_intv(whc, &intv, &whcn);
   // 更新 whcn_tmp 的前序节点的后继节点
-  if (whcn_tmp->prev_seq)
-    whcn_tmp->prev_seq->next_seq = whcn_tmp->next_seq;
+  if (whcn_tmp->prev_seq) whcn_tmp->prev_seq->next_seq = whcn_tmp->next_seq;
   // 更新 whcn_tmp 的后继节点的前序节点
-  if (whcn_tmp->next_seq)
-    whcn_tmp->next_seq->prev_seq = whcn_tmp->prev_seq;
+  if (whcn_tmp->next_seq) whcn_tmp->next_seq->prev_seq = whcn_tmp->prev_seq;
   // 将 whcn_tmp 的后继节点置空
   whcn_tmp->next_seq = NULL;
   // 释放延迟释放列表
@@ -1271,29 +1239,24 @@ static void whc_delete_one(struct whc_impl *whc, struct dds_whc_default_node *wh
  *
  * @param[in] deferred_free_list 指向 dds_whc_default_node 结构体的指针
  */
-static void free_deferred_free_list(struct dds_whc_default_node *deferred_free_list)
-{
+static void free_deferred_free_list(struct dds_whc_default_node *deferred_free_list) {
   // 判断延迟释放列表是否为空
-  if (deferred_free_list)
-  {
+  if (deferred_free_list) {
     // 定义两个指针，用于遍历延迟释放列表
     struct dds_whc_default_node *cur, *last;
     // 定义一个计数器
     uint32_t n = 0;
     // 遍历延迟释放列表
-    for (cur = deferred_free_list, last = NULL; cur; last = cur, cur = cur->next_seq)
-    {
+    for (cur = deferred_free_list, last = NULL; cur; last = cur, cur = cur->next_seq) {
       // 计数器递增
       n++;
       // 如果当前节点没有被借用，则释放节点内容
-      if (!cur->borrowed)
-        free_whc_node_contents(cur);
+      if (!cur->borrowed) free_whc_node_contents(cur);
     }
     // 将延迟释放列表中的节点压入 freelist
     cur = ddsi_freelist_pushmany(&whc_node_freelist, deferred_free_list, last, n);
     // 释放延迟释放列表中的节点
-    while (cur)
-    {
+    while (cur) {
       struct dds_whc_default_node *tmp = cur;
       cur = cur->next_seq;
       ddsrt_free(tmp);
@@ -1307,8 +1270,8 @@ static void free_deferred_free_list(struct dds_whc_default_node *deferred_free_l
  * @param[in] whc_generic 指向 ddsi_whc 结构体的指针
  * @param[in] deferred_free_list 指向 ddsi_whc_node 结构体的指针
  */
-static void whc_default_free_deferred_free_list(struct ddsi_whc *whc_generic, struct ddsi_whc_node *deferred_free_list)
-{
+static void whc_default_free_deferred_free_list(struct ddsi_whc *whc_generic,
+                                                struct ddsi_whc_node *deferred_free_list) {
   // 忽略 whc_generic 参数
   (void)whc_generic;
   // 调用 free_deferred_free_list 函数释放延迟释放列表
@@ -1322,17 +1285,16 @@ static void whc_default_free_deferred_free_list(struct ddsi_whc *whc_generic, st
  * @param[out] deferred_free_list 被删除节点的链表，用于后续释放内存
  * @return 返回删除的消息数量
  */
-static uint32_t whc_default_remove_acked_messages_noidx(struct whc_impl *whc, ddsi_seqno_t max_drop_seq, struct ddsi_whc_node **deferred_free_list)
-{
+static uint32_t whc_default_remove_acked_messages_noidx(struct whc_impl *whc,
+                                                        ddsi_seqno_t max_drop_seq,
+                                                        struct ddsi_whc_node **deferred_free_list) {
   struct whc_intvnode *intv;
   struct dds_whc_default_node *whcn;
   uint32_t ndropped = 0;
 
   // 如果 WHC 为空，则快速返回
-  if (max_drop_seq <= whc->max_drop_seq || whc->maxseq_node == NULL)
-  {
-    if (max_drop_seq > whc->max_drop_seq)
-      whc->max_drop_seq = max_drop_seq;
+  if (max_drop_seq <= whc->max_drop_seq || whc->maxseq_node == NULL) {
+    if (max_drop_seq > whc->max_drop_seq) whc->max_drop_seq = max_drop_seq;
     *deferred_free_list = NULL;
     return 0;
   }
@@ -1345,20 +1307,17 @@ static uint32_t whc_default_remove_acked_messages_noidx(struct whc_impl *whc, dd
 #endif
   intv = whc->open_intv;
 
-  // 删除所有直到包括 max_drop_seq 的内容，或者在没有这个序列号的情况下，删除最高可用的序列号（必须更小）
-  if ((whcn = whc_findseq(whc, max_drop_seq)) == NULL)
-  {
-    if (max_drop_seq < intv->min)
-    {
+  // 删除所有直到包括 max_drop_seq
+  // 的内容，或者在没有这个序列号的情况下，删除最高可用的序列号（必须更小）
+  if ((whcn = whc_findseq(whc, max_drop_seq)) == NULL) {
+    if (max_drop_seq < intv->min) {
       // 在启动时，whc->max_drop_seq = 0，读取器状态从 wr->seq 获取最大确认序列；
-      // 因此，如果有多个匹配的读取器，并且写入器超前于读取器，则对于第一个 ack，whc->max_drop_seq < max_drop_seq = MIN(readers max ack) < intv->min
-      if (max_drop_seq > whc->max_drop_seq)
-        whc->max_drop_seq = max_drop_seq;
+      // 因此，如果有多个匹配的读取器，并且写入器超前于读取器，则对于第一个 ack，whc->max_drop_seq <
+      // max_drop_seq = MIN(readers max ack) < intv->min
+      if (max_drop_seq > whc->max_drop_seq) whc->max_drop_seq = max_drop_seq;
       *deferred_free_list = NULL;
       return 0;
-    }
-    else
-    {
+    } else {
       whcn = whc->maxseq_node;
       assert(whcn->common.seq < max_drop_seq);
     }
@@ -1373,13 +1332,10 @@ static uint32_t whc_default_remove_acked_messages_noidx(struct whc_impl *whc, dd
   intv->first = whcn->next_seq;
   intv->min = max_drop_seq + 1;
   // 如果 whcn 的 next_seq 为空，则更新 whc->maxseq_node 和 intv->maxp1
-  if (whcn->next_seq == NULL)
-  {
+  if (whcn->next_seq == NULL) {
     whc->maxseq_node = NULL;
     intv->maxp1 = intv->min;
-  }
-  else
-  {
+  } else {
     // 断言 whcn 的 next_seq 的 common.seq 等于 max_drop_seq + 1
     assert(whcn->next_seq->common.seq == max_drop_seq + 1);
     // 将 whcn 的 next_seq 的 prev_seq 设置为 NULL
@@ -1395,8 +1351,7 @@ static uint32_t whc_default_remove_acked_messages_noidx(struct whc_impl *whc, dd
   // 更新 whc 的 unacked_bytes
   whc->unacked_bytes -= (size_t)(whcn->total_bytes - dfln->total_bytes + dfln->size);
   // 遍历 dfln 链表，处理每个节点
-  for (whcn = (struct dds_whc_default_node *)dfln; whcn; whcn = whcn->next_seq)
-  {
+  for (whcn = (struct dds_whc_default_node *)dfln; whcn; whcn = whcn->next_seq) {
 #ifdef DDS_HAS_LIFESPAN
     // 如果定义了 DDS_HAS_LIFESPAN，则取消注册样本的生命周期
     ddsi_lifespan_unregister_sample_locked(&whc->lifespan, &whcn->lifespan);
@@ -1424,8 +1379,9 @@ static uint32_t whc_default_remove_acked_messages_noidx(struct whc_impl *whc, dd
  * @param[out] deferred_free_list 要延迟释放的节点列表
  * @return 删除的消息数量
  */
-static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc, ddsi_seqno_t max_drop_seq, struct ddsi_whc_node **deferred_free_list)
-{
+static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc,
+                                                       ddsi_seqno_t max_drop_seq,
+                                                       struct ddsi_whc_node **deferred_free_list) {
   // 定义变量
   struct whc_intvnode *intv;
   struct dds_whc_default_node *whcn;
@@ -1435,14 +1391,11 @@ static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc, dds
 
   // 查找下一个序列号间隔
   whcn = find_nextseq_intv(&intv, whc, whc->max_drop_seq);
-  if (whc->wrinfo.is_transient_local && whc->wrinfo.tldepth == 0)
-  {
+  if (whc->wrinfo.is_transient_local && whc->wrinfo.tldepth == 0) {
     // 如果是 KEEP_ALL 的 transient local，我们不能删除任何数据，但是必须在 whc 中确认数据
     TRACE("  KEEP_ALL transient-local: ack data\n");
-    while (whcn && whcn->common.seq <= max_drop_seq)
-    {
-      if (whcn->unacked)
-      {
+    while (whcn && whcn->common.seq <= max_drop_seq) {
+      if (whcn->unacked) {
         assert(whc->unacked_bytes >= whcn->size);
         whc->unacked_bytes -= whcn->size;
         whcn->unacked = 0;
@@ -1456,16 +1409,13 @@ static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc, dds
 
   deferred_list_head.next_seq = NULL;
   prev_seq = whcn ? whcn->prev_seq : NULL;
-  while (whcn && whcn->common.seq <= max_drop_seq)
-  {
+  while (whcn && whcn->common.seq <= max_drop_seq) {
     TRACE("  whcn %p %" PRIu64, (void *)whcn, whcn->common.seq);
-    if (whcn_in_tlidx(whc, whcn->idxnode, whcn->idxnode_pos))
-    {
+    if (whcn_in_tlidx(whc, whcn->idxnode, whcn->idxnode_pos)) {
       // 快速跳过 tlidx 中的样本
       TRACE(" tl:keep");
       // 如果 whcn 未被确认
-      if (whcn->unacked)
-      {
+      if (whcn->unacked) {
         // 断言 whc 中未确认的字节数大于等于 whcn 的大小
         assert(whc->unacked_bytes >= whcn->size);
         // 减少 whc 中未确认的字节数
@@ -1488,9 +1438,7 @@ static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc, dds
       prev_seq = whcn;
       // 将 whcn 设置为下一个序列节点
       whcn = whcn->next_seq;
-    }
-    else
-    {
+    } else {
       TRACE(" delete");
       // 将 last_to_free 的 next_seq 指向 whcn
       last_to_free->next_seq = whcn;
@@ -1517,15 +1465,15 @@ static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc, dds
   *deferred_free_list = (struct ddsi_whc_node *)deferred_list_head.next_seq;
 
   // 如果历史记录比 durability_service.history 更深（但不是 KEEP_ALL），则此实例中可能有旧样本
-  if (whc->wrinfo.tldepth > 0 && whc->wrinfo.idxdepth > whc->wrinfo.tldepth)
-  {
+  if (whc->wrinfo.tldepth > 0 && whc->wrinfo.idxdepth > whc->wrinfo.tldepth) {
     assert(whc->wrinfo.hdepth == whc->wrinfo.idxdepth);
-    TRACE("  idxdepth %" PRIu32 " > tldepth %" PRIu32 " > 0 -- must prune\n", whc->wrinfo.idxdepth, whc->wrinfo.tldepth);
+    TRACE("  idxdepth %" PRIu32 " > tldepth %" PRIu32 " > 0 -- must prune\n", whc->wrinfo.idxdepth,
+          whc->wrinfo.tldepth);
 
-    // 对刚刚处理过的序列号范围进行第二次遍历：这次我们只会遇到因为 transient-local 持久性设置而保留的样本
+    // 对刚刚处理过的序列号范围进行第二次遍历：这次我们只会遇到因为 transient-local
+    // 持久性设置而保留的样本
     whcn = find_nextseq_intv(&intv, whc, whc->max_drop_seq);
-    while (whcn && whcn->common.seq <= max_drop_seq)
-    {
+    while (whcn && whcn->common.seq <= max_drop_seq) {
       /**
        * @brief 为 whcn 和 idxn 添加详细的中文注释
        *
@@ -1533,11 +1481,12 @@ static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc, dds
        * @param[in] idxn 指向 whc_idxnode 结构体的指针
        * @param[in] max_drop_seq 最大可删除序列号
        */
-      struct whc_idxnode *const idxn = whcn->idxnode; // 获取 whcn 的 idxnode 成员
+      struct whc_idxnode *const idxn = whcn->idxnode;  // 获取 whcn 的 idxnode 成员
       uint32_t cnt, idx;
 
       // 打印调试信息，包括 whcn、whcn 序列号、idxn 和 idxn 的剪枝序列号
-      TRACE("  whcn %p %" PRIu64 " idxn %p prune_seq %" PRIu64 ":", (void *)whcn, whcn->common.seq, (void *)idxn, idxn->prune_seq);
+      TRACE("  whcn %p %" PRIu64 " idxn %p prune_seq %" PRIu64 ":", (void *)whcn, whcn->common.seq,
+            (void *)idxn, idxn->prune_seq);
 
       // 断言：检查 whcn 是否在 tlidx 中
       assert(whcn_in_tlidx(whc, idxn, whcn->idxnode_pos));
@@ -1545,23 +1494,19 @@ static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc, dds
       assert(idxn->prune_seq <= max_drop_seq);
 
       // 如果 idxn 的剪枝序列号等于 max_drop_seq
-      if (idxn->prune_seq == max_drop_seq)
-      {
-        TRACE(" already pruned\n"); // 打印已经剪枝的信息
-        whcn = whcn->next_seq;      // 更新 whcn 为下一个序列节点
-        continue;                   // 跳过当前循环，进入下一次循环
+      if (idxn->prune_seq == max_drop_seq) {
+        TRACE(" already pruned\n");    // 打印已经剪枝的信息
+        whcn = whcn->next_seq;         // 更新 whcn 为下一个序列节点
+        continue;                      // 跳过当前循环，进入下一次循环
       }
-      idxn->prune_seq = max_drop_seq; // 更新 idxn 的剪枝序列号为 max_drop_seq
+      idxn->prune_seq = max_drop_seq;  // 更新 idxn 的剪枝序列号为 max_drop_seq
 
       idx = idxn->headidx;
       cnt = whc->wrinfo.idxdepth - whc->wrinfo.tldepth;
-      while (cnt--)
-      {
+      while (cnt--) {
         struct dds_whc_default_node *oldn;
-        if (++idx == whc->wrinfo.idxdepth)
-          idx = 0;
-        if ((oldn = idxn->hist[idx]) != NULL)
-        {
+        if (++idx == whc->wrinfo.idxdepth) idx = 0;
+        if ((oldn = idxn->hist[idx]) != NULL) {
           // 删除它，但这可能不会导致删除索引节点，因为必须仍然有一个更近期的可用
 #ifndef NDEBUG
           struct whc_idxnode template;
@@ -1598,22 +1543,26 @@ static uint32_t whc_default_remove_acked_messages_full(struct whc_impl *whc, dds
  * @param[out] deferred_free_list 指向延迟释放列表的指针
  * @return 删除的消息数量
  */
-static uint32_t whc_default_remove_acked_messages(struct ddsi_whc *whc_generic, ddsi_seqno_t max_drop_seq, struct ddsi_whc_state *whcst, struct ddsi_whc_node **deferred_free_list)
-{
-  struct whc_impl *const whc = (struct whc_impl *)whc_generic; // 将通用的 ddsi_whc 转换为具体的 whc_impl 结构体
+static uint32_t whc_default_remove_acked_messages(struct ddsi_whc *whc_generic,
+                                                  ddsi_seqno_t max_drop_seq,
+                                                  struct ddsi_whc_state *whcst,
+                                                  struct ddsi_whc_node **deferred_free_list) {
+  struct whc_impl *const whc =
+      (struct whc_impl *)whc_generic;  // 将通用的 ddsi_whc 转换为具体的 whc_impl 结构体
   uint32_t cnt;
 
-  ddsrt_mutex_lock(&whc->lock); // 锁定 WHC
+  ddsrt_mutex_lock(&whc->lock);  // 锁定 WHC
   assert(max_drop_seq < DDSI_MAX_SEQ_NUMBER);
   assert(max_drop_seq >= whc->max_drop_seq);
 
   // 如果启用了 WHC 日志记录
-  if (whc->gv->logconfig.c.mask & DDS_LC_WHC)
-  {
+  if (whc->gv->logconfig.c.mask & DDS_LC_WHC) {
     struct ddsi_whc_state tmp;
     get_state_locked(whc, &tmp);
-    TRACE("whc_default_remove_acked_messages(%p max_drop_seq %" PRIu64 ")\n", (void *)whc, max_drop_seq);
-    TRACE("  whc: [%" PRIu64 ",%" PRIu64 "] max_drop_seq %" PRIu64 " h %" PRIu32 " tl %" PRIu32 "\n",
+    TRACE("whc_default_remove_acked_messages(%p max_drop_seq %" PRIu64 ")\n", (void *)whc,
+          max_drop_seq);
+    TRACE("  whc: [%" PRIu64 ",%" PRIu64 "] max_drop_seq %" PRIu64 " h %" PRIu32 " tl %" PRIu32
+          "\n",
           tmp.min_seq, tmp.max_seq, whc->max_drop_seq, whc->wrinfo.hdepth, whc->wrinfo.tldepth);
   }
 
@@ -1626,9 +1575,9 @@ static uint32_t whc_default_remove_acked_messages(struct ddsi_whc *whc_generic, 
     cnt = whc_default_remove_acked_messages_noidx(whc, max_drop_seq, deferred_free_list);
   else
     cnt = whc_default_remove_acked_messages_full(whc, max_drop_seq, deferred_free_list);
-  get_state_locked(whc, whcst);   // 获取当前 WHC 状态
-  ddsrt_mutex_unlock(&whc->lock); // 解锁 WHC
-  return cnt;                     // 返回删除的消息数量
+  get_state_locked(whc, whcst);    // 获取当前 WHC 状态
+  ddsrt_mutex_unlock(&whc->lock);  // 解锁 WHC
+  return cnt;                      // 返回删除的消息数量
 }
 /**
  * @brief 向 whc 中插入一个序列号为 seq 的节点，并返回新插入的节点指针。
@@ -1640,8 +1589,11 @@ static uint32_t whc_default_remove_acked_messages(struct ddsi_whc *whc_generic, 
  * @param[in] serdata    序列化数据
  * @return 返回新插入的节点指针
  */
-static struct dds_whc_default_node *whc_default_insert_seq(struct whc_impl *whc, ddsi_seqno_t max_drop_seq, ddsi_seqno_t seq, ddsrt_mtime_t exp, struct ddsi_serdata *serdata)
-{
+static struct dds_whc_default_node *whc_default_insert_seq(struct whc_impl *whc,
+                                                           ddsi_seqno_t max_drop_seq,
+                                                           ddsi_seqno_t seq,
+                                                           ddsrt_mtime_t exp,
+                                                           struct ddsi_serdata *serdata) {
   // 新节点指针初始化为 NULL
   struct dds_whc_default_node *newn = NULL;
 
@@ -1651,8 +1603,7 @@ static struct dds_whc_default_node *whc_default_insert_seq(struct whc_impl *whc,
 #endif
 
   // 从 freelist 中获取一个空闲节点，如果没有则分配内存
-  if ((newn = ddsi_freelist_pop(&whc_node_freelist)) == NULL)
-    newn = ddsrt_malloc(sizeof(*newn));
+  if ((newn = ddsi_freelist_pop(&whc_node_freelist)) == NULL) newn = ddsrt_malloc(sizeof(*newn));
   // 设置新节点的序列号
   newn->common.seq = seq;
   // 根据序列号判断是否未确认
@@ -1674,8 +1625,7 @@ static struct dds_whc_default_node *whc_default_insert_seq(struct whc_impl *whc,
   // 设置前一个序列节点为 whc 的最大序列号节点
   newn->prev_seq = whc->maxseq_node;
   // 更新前一个序列节点的 next_seq 指针
-  if (newn->prev_seq)
-    newn->prev_seq->next_seq = newn;
+  if (newn->prev_seq) newn->prev_seq->next_seq = newn;
   // 更新 whc 的最大序列号节点为新节点
   whc->maxseq_node = newn;
 
@@ -1686,8 +1636,7 @@ static struct dds_whc_default_node *whc_default_insert_seq(struct whc_impl *whc,
   // 设置新节点的总字节数
   newn->total_bytes = whc->total_bytes;
   // 如果新节点未确认，更新 whc 的未确认字节数
-  if (newn->unacked)
-    whc->unacked_bytes += newn->size;
+  if (newn->unacked) whc->unacked_bytes += newn->size;
 
 #ifdef DDS_HAS_LIFESPAN
   // 设置新节点的生命周期到期时间
@@ -1698,21 +1647,16 @@ static struct dds_whc_default_node *whc_default_insert_seq(struct whc_impl *whc,
   insert_whcn_in_hash(whc, newn);
 
   // 处理 whc 的 open_intv
-  if (whc->open_intv->first == NULL)
-  {
+  if (whc->open_intv->first == NULL) {
     // 如果 open_intv 为空，重置 open_intv
     whc->open_intv->min = seq;
     whc->open_intv->maxp1 = seq + 1;
     whc->open_intv->first = whc->open_intv->last = newn;
-  }
-  else if (whc->open_intv->maxp1 == seq)
-  {
+  } else if (whc->open_intv->maxp1 == seq) {
     // 没有间隙，将新节点添加到 open_intv
     whc->open_intv->last = newn;
     whc->open_intv->maxp1++;
-  }
-  else
-  {
+  } else {
     // 有间隙，需要新的 open_intv
     struct whc_intvnode *intv1;
     ddsrt_avl_ipath_t path;
@@ -1720,8 +1664,7 @@ static struct dds_whc_default_node *whc_default_insert_seq(struct whc_impl *whc,
     intv1->min = seq;
     intv1->maxp1 = seq + 1;
     intv1->first = intv1->last = newn;
-    if (ddsrt_avl_lookup_ipath(&whc_seq_treedef, &whc->seq, &seq, &path) != NULL)
-      assert(0);
+    if (ddsrt_avl_lookup_ipath(&whc_seq_treedef, &whc->seq, &seq, &path) != NULL) assert(0);
     ddsrt_avl_insert_ipath(&whc_seq_treedef, &whc->seq, intv1, &path);
     whc->open_intv = intv1;
   }
@@ -1747,14 +1690,17 @@ static struct dds_whc_default_node *whc_default_insert_seq(struct whc_impl *whc,
  * @param[in] tk 序列化数据对应的主题实例。
  * @return 成功时返回0，失败时返回错误代码。
  */
-static int whc_default_insert(struct ddsi_whc *whc_generic, ddsi_seqno_t max_drop_seq, ddsi_seqno_t seq, ddsrt_mtime_t exp, struct ddsi_serdata *serdata, struct ddsi_tkmap_instance *tk)
-{
+static int whc_default_insert(struct ddsi_whc *whc_generic,
+                              ddsi_seqno_t max_drop_seq,
+                              ddsi_seqno_t seq,
+                              ddsrt_mtime_t exp,
+                              struct ddsi_serdata *serdata,
+                              struct ddsi_tkmap_instance *tk) {
   // 将通用结构转换为具体的whc_impl结构
   struct whc_impl *const whc = (struct whc_impl *)whc_generic;
   struct dds_whc_default_node *newn = NULL;
   struct whc_idxnode *idxn;
-  union
-  {
+  union {
     struct whc_idxnode idxn;
     char pad[sizeof(struct whc_idxnode) + sizeof(struct dds_whc_default_node *)];
   } template;
@@ -1764,13 +1710,14 @@ static int whc_default_insert(struct ddsi_whc *whc_generic, ddsi_seqno_t max_dro
   check_whc(whc);
 
   // 记录日志
-  if (whc->gv->logconfig.c.mask & DDS_LC_WHC)
-  {
+  if (whc->gv->logconfig.c.mask & DDS_LC_WHC) {
     struct ddsi_whc_state whcst;
     get_state_locked(whc, &whcst);
-    TRACE("whc_default_insert(%p max_drop_seq %" PRIu64 " seq %" PRIu64 " exp %" PRId64 " serdata %p:%" PRIx32 ")\n",
+    TRACE("whc_default_insert(%p max_drop_seq %" PRIu64 " seq %" PRIu64 " exp %" PRId64
+          " serdata %p:%" PRIx32 ")\n",
           (void *)whc, max_drop_seq, seq, exp.v, (void *)serdata, serdata->hash);
-    TRACE("  whc: [%" PRIu64 ",%" PRIu64 "] max_drop_seq %" PRIu64 " h %" PRIu32 " tl %" PRIu32 "\n",
+    TRACE("  whc: [%" PRIu64 ",%" PRIu64 "] max_drop_seq %" PRIu64 " h %" PRIu32 " tl %" PRIu32
+          "\n",
           whcst.min_seq, whcst.max_seq, whc->max_drop_seq, whc->wrinfo.hdepth, whc->wrinfo.tldepth);
   }
 
@@ -1787,8 +1734,7 @@ static int whc_default_insert(struct ddsi_whc *whc_generic, ddsi_seqno_t max_dro
   TRACE("  whcn %p:", (void *)newn);
 
   // 空数据（如提交消息）不能进入索引，如果我们不维护索引，也可以完成
-  if (serdata->kind == SDK_EMPTY)
-  {
+  if (serdata->kind == SDK_EMPTY) {
     TRACE(" empty or no hist\n");
     ddsrt_mutex_unlock(&whc->lock);
     return 0;
@@ -1796,35 +1742,27 @@ static int whc_default_insert(struct ddsi_whc *whc_generic, ddsi_seqno_t max_dro
 
   // 查找索引节点
   template.idxn.iid = tk->m_iid;
-  if ((idxn = ddsrt_hh_lookup(whc->idx_hash, &template)) != NULL)
-  {
+  if ((idxn = ddsrt_hh_lookup(whc->idx_hash, &template)) != NULL) {
     TRACE(" idxn %p", (void *)idxn);
     // 如果是注销操作，则从索引中删除实例，否则在历史记录中添加/覆盖
-    if (serdata->statusinfo & DDSI_STATUSINFO_UNREGISTER)
-    {
+    if (serdata->statusinfo & DDSI_STATUSINFO_UNREGISTER) {
       TRACE(" unreg:delete\n");
       delete_one_instance_from_idx(whc, max_drop_seq, idxn);
-      if (newn->common.seq <= max_drop_seq)
-      {
+      if (newn->common.seq <= max_drop_seq) {
         struct dds_whc_default_node *prev_seq = newn->prev_seq;
         TRACE(" unreg:seq <= max_drop_seq: delete newn\n");
         whc_delete_one(whc, newn);
         whc->maxseq_node = prev_seq;
       }
-    }
-    else
-    {
+    } else {
 #ifdef DDS_HAS_DEADLINE_MISSED
       ddsi_deadline_renew_instance_locked(&whc->deadline, &idxn->deadline);
 #endif
       // 处理非注销操作的情况
-      if (whc->wrinfo.idxdepth > 0)
-      {
+      if (whc->wrinfo.idxdepth > 0) {
         struct dds_whc_default_node *oldn;
-        if (++idxn->headidx == whc->wrinfo.idxdepth)
-          idxn->headidx = 0;
-        if ((oldn = idxn->hist[idxn->headidx]) != NULL)
-        {
+        if (++idxn->headidx == whc->wrinfo.idxdepth) idxn->headidx = 0;
+        if ((oldn = idxn->hist[idxn->headidx]) != NULL) {
           TRACE(" overwrite whcn %p", (void *)oldn);
           oldn->idxnode = NULL;
         }
@@ -1833,23 +1771,20 @@ static int whc_default_insert(struct ddsi_whc *whc_generic, ddsi_seqno_t max_dro
         newn->idxnode_pos = idxn->headidx;
 
         // 如果需要，删除旧节点
-        if (oldn && (whc->wrinfo.hdepth > 0 || oldn->common.seq <= max_drop_seq) && (!whc->wrinfo.is_transient_local || whc->wrinfo.tldepth > 0))
-        {
+        if (oldn && (whc->wrinfo.hdepth > 0 || oldn->common.seq <= max_drop_seq) &&
+            (!whc->wrinfo.is_transient_local || whc->wrinfo.tldepth > 0)) {
           TRACE(" prune whcn %p", (void *)oldn);
           assert(oldn != whc->maxseq_node || whc->wrinfo.has_deadline);
           whc_delete_one(whc, oldn);
-          if (oldn == whc->maxseq_node)
-            whc->maxseq_node = whc_findmax_procedurally(whc);
+          if (oldn == whc->maxseq_node) whc->maxseq_node = whc_findmax_procedurally(whc);
         }
 
         // 处理特殊情况：当新样本被自动确认（因为没有可靠的读者）时，丢弃超出T-L历史的所有内容，并且保持最后的T-L历史比保持最后的常规历史更浅（正常路径通过修剪处理这种情况）
-        if (seq <= max_drop_seq && whc->wrinfo.tldepth > 0 && whc->wrinfo.idxdepth > whc->wrinfo.tldepth)
-        {
+        if (seq <= max_drop_seq && whc->wrinfo.tldepth > 0 &&
+            whc->wrinfo.idxdepth > whc->wrinfo.tldepth) {
           uint32_t pos = idxn->headidx + whc->wrinfo.idxdepth - whc->wrinfo.tldepth;
-          if (pos >= whc->wrinfo.idxdepth)
-            pos -= whc->wrinfo.idxdepth;
-          if ((oldn = idxn->hist[pos]) != NULL)
-          {
+          if (pos >= whc->wrinfo.idxdepth) pos -= whc->wrinfo.idxdepth;
+          if ((oldn = idxn->hist[pos]) != NULL) {
             TRACE(" prune tl whcn %p", (void *)oldn);
             assert(oldn != whc->maxseq_node);
             whc_delete_one(whc, oldn);
@@ -1858,13 +1793,10 @@ static int whc_default_insert(struct ddsi_whc *whc_generic, ddsi_seqno_t max_dro
         TRACE("\n");
       }
     }
-  }
-  else
-  {
+  } else {
     TRACE(" newkey");
     // 忽略注销操作，但插入其他所有内容
-    if (!(serdata->statusinfo & DDSI_STATUSINFO_UNREGISTER))
-    {
+    if (!(serdata->statusinfo & DDSI_STATUSINFO_UNREGISTER)) {
       idxn = ddsrt_malloc(sizeof(*idxn) + whc->wrinfo.idxdepth * sizeof(idxn->hist[0]));
       TRACE(" idxn %p", (void *)idxn);
       ddsi_tkmap_instance_ref(tk);
@@ -1872,24 +1804,20 @@ static int whc_default_insert(struct ddsi_whc *whc_generic, ddsi_seqno_t max_dro
       idxn->tk = tk;
       idxn->prune_seq = 0;
       idxn->headidx = 0;
-      if (whc->wrinfo.idxdepth > 0)
-      {
+      if (whc->wrinfo.idxdepth > 0) {
         idxn->hist[0] = newn;
-        for (uint32_t i = 1; i < whc->wrinfo.idxdepth; i++)
-          idxn->hist[i] = NULL;
+        for (uint32_t i = 1; i < whc->wrinfo.idxdepth; i++) idxn->hist[i] = NULL;
         newn->idxnode = idxn;
         newn->idxnode_pos = 0;
       }
       ddsrt_hh_add_absent(whc->idx_hash, idxn);
 #ifdef DDS_HAS_DEADLINE_MISSED
-      ddsi_deadline_register_instance_locked(&whc->deadline, &idxn->deadline, ddsrt_time_monotonic());
+      ddsi_deadline_register_instance_locked(&whc->deadline, &idxn->deadline,
+                                             ddsrt_time_monotonic());
 #endif
-    }
-    else
-    {
+    } else {
       TRACE(" unreg:skip");
-      if (newn->common.seq <= max_drop_seq)
-      {
+      if (newn->common.seq <= max_drop_seq) {
         struct dds_whc_default_node *prev_seq = newn->prev_seq;
         TRACE(" unreg:seq <= max_drop_seq: delete newn\n");
         whc_delete_one(whc, newn);
@@ -1908,8 +1836,8 @@ static int whc_default_insert(struct ddsi_whc *whc_generic, ddsi_seqno_t max_dro
  * @param[out] sample 借用的样本结构体指针
  * @param[in] whcn dds_whc_default_node 结构体指针
  */
-static void make_borrowed_sample(struct ddsi_whc_borrowed_sample *sample, struct dds_whc_default_node *whcn)
-{
+static void make_borrowed_sample(struct ddsi_whc_borrowed_sample *sample,
+                                 struct dds_whc_default_node *whcn) {
   // 断言：whcn->borrowed 不为真，确保节点没有被借用
   assert(!whcn->borrowed);
 
@@ -1940,8 +1868,9 @@ static void make_borrowed_sample(struct ddsi_whc_borrowed_sample *sample, struct
  * @param[out] sample 借用的样本结构体指针
  * @return bool 如果找到并成功借用样本，返回 true，否则返回 false
  */
-static bool whc_default_borrow_sample(const struct ddsi_whc *whc_generic, ddsi_seqno_t seq, struct ddsi_whc_borrowed_sample *sample)
-{
+static bool whc_default_borrow_sample(const struct ddsi_whc *whc_generic,
+                                      ddsi_seqno_t seq,
+                                      struct ddsi_whc_borrowed_sample *sample) {
   // 将 whc_generic 转换为 whc_impl 类型的指针
   const struct whc_impl *const whc = (const struct whc_impl *)whc_generic;
 
@@ -1958,8 +1887,7 @@ static bool whc_default_borrow_sample(const struct ddsi_whc *whc_generic, ddsi_s
   if ((whcn = whc_findseq(whc, seq)) == NULL)
     // 如果没有找到，设置 found 为 false
     found = false;
-  else
-  {
+  else {
     // 如果找到了，调用 make_borrowed_sample 函数填充 sample 数据
     make_borrowed_sample(sample, whcn);
 
@@ -1981,8 +1909,9 @@ static bool whc_default_borrow_sample(const struct ddsi_whc *whc_generic, ddsi_s
  * @param[out] sample 指向 ddsi_whc_borrowed_sample 结构体的指针，用于存储找到的样本信息。
  * @return 如果找到了对应的样本，则返回 true；否则返回 false。
  */
-static bool whc_default_borrow_sample_key(const struct ddsi_whc *whc_generic, const struct ddsi_serdata *serdata_key, struct ddsi_whc_borrowed_sample *sample)
-{
+static bool whc_default_borrow_sample_key(const struct ddsi_whc *whc_generic,
+                                          const struct ddsi_serdata *serdata_key,
+                                          struct ddsi_whc_borrowed_sample *sample) {
   // 将 whc_generic 转换为 whc_impl 类型的指针
   const struct whc_impl *const whc = (const struct whc_impl *)whc_generic;
   struct dds_whc_default_node *whcn;
@@ -1994,8 +1923,7 @@ static bool whc_default_borrow_sample_key(const struct ddsi_whc *whc_generic, co
   // 在 whc 中查找与 serdata_key 匹配的节点
   if ((whcn = whc_findkey(whc, serdata_key)) == NULL)
     found = false;
-  else
-  {
+  else {
     // 创建一个借用的样本
     make_borrowed_sample(sample, whcn);
     found = true;
@@ -2014,22 +1942,19 @@ static bool whc_default_borrow_sample_key(const struct ddsi_whc *whc_generic, co
  * @param[in] sample 指向 ddsi_whc_borrowed_sample 结构体的指针，表示要归还的样本。
  * @param[in] update_retransmit_info 是否更新重传信息。
  */
-static void return_sample_locked(struct whc_impl *whc, struct ddsi_whc_borrowed_sample *sample, bool update_retransmit_info)
-{
+static void return_sample_locked(struct whc_impl *whc,
+                                 struct ddsi_whc_borrowed_sample *sample,
+                                 bool update_retransmit_info) {
   struct dds_whc_default_node *whcn;
 
   // 在 whc 中查找与 sample->seq 匹配的节点
-  if ((whcn = whc_findseq(whc, sample->seq)) == NULL)
-  {
+  if ((whcn = whc_findseq(whc, sample->seq)) == NULL) {
     // 数据不再存在于 WHC 中
     ddsi_serdata_unref(sample->serdata);
-  }
-  else
-  {
+  } else {
     assert(whcn->borrowed);
     whcn->borrowed = 0;
-    if (update_retransmit_info)
-    {
+    if (update_retransmit_info) {
       whcn->rexmit_count = sample->rexmit_count;
       whcn->last_rexmit_ts = sample->last_rexmit_ts;
     }
@@ -2043,8 +1968,9 @@ static void return_sample_locked(struct whc_impl *whc, struct ddsi_whc_borrowed_
  * @param[in] sample 指向 ddsi_whc_borrowed_sample 结构体的指针，表示要归还的样本。
  * @param[in] update_retransmit_info 是否更新重传信息。
  */
-static void whc_default_return_sample(struct ddsi_whc *whc_generic, struct ddsi_whc_borrowed_sample *sample, bool update_retransmit_info)
-{
+static void whc_default_return_sample(struct ddsi_whc *whc_generic,
+                                      struct ddsi_whc_borrowed_sample *sample,
+                                      bool update_retransmit_info) {
   // 将 whc_generic 转换为 whc_impl 类型的指针
   struct whc_impl *const whc = (struct whc_impl *)whc_generic;
 
@@ -2064,8 +1990,8 @@ static void whc_default_return_sample(struct ddsi_whc *whc_generic, struct ddsi_
  * @param[in] whc_generic 指向 ddsi_whc 结构体的指针。
  * @param[out] opaque_it 指向 ddsi_whc_sample_iter 结构体的指针，用于存储初始化后的迭代器信息。
  */
-static void whc_default_sample_iter_init(const struct ddsi_whc *whc_generic, struct ddsi_whc_sample_iter *opaque_it)
-{
+static void whc_default_sample_iter_init(const struct ddsi_whc *whc_generic,
+                                         struct ddsi_whc_sample_iter *opaque_it) {
   // 将 opaque_it 转换为 ddsi_whc_sample_iter_impl 类型的指针
   struct ddsi_whc_sample_iter_impl *it = (struct ddsi_whc_sample_iter_impl *)opaque_it;
 
@@ -2082,8 +2008,8 @@ static void whc_default_sample_iter_init(const struct ddsi_whc *whc_generic, str
  * @param[out] sample 指向ddsi_whc_borrowed_sample结构的指针，用于存储借用的样本信息
  * @return bool 如果成功找到并借用下一个样本，则返回true，否则返回false
  */
-static bool whc_default_sample_iter_borrow_next(struct ddsi_whc_sample_iter *opaque_it, struct ddsi_whc_borrowed_sample *sample)
-{
+static bool whc_default_sample_iter_borrow_next(struct ddsi_whc_sample_iter *opaque_it,
+                                                struct ddsi_whc_borrowed_sample *sample) {
   // 将opaque_it转换为ddsi_whc_sample_iter_impl类型的指针
   struct ddsi_whc_sample_iter_impl *const it = (struct ddsi_whc_sample_iter_impl *)opaque_it;
 
@@ -2109,16 +2035,13 @@ static bool whc_default_sample_iter_borrow_next(struct ddsi_whc_sample_iter *opa
   check_whc(whc);
 
   // 如果不是第一个样本
-  if (!it->first)
-  {
+  if (!it->first) {
     // 获取当前样本的序列号
     seq = sample->seq;
 
     // 返回已锁定的样本
     return_sample_locked(whc, sample, false);
-  }
-  else
-  {
+  } else {
     // 设置迭代器的first标志为false
     it->first = false;
 
@@ -2130,8 +2053,7 @@ static bool whc_default_sample_iter_borrow_next(struct ddsi_whc_sample_iter *opa
   if ((whcn = find_nextseq_intv(&intv, whc, seq)) == NULL)
     // 如果未找到，则将valid设置为false
     valid = false;
-  else
-  {
+  else {
     // 根据找到的节点创建借用的样本
     make_borrowed_sample(sample, whcn);
 

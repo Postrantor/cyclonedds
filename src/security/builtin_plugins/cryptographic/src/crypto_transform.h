@@ -17,12 +17,9 @@
 /**
  * @brief Allocation function for implementer structure (with internal variables) transparently.
  */
-dds_security_crypto_transform *
-dds_security_crypto_transform__alloc(
-    const dds_security_cryptography *crypto);
+dds_security_crypto_transform * dds_security_crypto_transform__alloc(
+  const dds_security_cryptography * crypto);
 
-void
-dds_security_crypto_transform__dealloc(
-    dds_security_crypto_transform *instance);
+void dds_security_crypto_transform__dealloc(dds_security_crypto_transform * instance);
 
 #endif /* CRYPTO_TRANSFORM_H */

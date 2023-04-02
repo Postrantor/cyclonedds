@@ -14,12 +14,12 @@
 
 /* DDSI Transport module */
 
-#include "dds/ddsrt/ifaddrs.h"
-#include "dds/ddsrt/atomics.h"
-#include "dds/ddsi/ddsi_locator.h"
 #include "dds/ddsi/ddsi_config.h"
+#include "dds/ddsi/ddsi_locator.h"
+#include "dds/ddsrt/atomics.h"
+#include "dds/ddsrt/ifaddrs.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -42,18 +42,18 @@ struct ddsi_tran_qos;
 #define DDSI_LOCSTRLEN 81
 
 /** @component locators */
-char *ddsi_xlocator_to_string (char *dst, size_t sizeof_dst, const ddsi_xlocator_t *loc);
+char * ddsi_xlocator_to_string(char * dst, size_t sizeof_dst, const ddsi_xlocator_t * loc);
 
 /** @component locators */
-char *ddsi_locator_to_string (char *dst, size_t sizeof_dst, const ddsi_locator_t *loc);
+char * ddsi_locator_to_string(char * dst, size_t sizeof_dst, const ddsi_locator_t * loc);
 
 /** @component locators */
-char *ddsi_xlocator_to_string_no_port (char *dst, size_t sizeof_dst, const ddsi_xlocator_t *loc);
+char * ddsi_xlocator_to_string_no_port(char * dst, size_t sizeof_dst, const ddsi_xlocator_t * loc);
 
 /** @component locators */
-char *ddsi_locator_to_string_no_port (char *dst, size_t sizeof_dst, const ddsi_locator_t *loc);
+char * ddsi_locator_to_string_no_port(char * dst, size_t sizeof_dst, const ddsi_locator_t * loc);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

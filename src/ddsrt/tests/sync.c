@@ -9,12 +9,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/sync.h"
+
 #include <stdint.h>
 
 #include "CUnit/Theory.h"
 #include "dds/ddsrt/atomics.h"
 #include "dds/ddsrt/cdtors.h"
-#include "dds/ddsrt/sync.h"
 #include "dds/ddsrt/threads.h"
 #include "dds/ddsrt/time.h"
 
@@ -30,7 +31,8 @@ CU_Clean(ddsrt_sync)
   return 0;
 }
 
-typedef struct {
+typedef struct
+{
   ddsrt_atomic_uint32_t cnt;
   ddsrt_mutex_t lock;
   ddsrt_rwlock_t rwlock;
@@ -39,10 +41,10 @@ typedef struct {
   dds_time_t reltime;
 } thread_arg_t;
 
-static uint32_t mutex_lock_routine(void *ptr)
+static uint32_t mutex_lock_routine(void * ptr)
 {
   int res;
-  thread_arg_t *arg = (thread_arg_t *)ptr;
+  thread_arg_t * arg = (thread_arg_t *)ptr;
 
   ddsrt_atomic_inc32(&arg->cnt);
   ddsrt_mutex_lock(&arg->lock);
@@ -58,7 +60,7 @@ CU_Test(ddsrt_sync, mutex_lock_conc)
   dds_return_t ret;
   ddsrt_thread_t thr;
   ddsrt_threadattr_t attr;
-  thread_arg_t arg = { .cnt = DDSRT_ATOMIC_UINT32_INIT(0) };
+  thread_arg_t arg = {.cnt = DDSRT_ATOMIC_UINT32_INIT(0)};
   uint32_t res = 0;
 
   ddsrt_mutex_init(&arg.lock);
@@ -66,8 +68,7 @@ CU_Test(ddsrt_sync, mutex_lock_conc)
   ddsrt_threadattr_init(&attr);
   ret = ddsrt_thread_create(&thr, "mutex_lock_conc", &attr, &mutex_lock_routine, &arg);
   CU_ASSERT_EQUAL(ret, DDS_RETCODE_OK);
-  while (ddsrt_atomic_ld32(&arg.cnt) == 0)
-    /* Wait for thread to be scheduled. */ ;
+  while (ddsrt_atomic_ld32(&arg.cnt) == 0) /* Wait for thread to be scheduled. */;
   ddsrt_atomic_inc32(&arg.cnt);
   ddsrt_mutex_unlock(&arg.lock);
   ret = ddsrt_thread_join(thr, &res);
@@ -77,9 +78,9 @@ CU_Test(ddsrt_sync, mutex_lock_conc)
   ddsrt_mutex_destroy(&arg.lock);
 }
 
-static uint32_t mutex_trylock_routine(void *ptr)
+static uint32_t mutex_trylock_routine(void * ptr)
 {
-  thread_arg_t *arg = (thread_arg_t *)ptr;
+  thread_arg_t * arg = (thread_arg_t *)ptr;
 
   if (ddsrt_mutex_trylock(&arg->lock)) {
     ddsrt_atomic_inc32(&arg->cnt);
@@ -96,7 +97,7 @@ CU_Test(ddsrt_sync, mutex_trylock)
   ddsrt_mutex_init(&lock);
   locked = ddsrt_mutex_trylock(&lock);
   CU_ASSERT(locked == true);
-  locked = ddsrt_mutex_trylock (&lock);
+  locked = ddsrt_mutex_trylock(&lock);
   /* NOTE: On VxWorks RTP mutexes seemingly can be locked recursively. Still,
            behavior should be consistent across targets. If this fails, fix
            the implementation instead. */
@@ -105,9 +106,9 @@ CU_Test(ddsrt_sync, mutex_trylock)
   ddsrt_mutex_destroy(&lock);
 }
 
-static uint32_t rwlock_tryread_routine(void *ptr)
+static uint32_t rwlock_tryread_routine(void * ptr)
 {
-  thread_arg_t *arg = (thread_arg_t *)ptr;
+  thread_arg_t * arg = (thread_arg_t *)ptr;
 
   if (ddsrt_rwlock_tryread(&arg->rwlock)) {
     ddsrt_atomic_inc32(&arg->cnt);
@@ -117,9 +118,9 @@ static uint32_t rwlock_tryread_routine(void *ptr)
   return ddsrt_atomic_ld32(&arg->cnt);
 }
 
-static uint32_t rwlock_trywrite_routine(void *ptr)
+static uint32_t rwlock_trywrite_routine(void * ptr)
 {
-  thread_arg_t *arg = (thread_arg_t *)ptr;
+  thread_arg_t * arg = (thread_arg_t *)ptr;
 
   /* This operation should never succeed in the test, but if it does the
      result must reflect it. */
@@ -136,7 +137,7 @@ CU_Test(ddsrt_sync, mutex_trylock_conc)
   dds_return_t ret;
   ddsrt_thread_t thr;
   ddsrt_threadattr_t attr;
-  thread_arg_t arg = { .cnt = DDSRT_ATOMIC_UINT32_INIT(1) };
+  thread_arg_t arg = {.cnt = DDSRT_ATOMIC_UINT32_INIT(1)};
   uint32_t res = 0;
 
   ddsrt_mutex_init(&arg.lock);
@@ -157,10 +158,9 @@ CU_Test(ddsrt_sync, mutex_trylock_conc)
 #define TRYWRITE (4)
 
 CU_TheoryDataPoints(ddsrt_sync, rwlock_trylock_conc) = {
-  CU_DataPoints(uint32_t, READ,    READ,     WRITE,   WRITE),
+  CU_DataPoints(uint32_t, READ, READ, WRITE, WRITE),
   CU_DataPoints(uint32_t, TRYREAD, TRYWRITE, TRYREAD, TRYWRITE),
-  CU_DataPoints(uint32_t, 2,       1,        1,       1)
-};
+  CU_DataPoints(uint32_t, 2, 1, 1, 1)};
 
 CU_Theory((uint32_t lock, uint32_t trylock, uint32_t exp), ddsrt_sync, rwlock_trylock_conc)
 {
@@ -168,7 +168,7 @@ CU_Theory((uint32_t lock, uint32_t trylock, uint32_t exp), ddsrt_sync, rwlock_tr
   ddsrt_thread_t thr;
   ddsrt_threadattr_t attr;
   ddsrt_thread_routine_t func;
-  thread_arg_t arg = { .cnt = DDSRT_ATOMIC_UINT32_INIT(1) };
+  thread_arg_t arg = {.cnt = DDSRT_ATOMIC_UINT32_INIT(1)};
   uint32_t res = 0;
 
   ddsrt_rwlock_init(&arg.rwlock);
@@ -203,16 +203,12 @@ static ddsrt_once_t once_control = DDSRT_ONCE_INIT;
 
 #define ONCE_THREADS (8)
 
-static void do_once(void)
-{
-  ddsrt_atomic_inc32(&once_count);
-}
+static void do_once(void) { ddsrt_atomic_inc32(&once_count); }
 
-static uint32_t once_routine(void *ptr)
+static uint32_t once_routine(void * ptr)
 {
   (void)ptr;
-  while (ddsrt_atomic_ld32(&once_count) == 0)
-    /* Wait for the go-ahead. */ ;
+  while (ddsrt_atomic_ld32(&once_count) == 0) /* Wait for the go-ahead. */;
   ddsrt_once(&once_control, &do_once);
   return ddsrt_atomic_ld32(&once_count);
 }
@@ -245,15 +241,14 @@ CU_Test(ddsrt_sync, once_conc)
   CU_ASSERT_EQUAL(ddsrt_atomic_ld32(&once_count), 2);
 }
 
-static uint32_t waitfor_routine(void *ptr)
+static uint32_t waitfor_routine(void * ptr)
 {
   dds_time_t before, after;
   dds_duration_t reltime;
-  thread_arg_t *arg = (thread_arg_t *)ptr;
+  thread_arg_t * arg = (thread_arg_t *)ptr;
   uint32_t cnt = 0, res = 0;
 
-  while (ddsrt_atomic_ld32(&arg->cnt) == 0)
-    /* Wait for go-ahead. */ ;
+  while (ddsrt_atomic_ld32(&arg->cnt) == 0) /* Wait for go-ahead. */;
   ddsrt_mutex_lock(&arg->lock);
   before = dds_time();
   reltime = arg->reltime;
@@ -268,9 +263,9 @@ static uint32_t waitfor_routine(void *ptr)
   }
   after = dds_time();
   reltime = after - before;
-  fprintf(stderr, "waited for %"PRId64" (nanoseconds)\n", reltime);
-  fprintf(stderr, "expected to wait %"PRId64" (nanoseconds)\n", arg->reltime);
-  fprintf(stderr, "woke up %"PRIu32" times\n", cnt);
+  fprintf(stderr, "waited for %" PRId64 " (nanoseconds)\n", reltime);
+  fprintf(stderr, "expected to wait %" PRId64 " (nanoseconds)\n", arg->reltime);
+  fprintf(stderr, "woke up %" PRIu32 " times\n", cnt);
   ddsrt_mutex_unlock(&arg->lock);
   if (reltime >= arg->reltime) {
     /* Ensure that the condition variable at least waited for the amount of
@@ -287,7 +282,7 @@ CU_Test(ddsrt_sync, cond_waitfor)
   dds_return_t rc;
   ddsrt_thread_t thr;
   ddsrt_threadattr_t attr;
-  thread_arg_t arg = { .cnt = DDSRT_ATOMIC_UINT32_INIT(0), .reltime = DDS_MSECS(100) };
+  thread_arg_t arg = {.cnt = DDSRT_ATOMIC_UINT32_INIT(0), .reltime = DDS_MSECS(100)};
   uint32_t res = 0;
 
   ddsrt_mutex_init(&arg.lock);
@@ -308,21 +303,21 @@ CU_Test(ddsrt_sync, cond_waitfor)
   CU_ASSERT_EQUAL(res, 1);
 }
 
-static uint32_t waituntil_routine(void *ptr)
+static uint32_t waituntil_routine(void * ptr)
 {
   dds_time_t after;
-  thread_arg_t *arg = (thread_arg_t *)ptr;
+  thread_arg_t * arg = (thread_arg_t *)ptr;
   uint32_t cnt = 0, res = 0;
 
   ddsrt_mutex_lock(&arg->lock);
-  while(ddsrt_cond_waituntil(&arg->cond, &arg->lock, arg->abstime)) {
+  while (ddsrt_cond_waituntil(&arg->cond, &arg->lock, arg->abstime)) {
     cnt++;
   }
   after = dds_time();
   ddsrt_mutex_unlock(&arg->lock);
-  fprintf(stderr, "waited until %"PRId64" (nanoseconds)\n", after);
-  fprintf(stderr, "expected to wait until %"PRId64" (nanoseconds)\n", arg->abstime);
-  fprintf(stderr, "woke up %"PRIu32" times\n", cnt);
+  fprintf(stderr, "waited until %" PRId64 " (nanoseconds)\n", after);
+  fprintf(stderr, "expected to wait until %" PRId64 " (nanoseconds)\n", arg->abstime);
+  fprintf(stderr, "woke up %" PRIu32 " times\n", cnt);
   if (after > arg->abstime) {
     res = cnt < 3; /* An arbitrary number to ensure the implementation
                       did not just spin, aka is completely broken. */
@@ -337,7 +332,7 @@ CU_Test(ddsrt_sync, cond_waituntil)
   dds_duration_t delay = DDS_MSECS(100);
   ddsrt_thread_t thr;
   ddsrt_threadattr_t attr;
-  thread_arg_t arg = { .cnt = DDSRT_ATOMIC_UINT32_INIT(0) };
+  thread_arg_t arg = {.cnt = DDSRT_ATOMIC_UINT32_INIT(0)};
   uint32_t res = 0;
 
   arg.abstime = dds_time() + delay;

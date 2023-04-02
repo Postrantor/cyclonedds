@@ -30,13 +30,14 @@ CU_Clean(ddsrt_thread_cleanup)
   return 0;
 }
 
-#define THREAD_RESET_1 (1<<0)
-#define THREAD_RESET_2 (1<<1)
+#define THREAD_RESET_1 (1 << 0)
+#define THREAD_RESET_2 (1 << 1)
 #define THREAD_RUN_OFFSET (4)
-#define THREAD_RUN_1 (1<<(THREAD_RUN_OFFSET))
-#define THREAD_RUN_2 (1<<(THREAD_RUN_OFFSET + 1))
+#define THREAD_RUN_1 (1 << (THREAD_RUN_OFFSET))
+#define THREAD_RUN_2 (1 << (THREAD_RUN_OFFSET + 1))
 
-struct thread_argument {
+struct thread_argument
+{
   int flags;
   int pop;
   int one;
@@ -44,15 +45,13 @@ struct thread_argument {
   int executed;
   int cancelled;
   int block;
-  ddsrt_mutex_t *mutex;
+  ddsrt_mutex_t * mutex;
   ddsrt_thread_t thread;
 };
 
-static struct thread_argument *
-make_thread_argument(
-  int flags, int pop, int one, int two)
+static struct thread_argument * make_thread_argument(int flags, int pop, int one, int two)
 {
-  struct thread_argument *targ = ddsrt_malloc(sizeof(*targ));
+  struct thread_argument * targ = ddsrt_malloc(sizeof(*targ));
   memset(targ, 0, sizeof(*targ));
   targ->flags = flags;
   targ->pop = pop;
@@ -62,32 +61,26 @@ make_thread_argument(
   return targ;
 }
 
-static void
-reset_one(
-  void *arg)
+static void reset_one(void * arg)
 {
-  struct thread_argument *targ = (struct thread_argument *)arg;
+  struct thread_argument * targ = (struct thread_argument *)arg;
   targ->one = 0;
   targ->executed++;
 }
 
-static void
-reset_two(
-    void *arg)
+static void reset_two(void * arg)
 {
-  struct thread_argument *targ = (struct thread_argument *)arg;
+  struct thread_argument * targ = (struct thread_argument *)arg;
   targ->two = 0;
   targ->executed++;
 }
 
-static uint32_t
-thread_main(
-  void *arg)
+static uint32_t thread_main(void * arg)
 {
   int pushed = 0;
   int popped = 0;
   int execute = 0;
-  struct thread_argument *targ = (struct thread_argument *)arg;
+  struct thread_argument * targ = (struct thread_argument *)arg;
 
   if (targ->flags & THREAD_RESET_1) {
     ddsrt_thread_cleanup_push(&reset_one, arg);
@@ -118,9 +111,7 @@ thread_main(
   return 0;
 }
 
-static void
-setup(
-  struct thread_argument *arg)
+static void setup(struct thread_argument * arg)
 {
   dds_return_t rc;
   ddsrt_thread_t thr;
@@ -143,7 +134,7 @@ setup(
 CU_Test(ddsrt_thread_cleanup, push_one)
 {
   int flags = THREAD_RESET_1;
-  struct thread_argument *targ = make_thread_argument(flags, 0, 1, 2);
+  struct thread_argument * targ = make_thread_argument(flags, 0, 1, 2);
   setup(targ);
 
   CU_ASSERT_EQUAL(targ->one, 0);
@@ -158,7 +149,7 @@ CU_Test(ddsrt_thread_cleanup, push_one)
 CU_Test(ddsrt_thread_cleanup, push_two)
 {
   int flags = THREAD_RESET_1 | THREAD_RESET_2;
-  struct thread_argument *targ = make_thread_argument(flags, 0, 1, 2);
+  struct thread_argument * targ = make_thread_argument(flags, 0, 1, 2);
   setup(targ);
 
   CU_ASSERT_EQUAL(targ->one, 0);
@@ -173,7 +164,7 @@ CU_Test(ddsrt_thread_cleanup, push_two)
 CU_Test(ddsrt_thread_cleanup, push_two_pop_one_no_exec)
 {
   int flags = THREAD_RESET_1 | THREAD_RESET_2;
-  struct thread_argument *targ = make_thread_argument(flags, 1, 1, 2);
+  struct thread_argument * targ = make_thread_argument(flags, 1, 1, 2);
   setup(targ);
 
   CU_ASSERT_EQUAL(targ->one, 0);
@@ -187,7 +178,7 @@ CU_Test(ddsrt_thread_cleanup, push_two_pop_one_no_exec)
 CU_Test(ddsrt_thread_cleanup, push_two_pop_one_exec)
 {
   int flags = THREAD_RESET_1 | THREAD_RESET_2 | THREAD_RUN_1;
-  struct thread_argument *targ = make_thread_argument(flags, 1, 1, 2);
+  struct thread_argument * targ = make_thread_argument(flags, 1, 1, 2);
   setup(targ);
 
   CU_ASSERT_EQUAL(targ->one, 0);
@@ -202,7 +193,7 @@ CU_Test(ddsrt_thread_cleanup, push_two_pop_one_exec)
 CU_Test(ddsrt_thread_cleanup, push_two_pop_two_no_exec)
 {
   int flags = THREAD_RESET_1 | THREAD_RESET_2;
-  struct thread_argument *targ = make_thread_argument(flags, 2, 1, 2);
+  struct thread_argument * targ = make_thread_argument(flags, 2, 1, 2);
   setup(targ);
 
   CU_ASSERT_EQUAL(targ->one, 1);
@@ -216,7 +207,7 @@ CU_Test(ddsrt_thread_cleanup, push_two_pop_two_no_exec)
 CU_Test(ddsrt_thread_cleanup, push_two_pop_two_exec_one)
 {
   int flags = THREAD_RESET_1 | THREAD_RESET_2 | THREAD_RUN_1;
-  struct thread_argument *targ = make_thread_argument(flags, 2, 1, 2);
+  struct thread_argument * targ = make_thread_argument(flags, 2, 1, 2);
   setup(targ);
 
   CU_ASSERT_EQUAL(targ->one, 0);
@@ -230,7 +221,7 @@ CU_Test(ddsrt_thread_cleanup, push_two_pop_two_exec_one)
 CU_Test(ddsrt_thread_cleanup, push_two_pop_two_exec_both)
 {
   int flags = THREAD_RESET_1 | THREAD_RESET_2 | THREAD_RUN_1 | THREAD_RUN_2;
-  struct thread_argument *targ = make_thread_argument(flags, 2, 1, 2);
+  struct thread_argument * targ = make_thread_argument(flags, 2, 1, 2);
   setup(targ);
 
   CU_ASSERT_EQUAL(targ->one, 0);
@@ -244,8 +235,8 @@ CU_Test(ddsrt_thread_cleanup, push_two_pop_two_exec_both)
 CU_Test(ddsrt_thread_cleanup, no_interference)
 {
   int flags = THREAD_RESET_1 | THREAD_RESET_2;
-  struct thread_argument *targ1 = make_thread_argument(flags, 0, 1, 2);
-  struct thread_argument *targ2 = make_thread_argument(flags, 2, 1, 2);
+  struct thread_argument * targ1 = make_thread_argument(flags, 0, 1, 2);
+  struct thread_argument * targ2 = make_thread_argument(flags, 2, 1, 2);
   ddsrt_mutex_t mutex1, mutex2;
 
   ddsrt_mutex_init(&mutex1);

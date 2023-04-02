@@ -12,27 +12,30 @@
 #ifndef DDSRT_WINDOWS_SYNC_H
 #define DDSRT_WINDOWS_SYNC_H
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-typedef struct {
-    CONDITION_VARIABLE cond;
+typedef struct
+{
+  CONDITION_VARIABLE cond;
 } ddsrt_cond_t;
 
-typedef struct {
-    SRWLOCK lock;
+typedef struct
+{
+  SRWLOCK lock;
 } ddsrt_mutex_t;
 
-typedef struct os_rwlock {
-    SRWLOCK lock;
-    int state; /* -1: exclusive, 0: free, 1: shared */
+typedef struct os_rwlock
+{
+  SRWLOCK lock;
+  int state; /* -1: exclusive, 0: free, 1: shared */
 } ddsrt_rwlock_t;
 
 typedef INIT_ONCE ddsrt_once_t;
 #define DDSRT_ONCE_INIT INIT_ONCE_STATIC_INIT
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

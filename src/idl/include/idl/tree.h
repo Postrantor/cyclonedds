@@ -30,93 +30,90 @@
    reserved for categories and properties that generators are likely to filter
    on when applying a visitor pattern. */
 
-#define IDL_DECLARATION \
-  (IDL_MODULE | IDL_CONST | IDL_CONSTR_TYPE | IDL_TYPEDEF | \
-   IDL_MEMBER | IDL_CASE | IDL_CASE_LABEL | IDL_ENUMERATOR | IDL_DECLARATOR | IDL_BIT_VALUE)
+#define IDL_DECLARATION                                                             \
+  (IDL_MODULE | IDL_CONST | IDL_CONSTR_TYPE | IDL_TYPEDEF | IDL_MEMBER | IDL_CASE | \
+   IDL_CASE_LABEL | IDL_ENUMERATOR | IDL_DECLARATOR | IDL_BIT_VALUE)
 
-#define IDL_TYPE \
-  (IDL_BASE_TYPE | IDL_TEMPL_TYPE | IDL_CONSTR_TYPE | IDL_TYPEDEF)
+#define IDL_TYPE (IDL_BASE_TYPE | IDL_TEMPL_TYPE | IDL_CONSTR_TYPE | IDL_TYPEDEF)
 
-#define IDL_CONSTR_TYPE \
-  (IDL_STRUCT | IDL_UNION | IDL_ENUM | IDL_BITMASK)
+#define IDL_CONSTR_TYPE (IDL_STRUCT | IDL_UNION | IDL_ENUM | IDL_BITMASK)
 
-#define IDL_TEMPL_TYPE \
-  (IDL_SEQUENCE | IDL_STRING | IDL_WSTRING | IDL_FIXED_PT)
+#define IDL_TEMPL_TYPE (IDL_SEQUENCE | IDL_STRING | IDL_WSTRING | IDL_FIXED_PT)
 
 /* miscellaneous */
-#define IDL_KEYLIST (1llu<<39)
-#define IDL_KEY (1llu<<38)
-#define IDL_INHERIT_SPEC (1llu<<37)
-#define IDL_SWITCH_TYPE_SPEC (1llu<<36)
-#define IDL_LITERAL (1ull<<35)
+#define IDL_KEYLIST (1llu << 39)
+#define IDL_KEY (1llu << 38)
+#define IDL_INHERIT_SPEC (1llu << 37)
+#define IDL_SWITCH_TYPE_SPEC (1llu << 36)
+#define IDL_LITERAL (1ull << 35)
 /* declarations */
-#define IDL_MODULE (1llu<<34)
-#define IDL_CONST (1llu<<33)
-#define IDL_MEMBER (1llu<<32)
-#define IDL_FORWARD (1llu<<31)
-#define IDL_CASE (1llu<<30)
-#define IDL_CASE_LABEL (1llu<<29)
+#define IDL_MODULE (1llu << 34)
+#define IDL_CONST (1llu << 33)
+#define IDL_MEMBER (1llu << 32)
+#define IDL_FORWARD (1llu << 31)
+#define IDL_CASE (1llu << 30)
+#define IDL_CASE_LABEL (1llu << 29)
 /* if explicit default is specified */
 #define IDL_DEFAULT_CASE_LABEL (IDL_CASE_LABEL | 1u)
 /* if no explicit default is specified and range is not covered */
 #define IDL_IMPLICIT_DEFAULT_CASE_LABEL (IDL_DEFAULT_CASE_LABEL | 2u)
-#define IDL_ENUMERATOR (1llu<<28)
+#define IDL_ENUMERATOR (1llu << 28)
 #define IDL_DEFAULT_ENUMERATOR (IDL_ENUMERATOR | 1u)
 #define IDL_IMPLICIT_DEFAULT_ENUMERATOR (IDL_DEFAULT_ENUMERATOR | 2u)
-#define IDL_BIT_VALUE (1llu<<27)
-#define IDL_DECLARATOR (1llu<<26)
+#define IDL_BIT_VALUE (1llu << 27)
+#define IDL_DECLARATOR (1llu << 26)
 /* annotations */
-#define IDL_ANNOTATION (1llu<<25)
-#define IDL_ANNOTATION_MEMBER (1llu<<24)
-#define IDL_ANNOTATION_APPL (1llu<<23)
-#define IDL_ANNOTATION_APPL_PARAM (1llu<<22)
+#define IDL_ANNOTATION (1llu << 25)
+#define IDL_ANNOTATION_MEMBER (1llu << 24)
+#define IDL_ANNOTATION_APPL (1llu << 23)
+#define IDL_ANNOTATION_APPL_PARAM (1llu << 22)
 
 /* bits 20 - 21 are reserved for operators (not exposed in tree) */
 
 typedef enum idl_type idl_type_t;
 enum idl_type {
   IDL_NULL = 0u,
-  IDL_TYPEDEF = (1llu<<19),
+  IDL_TYPEDEF = (1llu << 19),
   /* constructed types */
-  IDL_STRUCT = (1u<<17),
-  IDL_UNION = (1u<<16),
-  IDL_ENUM = (1u<<15),
-  IDL_BITMASK = (1u<<18),
+  IDL_STRUCT = (1u << 17),
+  IDL_UNION = (1u << 16),
+  IDL_ENUM = (1u << 15),
+  IDL_BITMASK = (1u << 18),
   /* template types */
-  IDL_SEQUENCE = (1llu<<14),
-  IDL_STRING = (1llu<<13),
-  IDL_WSTRING = (1llu<<12),
-  IDL_FIXED_PT = (1llu<<11),
-  /* simple types */
-  /* miscellaneous base types */
-#define IDL_BASE_TYPE (1llu<<10)
-#define IDL_UNSIGNED (1llu<<0)
-  IDL_CHAR = (IDL_BASE_TYPE | (1u<<1)),
-  IDL_WCHAR = (IDL_BASE_TYPE | (2u<<1)),
-  IDL_BOOL = (IDL_BASE_TYPE | (3u<<1)),
-  IDL_OCTET = (IDL_BASE_TYPE | (4u<<1) | IDL_UNSIGNED),
-  IDL_ANY = (IDL_BASE_TYPE | (5u<<1)),
-  /* integer types */
-#define IDL_INTEGER_TYPE (1llu<<9)
-  IDL_SHORT = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (1u<<1)),
+  IDL_SEQUENCE = (1llu << 14),
+  IDL_STRING = (1llu << 13),
+  IDL_WSTRING = (1llu << 12),
+  IDL_FIXED_PT = (1llu << 11),
+/* simple types */
+/* miscellaneous base types */
+#define IDL_BASE_TYPE (1llu << 10)
+#define IDL_UNSIGNED (1llu << 0)
+  IDL_CHAR = (IDL_BASE_TYPE | (1u << 1)),
+  IDL_WCHAR = (IDL_BASE_TYPE | (2u << 1)),
+  IDL_BOOL = (IDL_BASE_TYPE | (3u << 1)),
+  IDL_OCTET = (IDL_BASE_TYPE | (4u << 1) | IDL_UNSIGNED),
+  IDL_ANY = (IDL_BASE_TYPE | (5u << 1)),
+/* integer types */
+#define IDL_INTEGER_TYPE (1llu << 9)
+  IDL_SHORT = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (1u << 1)),
   IDL_USHORT = (IDL_SHORT | IDL_UNSIGNED),
-  IDL_LONG = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (2u<<1)),
+  IDL_LONG = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (2u << 1)),
   IDL_ULONG = (IDL_LONG | IDL_UNSIGNED),
-  IDL_LLONG = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (3u<<1)),
+  IDL_LLONG = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (3u << 1)),
   IDL_ULLONG = (IDL_LLONG | IDL_UNSIGNED),
   /* fixed size integer types overlap with legacy integer types in size, but
      unique identifiers are required for proper syntax errors. language
      bindings may choose to map onto different types as well */
-  IDL_INT8 = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (4u<<1)),
+  IDL_INT8 = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (4u << 1)),
   IDL_UINT8 = (IDL_INT8 | IDL_UNSIGNED),
-  IDL_INT16 = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (5u<<1)),
+  IDL_INT16 = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (5u << 1)),
   IDL_UINT16 = (IDL_INT16 | IDL_UNSIGNED),
-  IDL_INT32 = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (6u<<1)),
+  IDL_INT32 = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (6u << 1)),
   IDL_UINT32 = (IDL_INT32 | IDL_UNSIGNED),
-  IDL_INT64 = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (7u<<1)),
+  IDL_INT64 = (IDL_BASE_TYPE | IDL_INTEGER_TYPE | (7u << 1)),
   IDL_UINT64 = (IDL_INT64 | IDL_UNSIGNED),
-  /* floating point types */
-#define IDL_FLOATING_PT_TYPE (1llu<<8)
+/* floating point types */
+#define IDL_FLOATING_PT_TYPE (1llu << 8)
   IDL_FLOAT = (IDL_BASE_TYPE | IDL_FLOATING_PT_TYPE | 1u),
   IDL_DOUBLE = (IDL_BASE_TYPE | IDL_FLOATING_PT_TYPE | 2u),
   IDL_LDOUBLE = (IDL_BASE_TYPE | IDL_FLOATING_PT_TYPE | 3u)
@@ -125,27 +122,30 @@ enum idl_type {
 #define IDL_TYPE_MASK ((IDL_TYPEDEF << 1) - 1)
 
 typedef struct idl_name idl_name_t;
-struct idl_name {
+struct idl_name
+{
   idl_symbol_t symbol;
-  char *identifier;
+  char * identifier;
   bool is_annotation;
 };
 
 typedef struct idl_scoped_name idl_scoped_name_t;
-struct idl_scoped_name {
+struct idl_scoped_name
+{
   idl_symbol_t symbol;
   bool absolute;
   size_t length;
-  idl_name_t **names;
-  char *identifier; /**< qualified identifier */
+  idl_name_t ** names;
+  char * identifier; /**< qualified identifier */
 };
 
 typedef struct idl_field_name idl_field_name_t;
-struct idl_field_name {
+struct idl_field_name
+{
   idl_symbol_t symbol;
   size_t length;
-  idl_name_t **names;
-  char *identifier; /**< field identifier */
+  idl_name_t ** names;
+  char * identifier; /**< field identifier */
 };
 
 struct idl_scope;
@@ -157,55 +157,46 @@ typedef void idl_definition_t;
 typedef void idl_type_spec_t;
 
 typedef uint64_t idl_mask_t;
-typedef void(*idl_delete_t)(void *node);
-typedef void *(*idl_iterate_t)(const void *root, const void *node);
-typedef const char *(*idl_describe_t)(const void *node);
+typedef void (*idl_delete_t)(void * node);
+typedef void * (*idl_iterate_t)(const void * root, const void * node);
+typedef const char * (*idl_describe_t)(const void * node);
 
 typedef struct idl_node idl_node_t;
-struct idl_node {
+struct idl_node
+{
   idl_symbol_t symbol;
   idl_mask_t mask;
   idl_delete_t destructor;
   idl_iterate_t iterate;
   idl_describe_t describe;
   int32_t references;
-  struct idl_annotation_appl *annotations;
-  const struct idl_declaration *declaration;
-  idl_node_t *parent;
+  struct idl_annotation_appl * annotations;
+  const struct idl_declaration * declaration;
+  idl_node_t * parent;
   idl_node_t *previous, *next;
 };
 
 typedef struct idl_path idl_path_t;
-struct idl_path {
+struct idl_path
+{
   size_t length;
-  const idl_node_t **nodes;
+  const idl_node_t ** nodes;
 };
 
 typedef enum idl_autoid idl_autoid_t;
-enum idl_autoid {
-  IDL_SEQUENTIAL,
-  IDL_HASH
-};
+enum idl_autoid { IDL_SEQUENTIAL, IDL_HASH };
 
 typedef enum idl_extensibility idl_extensibility_t;
-enum idl_extensibility {
-  IDL_FINAL,
-  IDL_APPENDABLE,
-  IDL_MUTABLE
-};
+enum idl_extensibility { IDL_FINAL, IDL_APPENDABLE, IDL_MUTABLE };
 
 typedef enum idl_try_construct idl_try_construct_t;
-enum idl_try_construct {
-  IDL_DISCARD,
-  IDL_USE_DEFAULT,
-  IDL_TRIM
-};
+enum idl_try_construct { IDL_DISCARD, IDL_USE_DEFAULT, IDL_TRIM };
 
 typedef uint32_t allowable_data_representations_t;
 #define IDL_ALLOWABLE_DATAREPRESENTATION_DEFAULT (0xffffffff)
 typedef enum {
   IDL_DATAREPRESENTATION_FLAG_XCDR1 = 0x1 << 0,
-  IDL_DATAREPRESENTATION_FLAG_XML   = 0x1 << 1,
+  IDL_DATAREPRESENTATION_FLAG_XML = 0x1 << 1,
   IDL_DATAREPRESENTATION_FLAG_XCDR2 = 0x1 << 2
 } idl_data_representation_flags_t;
 
@@ -229,17 +220,22 @@ typedef enum {
    weak reference to the annotation, or is set to NULL. only annotations on
    the construct itself may be referenced. e.g. @default_nested annotations
    are only referenced by the annotated module, not by any subconstructs */
-#define IDL_ANNOTATABLE(type) \
-  struct { const struct idl_annotation_appl *annotation; type value; }
+#define IDL_ANNOTATABLE(type)                      \
+  struct                                           \
+  {                                                \
+    const struct idl_annotation_appl * annotation; \
+    type value;                                    \
+  }
 
 /* annotations */
 
 typedef struct idl_const idl_const_t;
-struct idl_const {
+struct idl_const
+{
   idl_node_t node;
-  idl_name_t *name;
-  idl_type_spec_t *type_spec;
-  idl_const_expr_t *const_expr;
+  idl_name_t * name;
+  idl_type_spec_t * type_spec;
+  idl_const_expr_t * const_expr;
 };
 
 /* constants contain the value of resolved constant expressions and are used
@@ -248,7 +244,8 @@ struct idl_const {
    the resulting constant value is required to be of a specific base type,
    e.g. bounds in sequences */
 typedef struct idl_literal idl_literal_t;
-struct idl_literal {
+struct idl_literal
+{
   idl_node_t node;
   union {
     bool bln;
@@ -264,35 +261,39 @@ struct idl_literal {
     float flt;
     double dbl;
     long double ldbl;
-    char *str;
+    char * str;
   } value;
 };
 
 typedef struct idl_base_type idl_base_type_t;
-struct idl_base_type {
+struct idl_base_type
+{
   idl_node_t node;
   /* empty */
 };
 
 typedef struct idl_sequence idl_sequence_t;
-struct idl_sequence {
+struct idl_sequence
+{
   idl_node_t node;
-  idl_type_spec_t *type_spec;
+  idl_type_spec_t * type_spec;
   uint32_t maximum;
 };
 
 typedef struct idl_string idl_string_t;
-struct idl_string {
+struct idl_string
+{
   idl_node_t node;
   uint32_t maximum;
 };
 
 typedef struct idl_module idl_module_t;
-struct idl_module {
+struct idl_module
+{
   idl_node_t node;
-  idl_name_t *name;
-  idl_definition_t *definitions;
-  const idl_module_t *previous; /**< previous module if module was reopened */
+  idl_name_t * name;
+  idl_definition_t * definitions;
+  const idl_module_t * previous; /**< previous module if module was reopened */
   /* metadata */
   IDL_ANNOTATABLE(bool) default_nested;
   IDL_ANNOTATABLE(idl_autoid_t) autoid;
@@ -300,28 +301,30 @@ struct idl_module {
 };
 
 typedef struct idl_declarator idl_declarator_t;
-struct idl_declarator {
+struct idl_declarator
+{
   idl_node_t node;
-  idl_name_t *name;
-  idl_const_expr_t *const_expr;
+  idl_name_t * name;
+  idl_const_expr_t * const_expr;
   /* metadata */
   IDL_ANNOTATABLE(uint32_t) id;
 };
 
 typedef struct idl_member idl_member_t;
-struct idl_member {
+struct idl_member
+{
   idl_node_t node;
-  idl_type_spec_t *type_spec;
-  idl_declarator_t *declarators;
+  idl_type_spec_t * type_spec;
+  idl_declarator_t * declarators;
   /* metadata */
   IDL_ANNOTATABLE(bool) key;
   IDL_ANNOTATABLE(bool) optional;
   IDL_ANNOTATABLE(bool) external;
   IDL_ANNOTATABLE(bool) must_understand;
   IDL_ANNOTATABLE(idl_try_construct_t) try_construct;
-  IDL_ANNOTATABLE(const idl_literal_t*) min;
-  IDL_ANNOTATABLE(const idl_literal_t*) max;
-  IDL_ANNOTATABLE(const idl_literal_t*) value;
+  IDL_ANNOTATABLE(const idl_literal_t *) min;
+  IDL_ANNOTATABLE(const idl_literal_t *) max;
+  IDL_ANNOTATABLE(const idl_literal_t *) value;
   IDL_ANNOTATABLE(const char *) unit;
 };
 
@@ -329,9 +332,10 @@ struct idl_member {
    structs). declarations in the base type that become available in the
    derived type as a consequence are imported into the scope */
 typedef struct idl_inherit_spec idl_inherit_spec_t;
-struct idl_inherit_spec {
+struct idl_inherit_spec
+{
   idl_node_t node;
-  idl_type_spec_t *base;
+  idl_type_spec_t * base;
 };
 
 /* keylist directives can use dotted names, e.g. "#pragma keylist foo bar.baz"
@@ -339,26 +343,29 @@ struct idl_inherit_spec {
    this notation makes it possible for "baz" to only be a key member if "bar"
    is embedded in "foo" and for key order to differ from field order */
 typedef struct idl_key idl_key_t;
-struct idl_key {
+struct idl_key
+{
   idl_node_t node;
   /* store entire field name as context matters for embedded struct fields */
-  idl_field_name_t *field_name;
+  idl_field_name_t * field_name;
 };
 
 typedef struct idl_keylist idl_keylist_t;
-struct idl_keylist {
+struct idl_keylist
+{
   idl_node_t node;
-  idl_key_t *keys;
+  idl_key_t * keys;
 };
 
 typedef struct idl_struct idl_struct_t;
-struct idl_struct {
+struct idl_struct
+{
   idl_node_t node;
-  idl_inherit_spec_t *inherit_spec;
-  struct idl_name *name;
-  idl_member_t *members;
+  idl_inherit_spec_t * inherit_spec;
+  struct idl_name * name;
+  idl_member_t * members;
   /* metadata */
-  idl_keylist_t *keylist; /**< if type is a topic (#pragma keylist) */
+  idl_keylist_t * keylist; /**< if type is a topic (#pragma keylist) */
   idl_requires_xcdr2_t requires_xcdr2;
   IDL_ANNOTATABLE(uint32_t) id;
   IDL_ANNOTATABLE(idl_autoid_t) autoid;
@@ -373,55 +380,60 @@ struct idl_struct {
 };
 
 typedef struct idl_forward idl_forward_t;
-struct idl_forward {
+struct idl_forward
+{
   idl_node_t node;
-  struct idl_name *name;
+  struct idl_name * name;
   /* FIXME: no reference count is maintained for type specifier in forward
             declarations as it may introduce cyclic dependencies. perfect
             reason to remove use of destructors in Bison and use a pool
             allocator instead */
-  idl_type_spec_t *type_spec;
+  idl_type_spec_t * type_spec;
 };
 
 typedef struct idl_case_label idl_case_label_t;
-struct idl_case_label {
+struct idl_case_label
+{
   idl_node_t node;
-  void *const_expr;
+  void * const_expr;
 };
 
 typedef struct idl_case idl_case_t;
-struct idl_case {
+struct idl_case
+{
   idl_node_t node;
-  idl_case_label_t *labels;
-  idl_type_spec_t *type_spec;
-  idl_declarator_t *declarator;
+  idl_case_label_t * labels;
+  idl_type_spec_t * type_spec;
+  idl_declarator_t * declarator;
   IDL_ANNOTATABLE(bool) external;
   IDL_ANNOTATABLE(idl_try_construct_t) try_construct;
-  IDL_ANNOTATABLE(const idl_literal_t*) min;
-  IDL_ANNOTATABLE(const idl_literal_t*) max;
+  IDL_ANNOTATABLE(const idl_literal_t *) min;
+  IDL_ANNOTATABLE(const idl_literal_t *) max;
   IDL_ANNOTATABLE(const char *) unit;
 };
 
 typedef struct idl_switch_type_spec idl_switch_type_spec_t;
-struct idl_switch_type_spec {
+struct idl_switch_type_spec
+{
   idl_node_t node;
-  idl_type_spec_t *type_spec;
+  idl_type_spec_t * type_spec;
   /* metadata */
   IDL_ANNOTATABLE(bool) key;
 };
 
 typedef struct idl_union idl_union_t;
-struct idl_union {
+struct idl_union
+{
   idl_node_t node;
-  struct idl_name *name;
-  idl_switch_type_spec_t *switch_type_spec;
-  idl_case_t *cases;
+  struct idl_name * name;
+  idl_switch_type_spec_t * switch_type_spec;
+  idl_case_t * cases;
   /* metadata */
   /* label associated with the default value for the discriminator. i.e.
      the first discriminant value if the entire range of the discriminator is
      covered, the default case if specified, or a spontaneously materialised
      implicit default case that does not reference any branch */
-  idl_case_label_t *default_case;
+  idl_case_label_t * default_case;
   uint64_t unused_labels; /**< number of unused labels */
   idl_requires_xcdr2_t requires_xcdr2;
   IDL_ANNOTATABLE(bool) nested; /**< if type is nested or a topic */
@@ -431,9 +443,10 @@ struct idl_union {
 };
 
 typedef struct idl_enumerator idl_enumerator_t;
-struct idl_enumerator {
+struct idl_enumerator
+{
   idl_node_t node;
-  struct idl_name *name;
+  struct idl_name * name;
   /* metadata */
   /* an enumeration must contain no more than 2^32 enumerators and must be
      mapped to a native data type capable of representing a maximally-sized
@@ -442,75 +455,81 @@ struct idl_enumerator {
 };
 
 typedef struct idl_enum idl_enum_t;
-struct idl_enum {
+struct idl_enum
+{
   idl_node_t node;
-  struct idl_name *name;
-  idl_enumerator_t *enumerators;
-  idl_enumerator_t *default_enumerator;
+  struct idl_name * name;
+  idl_enumerator_t * enumerators;
+  idl_enumerator_t * default_enumerator;
   IDL_ANNOTATABLE(uint16_t) bit_bound;
   IDL_ANNOTATABLE(idl_extensibility_t) extensibility;
 };
 
 typedef struct idl_bit_value idl_bit_value_t;
-struct idl_bit_value {
+struct idl_bit_value
+{
   idl_node_t node;
-  struct idl_name *name;
+  struct idl_name * name;
   IDL_ANNOTATABLE(uint16_t) position;
 };
 
 typedef struct idl_bitmask idl_bitmask_t;
-struct idl_bitmask {
+struct idl_bitmask
+{
   idl_node_t node;
-  struct idl_name *name;
-  idl_bit_value_t *bit_values;
+  struct idl_name * name;
+  idl_bit_value_t * bit_values;
   IDL_ANNOTATABLE(uint16_t) bit_bound;
   IDL_ANNOTATABLE(idl_extensibility_t) extensibility;
 };
 
 typedef struct idl_typedef idl_typedef_t;
-struct idl_typedef {
+struct idl_typedef
+{
   idl_node_t node;
-  void *type_spec;
-  idl_declarator_t *declarators;
+  void * type_spec;
+  idl_declarator_t * declarators;
 };
 
 struct idl_pstate;
 typedef idl_retcode_t (*idl_annotation_callback_t)(
-  struct idl_pstate *,
-  struct idl_annotation_appl *,
-  idl_node_t *);
+  struct idl_pstate *, struct idl_annotation_appl *, idl_node_t *);
 
 typedef struct idl_annotation_member idl_annotation_member_t;
-struct idl_annotation_member {
+struct idl_annotation_member
+{
   idl_node_t node;
-  idl_type_spec_t *type_spec;
-  idl_declarator_t *declarator;
-  idl_const_expr_t *const_expr; /**< default value (if any) */
+  idl_type_spec_t * type_spec;
+  idl_declarator_t * declarator;
+  idl_const_expr_t * const_expr; /**< default value (if any) */
 };
 
 typedef void idl_annotation_definition_t;
 
 typedef struct idl_annotation idl_annotation_t;
-struct idl_annotation {
+struct idl_annotation
+{
   idl_node_t node;
-  idl_name_t *name;
+  idl_name_t * name;
   /** definitions that together form the body, e.g. member, enum, etc */
-  idl_definition_t *definitions;
+  idl_definition_t * definitions;
   idl_annotation_callback_t callback;
 };
 
 typedef struct idl_annotation_appl_param idl_annotation_appl_param_t;
-struct idl_annotation_appl_param {
+struct idl_annotation_appl_param
+{
   idl_node_t node;
-  idl_annotation_member_t *member;
-  idl_const_expr_t *const_expr; /**< constant or enumerator */
+  idl_annotation_member_t * member;
+  idl_const_expr_t * const_expr; /**< constant or enumerator */
 };
 
 typedef struct idl_annotation_appl idl_annotation_appl_t;
-struct idl_annotation_appl {
+struct idl_annotation_appl
+{
   idl_node_t node;
-  const idl_annotation_t *annotation;
-  idl_annotation_appl_param_t *parameters;
+  const idl_annotation_t * annotation;
+  idl_annotation_appl_param_t * parameters;
 };
 
 typedef enum idl_keytype {
@@ -519,87 +538,87 @@ typedef enum idl_keytype {
   IDL_KEYTYPE_EXPLICIT
 } idl_keytype_t;
 
-IDL_EXPORT bool idl_is_declaration(const void *node);
-IDL_EXPORT bool idl_is_module(const void *node);
-IDL_EXPORT bool idl_is_const(const void *node);
-IDL_EXPORT bool idl_is_literal(const void *node);
-IDL_EXPORT bool idl_is_type_spec(const void *node);
-IDL_EXPORT bool idl_is_base_type(const void *node);
-IDL_EXPORT bool idl_is_floating_pt_type(const void *node);
-IDL_EXPORT bool idl_is_integer_type(const void *node);
-IDL_EXPORT bool idl_is_templ_type(const void *node);
-IDL_EXPORT bool idl_is_bounded(const void *node);
-IDL_EXPORT bool idl_is_sequence(const void *node);
-IDL_EXPORT bool idl_is_string(const void *node);
-IDL_EXPORT bool idl_is_unbounded_string(const void *node);
-IDL_EXPORT bool idl_is_bounded_string(const void *node);
-IDL_EXPORT bool idl_is_constr_type(const void *node);
-IDL_EXPORT bool idl_is_struct(const void *node);
-IDL_EXPORT bool idl_is_empty(const void *node);
-IDL_EXPORT bool idl_is_inherit_spec(const void *node);
-IDL_EXPORT bool idl_is_member(const void *node);
-IDL_EXPORT bool idl_is_union(const void *node);
-IDL_EXPORT bool idl_is_switch_type_spec(const void *node);
-IDL_EXPORT bool idl_is_case(const void *node);
-IDL_EXPORT bool idl_is_default_case(const void *node);
-IDL_EXPORT bool idl_is_implicit_default_case(const void *ptr);
-IDL_EXPORT bool idl_is_case_label(const void *node);
-IDL_EXPORT bool idl_is_default_case_label(const void *node);
-IDL_EXPORT bool idl_is_implicit_default_case_label(const void *node);
-IDL_EXPORT bool idl_is_enum(const void *node);
-IDL_EXPORT bool idl_is_enumerator(const void *node);
-IDL_EXPORT bool idl_is_bitmask(const void *node);
-IDL_EXPORT bool idl_is_bit_value(const void *node);
-IDL_EXPORT bool idl_is_alias(const void *node);
-IDL_EXPORT bool idl_is_typedef(const void *node);
-IDL_EXPORT bool idl_is_declarator(const void *node);
-IDL_EXPORT bool idl_is_array(const void *node);
-IDL_EXPORT bool idl_is_annotation_member(const void *node);
-IDL_EXPORT bool idl_is_annotation_appl(const void *node);
-IDL_EXPORT bool idl_is_topic(const void *node, bool keylist);
-IDL_EXPORT bool idl_is_keyless(const void *node, bool keylist);
-IDL_EXPORT bool idl_is_forward(const void *node);
-IDL_EXPORT idl_keytype_t idl_is_topic_key(const void *node, bool keylist, const idl_path_t *path, uint32_t *order);
-IDL_EXPORT bool idl_is_extensible(const idl_node_t *node, idl_extensibility_t extensibility);
-IDL_EXPORT bool idl_has_unset_extensibility_r(idl_node_t *node);
-IDL_EXPORT bool idl_is_external(const idl_node_t *node);
-IDL_EXPORT bool idl_is_optional(const idl_node_t *node);
-IDL_EXPORT bool idl_is_must_understand(const idl_node_t *node);
-IDL_EXPORT int64_t idl_case_label_intvalue(const void *ptr);
+IDL_EXPORT bool idl_is_declaration(const void * node);
+IDL_EXPORT bool idl_is_module(const void * node);
+IDL_EXPORT bool idl_is_const(const void * node);
+IDL_EXPORT bool idl_is_literal(const void * node);
+IDL_EXPORT bool idl_is_type_spec(const void * node);
+IDL_EXPORT bool idl_is_base_type(const void * node);
+IDL_EXPORT bool idl_is_floating_pt_type(const void * node);
+IDL_EXPORT bool idl_is_integer_type(const void * node);
+IDL_EXPORT bool idl_is_templ_type(const void * node);
+IDL_EXPORT bool idl_is_bounded(const void * node);
+IDL_EXPORT bool idl_is_sequence(const void * node);
+IDL_EXPORT bool idl_is_string(const void * node);
+IDL_EXPORT bool idl_is_unbounded_string(const void * node);
+IDL_EXPORT bool idl_is_bounded_string(const void * node);
+IDL_EXPORT bool idl_is_constr_type(const void * node);
+IDL_EXPORT bool idl_is_struct(const void * node);
+IDL_EXPORT bool idl_is_empty(const void * node);
+IDL_EXPORT bool idl_is_inherit_spec(const void * node);
+IDL_EXPORT bool idl_is_member(const void * node);
+IDL_EXPORT bool idl_is_union(const void * node);
+IDL_EXPORT bool idl_is_switch_type_spec(const void * node);
+IDL_EXPORT bool idl_is_case(const void * node);
+IDL_EXPORT bool idl_is_default_case(const void * node);
+IDL_EXPORT bool idl_is_implicit_default_case(const void * ptr);
+IDL_EXPORT bool idl_is_case_label(const void * node);
+IDL_EXPORT bool idl_is_default_case_label(const void * node);
+IDL_EXPORT bool idl_is_implicit_default_case_label(const void * node);
+IDL_EXPORT bool idl_is_enum(const void * node);
+IDL_EXPORT bool idl_is_enumerator(const void * node);
+IDL_EXPORT bool idl_is_bitmask(const void * node);
+IDL_EXPORT bool idl_is_bit_value(const void * node);
+IDL_EXPORT bool idl_is_alias(const void * node);
+IDL_EXPORT bool idl_is_typedef(const void * node);
+IDL_EXPORT bool idl_is_declarator(const void * node);
+IDL_EXPORT bool idl_is_array(const void * node);
+IDL_EXPORT bool idl_is_annotation_member(const void * node);
+IDL_EXPORT bool idl_is_annotation_appl(const void * node);
+IDL_EXPORT bool idl_is_topic(const void * node, bool keylist);
+IDL_EXPORT bool idl_is_keyless(const void * node, bool keylist);
+IDL_EXPORT bool idl_is_forward(const void * node);
+IDL_EXPORT idl_keytype_t
+idl_is_topic_key(const void * node, bool keylist, const idl_path_t * path, uint32_t * order);
+IDL_EXPORT bool idl_is_extensible(const idl_node_t * node, idl_extensibility_t extensibility);
+IDL_EXPORT bool idl_has_unset_extensibility_r(idl_node_t * node);
+IDL_EXPORT bool idl_is_external(const idl_node_t * node);
+IDL_EXPORT bool idl_is_optional(const idl_node_t * node);
+IDL_EXPORT bool idl_is_must_understand(const idl_node_t * node);
+IDL_EXPORT int64_t idl_case_label_intvalue(const void * ptr);
 
 /* accessors */
-IDL_EXPORT idl_mask_t idl_mask(const void *node);
-IDL_EXPORT idl_type_t idl_type(const void *node);
-IDL_EXPORT idl_type_spec_t *idl_type_spec(const void *node);
+IDL_EXPORT idl_mask_t idl_mask(const void * node);
+IDL_EXPORT idl_type_t idl_type(const void * node);
+IDL_EXPORT idl_type_spec_t * idl_type_spec(const void * node);
 /* return a string describing the language construct. e.g. "module" or
    "forward struct" for modules and forward struct declarations respectively */
-IDL_EXPORT const char *idl_construct(const void *node);
-IDL_EXPORT const char *idl_identifier(const void *node);
-IDL_EXPORT bool idl_identifier_is(const void *node, const char *identifier);
-IDL_EXPORT const idl_name_t *idl_name(const void *node);
-IDL_EXPORT uint32_t idl_array_size(const void *node);
-IDL_EXPORT uint32_t idl_bound(const void *node);
-IDL_EXPORT const idl_literal_t *idl_default_value(const void *node);
-IDL_EXPORT bool idl_requires_xcdr2(const void *node);
-IDL_EXPORT allowable_data_representations_t idl_allowable_data_representations(const void *node);
-IDL_EXPORT uint32_t idl_enum_max_value(const void *node);
+IDL_EXPORT const char * idl_construct(const void * node);
+IDL_EXPORT const char * idl_identifier(const void * node);
+IDL_EXPORT bool idl_identifier_is(const void * node, const char * identifier);
+IDL_EXPORT const idl_name_t * idl_name(const void * node);
+IDL_EXPORT uint32_t idl_array_size(const void * node);
+IDL_EXPORT uint32_t idl_bound(const void * node);
+IDL_EXPORT const idl_literal_t * idl_default_value(const void * node);
+IDL_EXPORT bool idl_requires_xcdr2(const void * node);
+IDL_EXPORT allowable_data_representations_t idl_allowable_data_representations(const void * node);
+IDL_EXPORT uint32_t idl_enum_max_value(const void * node);
 
 /* navigation */
-IDL_EXPORT void *idl_ancestor(const void *node, size_t levels);
-IDL_EXPORT void *idl_parent(const void *node);
-IDL_EXPORT size_t idl_degree(const void *node);
-IDL_EXPORT void *idl_next(const void *node);
-IDL_EXPORT void *idl_previous(const void *node);
-IDL_EXPORT void *idl_iterate(const void *root, const void *node);
+IDL_EXPORT void * idl_ancestor(const void * node, size_t levels);
+IDL_EXPORT void * idl_parent(const void * node);
+IDL_EXPORT size_t idl_degree(const void * node);
+IDL_EXPORT void * idl_next(const void * node);
+IDL_EXPORT void * idl_previous(const void * node);
+IDL_EXPORT void * idl_iterate(const void * root, const void * node);
 
-#define IDL_FOREACH(node, list) \
-  for ((node) = (list); (node); (node) = idl_next(node))
+#define IDL_FOREACH(node, list) for ((node) = (list); (node); (node) = idl_next(node))
 
-IDL_EXPORT void *idl_unalias(const void *node);
+IDL_EXPORT void * idl_unalias(const void * node);
 
-#define IDL_STRIP_ALIASES (1u<<0) /**< expose base type of aliase(s) for a non-array type */
-#define IDL_STRIP_ALIASES_ARRAY (1u<<1) /**< expose base type of aliase(s) for array type */
-#define IDL_STRIP_FORWARD (1u<<2) /**< expose definition */
-IDL_EXPORT void *idl_strip(const void *node, uint32_t flags);
+#define IDL_STRIP_ALIASES (1u << 0)       /**< expose base type of aliase(s) for a non-array type */
+#define IDL_STRIP_ALIASES_ARRAY (1u << 1) /**< expose base type of aliase(s) for array type */
+#define IDL_STRIP_FORWARD (1u << 2)       /**< expose definition */
+IDL_EXPORT void * idl_strip(const void * node, uint32_t flags);
 
 #endif /* IDL_TREE_H */

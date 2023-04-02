@@ -12,14 +12,14 @@
 #ifndef DDSI_SOCKWAITSET_H
 #define DDSI_SOCKWAITSET_H
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 struct ddsi_sock_waitset;
 struct ddsi_sock_waitset_ctx;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif /* DDSI_SOCKWAITSET_H */

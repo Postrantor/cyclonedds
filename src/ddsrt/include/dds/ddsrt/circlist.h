@@ -16,28 +16,31 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
 #include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-#define DDSRT_FROM_CIRCLIST(typ_, member_, cle_) ((typ_ *) ((char *) (cle_) - offsetof (typ_, member_)))
+#define DDSRT_FROM_CIRCLIST(typ_, member_, cle_) ((typ_ *)((char *)(cle_)-offsetof(typ_, member_)))
 
-struct ddsrt_circlist {
-  struct ddsrt_circlist_elem *latest; /* pointer to latest inserted element */
+struct ddsrt_circlist
+{
+  struct ddsrt_circlist_elem * latest; /* pointer to latest inserted element */
 };
 
-struct ddsrt_circlist_elem {
-  struct ddsrt_circlist_elem *next;
-  struct ddsrt_circlist_elem *prev;
+struct ddsrt_circlist_elem
+{
+  struct ddsrt_circlist_elem * next;
+  struct ddsrt_circlist_elem * prev;
 };
 
-void ddsrt_circlist_init (struct ddsrt_circlist *list);
-bool ddsrt_circlist_isempty (const struct ddsrt_circlist *list);
-void ddsrt_circlist_append (struct ddsrt_circlist *list, struct ddsrt_circlist_elem *elem);
-void ddsrt_circlist_remove (struct ddsrt_circlist *list, struct ddsrt_circlist_elem *elem);
-struct ddsrt_circlist_elem *ddsrt_circlist_oldest (const struct ddsrt_circlist *list);
-struct ddsrt_circlist_elem *ddsrt_circlist_latest (const struct ddsrt_circlist *list);
+void ddsrt_circlist_init(struct ddsrt_circlist * list);
+bool ddsrt_circlist_isempty(const struct ddsrt_circlist * list);
+void ddsrt_circlist_append(struct ddsrt_circlist * list, struct ddsrt_circlist_elem * elem);
+void ddsrt_circlist_remove(struct ddsrt_circlist * list, struct ddsrt_circlist_elem * elem);
+struct ddsrt_circlist_elem * ddsrt_circlist_oldest(const struct ddsrt_circlist * list);
+struct ddsrt_circlist_elem * ddsrt_circlist_latest(const struct ddsrt_circlist * list);
 
 #endif /* DDSRT_CIRCLIST_H */

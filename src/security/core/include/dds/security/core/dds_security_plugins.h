@@ -10,24 +10,25 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 
-
 #ifndef SECURITY_CORE_PLUGINS_H_
 #define SECURITY_CORE_PLUGINS_H_
 
 #include <stdint.h>
-#include "dds/export.h"
-#include "dds/ddsrt/retcode.h"
-#include "dds/ddsrt/dynlib.h"
+
 #include "dds/ddsi/ddsi_domaingv.h"
+#include "dds/ddsrt/dynlib.h"
+#include "dds/ddsrt/retcode.h"
+#include "dds/export.h"
 #include "dds/security/dds_security_api.h"
 
 struct ddsrt_log_cfg;
 
-typedef struct dds_security_plugin {
+typedef struct dds_security_plugin
+{
   ddsrt_dynlib_t lib_handle;
   plugin_init func_init;
   plugin_finalize func_finalize;
-  char *name;
+  char * name;
 } dds_security_plugin;
 
 /* we are using our own security plugin configuration (not certificates etc)
@@ -36,26 +37,31 @@ typedef struct dds_security_plugin {
  * A configuration data type is needed because there are traverses to properties several times
  */
 
-typedef struct dds_security_plugin_config {
-  char *library_path;
-  char *library_init;
-  char *library_finalize;
+typedef struct dds_security_plugin_config
+{
+  char * library_path;
+  char * library_init;
+  char * library_finalize;
 } dds_security_plugin_config;
 
-typedef struct dds_security_plugin_suite_config{
+typedef struct dds_security_plugin_suite_config
+{
   dds_security_plugin_config authentication;
   dds_security_plugin_config cryptography;
   dds_security_plugin_config access_control;
 } dds_security_plugin_suite_config;
 
-dds_return_t dds_security_plugin_release(const dds_security_plugin *security_plugin, void *context);
-dds_return_t dds_security_check_plugin_configuration(const dds_security_plugin_suite_config *security_suite_config, struct ddsi_domaingv *gv);
-dds_return_t dds_security_load_security_library(const dds_security_plugin_config *plugin_config, dds_security_plugin *security_plugin,
-    void **security_plugin_context, struct ddsi_domaingv *gv);
+dds_return_t dds_security_plugin_release(
+  const dds_security_plugin * security_plugin, void * context);
+dds_return_t dds_security_check_plugin_configuration(
+  const dds_security_plugin_suite_config * security_suite_config, struct ddsi_domaingv * gv);
+dds_return_t dds_security_load_security_library(
+  const dds_security_plugin_config * plugin_config, dds_security_plugin * security_plugin,
+  void ** security_plugin_context, struct ddsi_domaingv * gv);
 dds_return_t dds_security_verify_plugin_functions(
-    dds_security_authentication *authentication_context, dds_security_plugin *auth_plugin,
-    dds_security_cryptography *crypto_context, dds_security_plugin *crypto_plugin,
-    dds_security_access_control *access_control_context, dds_security_plugin *ac_plugin,
-    struct ddsi_domaingv *gv);
+  dds_security_authentication * authentication_context, dds_security_plugin * auth_plugin,
+  dds_security_cryptography * crypto_context, dds_security_plugin * crypto_plugin,
+  dds_security_access_control * access_control_context, dds_security_plugin * ac_plugin,
+  struct ddsi_domaingv * gv);
 
 #endif /* SECURITY_CORE_PLUGINS_H_ */

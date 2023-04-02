@@ -17,8 +17,7 @@
 #include "dds/ddsrt/sync.h"
 
 #if defined(__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
 #ifdef DDS_HAS_SHM
@@ -26,47 +25,88 @@ extern "C"
 #include "iceoryx_binding_c/publisher.h"
 #include "iceoryx_binding_c/subscriber.h"
 
-  typedef enum dds_iox_allocator_kind
-  {
-    DDS_IOX_ALLOCATOR_KIND_FINI,
-    DDS_IOX_ALLOCATOR_KIND_NONE, /* use heap */
-    DDS_IOX_ALLOCATOR_KIND_PUBLISHER,
-    DDS_IOX_ALLOCATOR_KIND_SUBSCRIBER
-  } dds_iox_allocator_kind_t;
+/**
+ * @brief dds_iox_allocator_kind 枚举类型定义了不同的分配器类型。
+ *        (The dds_iox_allocator_kind enumeration defines different types of allocators.)
+ */
+typedef enum dds_iox_allocator_kind {
+  DDS_IOX_ALLOCATOR_KIND_FINI,      /**< 分配器已完成。 (Allocator is finished.) */
+  DDS_IOX_ALLOCATOR_KIND_NONE,      /**< 使用堆。 (Use heap.) */
+  DDS_IOX_ALLOCATOR_KIND_PUBLISHER, /**< 发布者分配器。 (Publisher allocator.) */
+  DDS_IOX_ALLOCATOR_KIND_SUBSCRIBER /**< 订阅者分配器。 (Subscriber allocator.) */
+} dds_iox_allocator_kind_t;
 
-  typedef struct dds_iox_allocator
-  {
-    enum dds_iox_allocator_kind kind;
-    union
-    {
-      iox_pub_t pub;
-      iox_sub_t sub;
-    } ref;
-    ddsrt_mutex_t mutex;
-  } dds_iox_allocator_t;
+/**
+ * @brief dds_iox_allocator 结构体定义了一个分配器，包含分配器类型、引用和互斥锁。
+ *        (The dds_iox_allocator structure defines an allocator with a type, reference, and mutex.)
+ */
+typedef struct dds_iox_allocator {
+  enum dds_iox_allocator_kind kind; /**< 分配器类型。 (Allocator type.) */
+  union {
+    iox_pub_t pub;                  /**< 发布者引用。 (Publisher reference.) */
+    iox_sub_t sub;                  /**< 订阅者引用。 (Subscriber reference.) */
+  } ref;
+  ddsrt_mutex_t mutex;              /**< 互斥锁。 (Mutex.) */
+} dds_iox_allocator_t;
 
-  DDSRT_STATIC_ASSERT(sizeof(dds_iox_allocator_t) <= sizeof(dds_data_allocator_t));
+DDSRT_STATIC_ASSERT(sizeof(dds_iox_allocator_t) <= sizeof(dds_data_allocator_t));
 
-#endif // DDS_HAS_SHM
+#endif  // DDS_HAS_SHM
 
-  struct dds_writer;
-  struct dds_reader;
+struct dds_writer;
+struct dds_reader;
 
-  /** @component data_alloc */
-  dds_return_t dds__writer_data_allocator_init(const struct dds_writer *wr, dds_data_allocator_t *data_allocator)
-      ddsrt_nonnull_all;
+/**
+ * @brief 初始化写入器数据分配器。
+ *        (Initialize the writer data allocator.)
+ *
+ * @param[in] wr 指向 dds_writer 结构体的指针。 (Pointer to the dds_writer structure.)
+ * @param[out] data_allocator 指向 dds_data_allocator_t 结构体的指针。 (Pointer to the
+ * dds_data_allocator_t structure.)
+ * @return 成功返回 DDS_RETCODE_OK，否则返回错误代码。 (Returns DDS_RETCODE_OK on success, otherwise
+ * returns an error code.)
+ */
+dds_return_t dds__writer_data_allocator_init(
+    const struct dds_writer* wr, dds_data_allocator_t* data_allocator) ddsrt_nonnull_all;
 
-  /** @component data_alloc */
-  dds_return_t dds__writer_data_allocator_fini(const struct dds_writer *wr, dds_data_allocator_t *data_allocator)
-      ddsrt_nonnull_all;
+/**
+ * @brief 释放写入器数据分配器。
+ *        (Finalize the writer data allocator.)
+ *
+ * @param[in] wr 指向 dds_writer 结构体的指针。 (Pointer to the dds_writer structure.)
+ * @param[out] data_allocator 指向 dds_data_allocator_t 结构体的指针。 (Pointer to the
+ * dds_data_allocator_t structure.)
+ * @return 成功返回 DDS_RETCODE_OK，否则返回错误代码。 (Returns DDS_RETCODE_OK on success, otherwise
+ * returns an error code.)
+ */
+dds_return_t dds__writer_data_allocator_fini(
+    const struct dds_writer* wr, dds_data_allocator_t* data_allocator) ddsrt_nonnull_all;
 
-  /** @component data_alloc */
-  dds_return_t dds__reader_data_allocator_init(const struct dds_reader *wr, dds_data_allocator_t *data_allocator)
-      ddsrt_nonnull_all;
+/**
+ * @brief 初始化读取器数据分配器。
+ *        (Initialize the reader data allocator.)
+ *
+ * @param[in] wr 指向 dds_reader 结构体的指针。 (Pointer to the dds_reader structure.)
+ * @param[out] data_allocator 指向 dds_data_allocator_t 结构体的指针。 (Pointer to the
+ * dds_data_allocator_t structure.)
+ * @return 成功返回 DDS_RETCODE_OK，否则返回错误代码。 (Returns DDS_RETCODE_OK on success, otherwise
+ * returns an error code.)
+ */
+dds_return_t dds__reader_data_allocator_init(
+    const struct dds_reader* wr, dds_data_allocator_t* data_allocator) ddsrt_nonnull_all;
 
-  /** @component data_alloc */
-  dds_return_t dds__reader_data_allocator_fini(const struct dds_reader *wr, dds_data_allocator_t *data_allocator)
-      ddsrt_nonnull_all;
+/**
+ * @brief 释放读取器数据分配器。
+ *        (Finalize the reader data allocator.)
+ *
+ * @param[in] wr 指向 dds_reader 结构体的指针。 (Pointer to the dds_reader structure.)
+ * @param[out] data_allocator 指向 dds_data_allocator_t 结构体的指针。 (Pointer to the
+ * dds_data_allocator_t structure.)
+ * @return 成功返回 DDS_RETCODE_OK，否则返回错误代码。 (Returns DDS_RETCODE_OK on success, otherwise
+ * returns an error code.)
+ */
+dds_return_t dds__reader_data_allocator_fini(
+    const struct dds_reader* wr, dds_data_allocator_t* data_allocator) ddsrt_nonnull_all;
 
 #if defined(__cplusplus)
 }

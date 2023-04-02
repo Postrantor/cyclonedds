@@ -15,8 +15,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "dds/export.h"
 #include "dds/ddsrt/attributes.h"
+#include "dds/export.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -25,23 +25,16 @@ extern "C" {
 /**
  * @brief Write a formatted string to a newly allocated buffer.
  */
-DDS_EXPORT int
-ddsrt_vasprintf(
-  char **strp,
-  const char *fmt,
-  va_list ap);
+DDS_EXPORT int ddsrt_vasprintf(char ** strp, const char * fmt, va_list ap);
 
 /**
  * @brief Write a formatted string to a newly allocated buffer.
  */
-DDS_EXPORT int
-ddsrt_asprintf(
-  char **strp,
-  const char *fmt,
-  ...) ddsrt_attribute_format ((printf, 2, 3));
+DDS_EXPORT int ddsrt_asprintf(char ** strp, const char * fmt, ...)
+  ddsrt_attribute_format((printf, 2, 3));
 
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
-extern int snprintf(char *s, size_t n, const char *format, ...);
+extern int snprintf(char * s, size_t n, const char * format, ...);
 #endif
 
 #if defined(__cplusplus)

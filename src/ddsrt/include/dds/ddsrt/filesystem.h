@@ -14,10 +14,10 @@
 
 #include <stddef.h>
 
-#include "dds/export.h"
 #include "dds/config.h"
 #include "dds/ddsrt/retcode.h"
 #include "dds/ddsrt/time.h"
+#include "dds/export.h"
 
 #if DDSRT_HAVE_FILESYSTEM
 
@@ -27,19 +27,20 @@
 #include "dds/ddsrt/filesystem/posix.h"
 #endif
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-struct ddsrt_stat {
+struct ddsrt_stat
+{
   ddsrt_mode_t stat_mode;
   size_t stat_size;
-  dds_time_t  stat_mtime;
+  dds_time_t stat_mtime;
 };
 
-
-struct ddsrt_dirent {
-    char d_name[DDSRT_PATH_MAX + 1];
+struct ddsrt_dirent
+{
+  char d_name[DDSRT_PATH_MAX + 1];
 };
 
 /** \brief opendir wrapper
@@ -54,7 +55,7 @@ struct ddsrt_dirent {
  * - DDS_RETCODE_ERROR if 'name' could not
  *     be found or is not a directory.
  */
-DDS_EXPORT dds_return_t ddsrt_opendir(const char *name, ddsrt_dir_handle_t *dir);
+DDS_EXPORT dds_return_t ddsrt_opendir(const char * name, ddsrt_dir_handle_t * dir);
 
 /** \brief closedir wrapper
  *
@@ -81,7 +82,7 @@ DDS_EXPORT dds_return_t ddsrt_closedir(ddsrt_dir_handle_t d);
  * - return DDS_RETCODE_OK if next directory is found
  * - return DDS_RETCODE_ERROR if no more directories are found.
  */
-DDS_EXPORT dds_return_t ddsrt_readdir(ddsrt_dir_handle_t d, struct ddsrt_dirent *direntp);
+DDS_EXPORT dds_return_t ddsrt_readdir(ddsrt_dir_handle_t d, struct ddsrt_dirent * direntp);
 
 /** \brief stat wrapper
  *
@@ -94,7 +95,7 @@ DDS_EXPORT dds_return_t ddsrt_readdir(ddsrt_dir_handle_t d, struct ddsrt_dirent 
  * - return DDS_RETCODE_OK if stat is successful
  * - return DDS_RETCODE_ERROR if stat fails.
  */
-DDS_EXPORT dds_return_t ddsrt_stat(const char *path, struct ddsrt_stat *buf);
+DDS_EXPORT dds_return_t ddsrt_stat(const char * path, struct ddsrt_stat * buf);
 
 /** \brief Transforms the given filepath into a platform specific filepath.
  *
@@ -109,19 +110,19 @@ DDS_EXPORT dds_return_t ddsrt_stat(const char *path, struct ddsrt_stat *buf);
  * - returns normalized filepath conform current platform
  * - return NULL if out of memory.
  */
-DDS_EXPORT char* ddsrt_file_normalize(const char *filepath);
+DDS_EXPORT char * ddsrt_file_normalize(const char * filepath);
 
 /** \brief Get file seperator
  *
  * Possible Results:
  * - "<file-seperator-string>"
  */
-DDS_EXPORT const char* ddsrt_file_sep(void);
+DDS_EXPORT const char * ddsrt_file_sep(void);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 
-#endif // DDRT_HAVE_FILESYSTEM
+#endif  // DDRT_HAVE_FILESYSTEM
 
-#endif // DDSRT_FILESYSTEM_H
+#endif  // DDSRT_FILESYSTEM_H

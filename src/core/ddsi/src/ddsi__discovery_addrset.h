@@ -12,13 +12,14 @@
 #ifndef DDSI__DISCOVERY_ADDRSET_H
 #define DDSI__DISCOVERY_ADDRSET_H
 
-#include "dds/ddsi/ddsi_domaingv.h" // FIXME: MAX_XMIT_CONNS
+#include "dds/ddsi/ddsi_domaingv.h"  // FIXME: MAX_XMIT_CONNS
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-typedef struct ddsi_interface_set {
+typedef struct ddsi_interface_set
+{
   bool xs[MAX_XMIT_CONNS];
 } ddsi_interface_set_t;
 
@@ -26,16 +27,14 @@ typedef struct ddsi_interface_set {
  * @component discovery
  * 
  * @param[out] intfs interface set to initialize */
-void ddsi_interface_set_init (ddsi_interface_set_t *intfs)
-  ddsrt_nonnull_all;
+void ddsi_interface_set_init(ddsi_interface_set_t * intfs) ddsrt_nonnull_all;
 
 /** @brief Whether multicast locators are to be included in discovery information for this domain
  * @component discovery
  *
  * @param[in] gv domain
  * @return true iff multicast locators are to be included */
-bool ddsi_include_multicast_locator_in_discovery (const struct ddsi_domaingv *gv)
-  ddsrt_nonnull_all;
+bool ddsi_include_multicast_locator_in_discovery(const struct ddsi_domaingv * gv) ddsrt_nonnull_all;
 
 /** @brief Constructs a new address set from uni- and multicast locators received in SPDP or SEDP
  * @component discovery
@@ -65,10 +64,13 @@ bool ddsi_include_multicast_locator_in_discovery (const struct ddsi_domaingv *gv
  * @param[in,out] inherited_intfs set of applicable interfaces, may be NULL
  *
  * @return new addrset, possibly empty */
-struct ddsi_addrset *ddsi_addrset_from_locatorlists (const struct ddsi_domaingv *gv, const ddsi_locators_t *uc, const ddsi_locators_t *mc, const ddsi_locator_t *srcloc, const ddsi_interface_set_t *inherited_intfs)
-  ddsrt_attribute_warn_unused_result ddsrt_nonnull((1,2,3,4));
+struct ddsi_addrset * ddsi_addrset_from_locatorlists(
+  const struct ddsi_domaingv * gv, const ddsi_locators_t * uc, const ddsi_locators_t * mc,
+  const ddsi_locator_t * srcloc,
+  const ddsi_interface_set_t * inherited_intfs) ddsrt_attribute_warn_unused_result
+  ddsrt_nonnull((1, 2, 3, 4));
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

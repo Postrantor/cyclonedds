@@ -12,12 +12,12 @@
 #include "test_common.h"
 #include "test_oneliner.h"
 
-CU_Test (ddsc_asymdisconnect, reader_keeps_nacking)
+CU_Test(ddsc_asymdisconnect, reader_keeps_nacking)
 {
   // Override the default rescheduling delay to speed things up a bit
-  const char *config = "<Internal><AutoReschedNackDelay>100ms</AutoReschedNackDelay></Internal>";
-  
-  const int result = test_oneliner_with_config (
+  const char * config = "<Internal><AutoReschedNackDelay>100ms</AutoReschedNackDelay></Internal>";
+
+  const int result = test_oneliner_with_config(
     "da sm r(r=r,d=tl) pm w'(r=r,d=tl)"
     "  ?sm r ?pm w'"
     // given a matched reader/writer pair with a network in between
@@ -62,7 +62,7 @@ CU_Test (ddsc_asymdisconnect, reader_keeps_nacking)
     //   deaf! P ?sm r hearing! P ?sm r // dis-/reconnect
     //   ?da r take{(1,0,0)} r
     // with fix present:
-    "  ?da r take{(1,0,0)} r"
-    , config);
-  CU_ASSERT (result > 0);
+    "  ?da r take{(1,0,0)} r",
+    config);
+  CU_ASSERT(result > 0);
 }

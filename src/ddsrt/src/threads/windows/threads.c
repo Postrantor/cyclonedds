@@ -11,11 +11,11 @@
  */
 #include <assert.h>
 
-#include "threads_priv.h"
 #include "dds/ddsrt/heap.h"
 #include "dds/ddsrt/log.h"
-#include "dds/ddsrt/string.h"
 #include "dds/ddsrt/misc.h"
+#include "dds/ddsrt/string.h"
+#include "threads_priv.h"
 
 /* tlhelp32 for ddsrt_thread_list */
 #include <stdio.h>
@@ -26,65 +26,60 @@
    least in some setups the linker can't find the symbols in kernel32.lib, even though kernel32.dll
    exports them.  (Perhaps it is just a broken installation, who knows ...)  Looking them up
    dynamically works fine.  */
-typedef HRESULT (WINAPI *SetThreadDescription_t) (HANDLE hThread, PCWSTR lpThreadDescription);
-typedef HRESULT (WINAPI *GetThreadDescription_t) (HANDLE hThread, PWSTR *ppszThreadDescription);
+typedef HRESULT(WINAPI * SetThreadDescription_t)(HANDLE hThread, PCWSTR lpThreadDescription);
+typedef HRESULT(WINAPI * GetThreadDescription_t)(HANDLE hThread, PWSTR * ppszThreadDescription);
 static volatile SetThreadDescription_t SetThreadDescription_ptr = 0;
 static volatile GetThreadDescription_t GetThreadDescription_ptr = 0;
 
-static HRESULT WINAPI SetThreadDescription_dummy (HANDLE hThread, PCWSTR lpThreadDescription)
+static HRESULT WINAPI SetThreadDescription_dummy(HANDLE hThread, PCWSTR lpThreadDescription)
 {
-  (void) hThread;
-  (void) lpThreadDescription;
+  (void)hThread;
+  (void)lpThreadDescription;
   return E_FAIL;
 }
 
-static HRESULT WINAPI GetThreadDescription_dummy (HANDLE hThread, PWSTR *ppszThreadDescription)
+static HRESULT WINAPI GetThreadDescription_dummy(HANDLE hThread, PWSTR * ppszThreadDescription)
 {
-  (void) hThread;
-  (void) ppszThreadDescription;
+  (void)hThread;
+  (void)ppszThreadDescription;
   return E_FAIL;
 }
 
-static void getset_threaddescription_addresses (void)
+static void getset_threaddescription_addresses(void)
 {
   /* Rely on MSVC's interpretation of the meaning of volatile
      to order checking & setting the pointers */
-  if (GetThreadDescription_ptr == 0)
-  {
+  if (GetThreadDescription_ptr == 0) {
     HMODULE mod;
     FARPROC p;
-    if (!GetModuleHandleExA (GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, "kernel32.dll", &mod))
-    {
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, "kernel32.dll", &mod)) {
       SetThreadDescription_ptr = SetThreadDescription_dummy;
       GetThreadDescription_ptr = GetThreadDescription_dummy;
-    }
-    else
-    {
-      DDSRT_WARNING_GNUC_OFF(cast-function-type)
-      if ((p = GetProcAddress (mod, "SetThreadDescription")) != 0)
-        SetThreadDescription_ptr = (SetThreadDescription_t) p;
+    } else {
+      DDSRT_WARNING_GNUC_OFF(cast - function - type)
+      if ((p = GetProcAddress(mod, "SetThreadDescription")) != 0)
+        SetThreadDescription_ptr = (SetThreadDescription_t)p;
       else
         SetThreadDescription_ptr = SetThreadDescription_dummy;
-      if ((p = GetProcAddress (mod, "GetThreadDescription")) != 0)
-        GetThreadDescription_ptr = (GetThreadDescription_t) p;
+      if ((p = GetProcAddress(mod, "GetThreadDescription")) != 0)
+        GetThreadDescription_ptr = (GetThreadDescription_t)p;
       else
         GetThreadDescription_ptr = GetThreadDescription_dummy;
-      DDSRT_WARNING_GNUC_ON(cast-function-type)
+      DDSRT_WARNING_GNUC_ON(cast - function - type)
     }
   }
 }
 
-typedef struct {
-  char *name;
+typedef struct
+{
+  char * name;
   ddsrt_thread_routine_t routine;
-  void *arg;
+  void * arg;
 } thread_context_t;
 
-static uint32_t
-os_startRoutineWrapper(
-  void *threadContext)
+static uint32_t os_startRoutineWrapper(void * threadContext)
 {
-  thread_context_t *context = threadContext;
+  thread_context_t * context = threadContext;
   uint32_t resultValue = 0;
 
   ddsrt_thread_setname(context->name);
@@ -101,16 +96,12 @@ os_startRoutineWrapper(
   return resultValue;
 }
 
-dds_return_t
-ddsrt_thread_create(
-  ddsrt_thread_t *thrptr,
-  const char *name,
-  const ddsrt_threadattr_t *attr,
-  ddsrt_thread_routine_t start_routine,
-  void *arg)
+dds_return_t ddsrt_thread_create(
+  ddsrt_thread_t * thrptr, const char * name, const ddsrt_threadattr_t * attr,
+  ddsrt_thread_routine_t start_routine, void * arg)
 {
   ddsrt_thread_t thr;
-  thread_context_t *ctx;
+  thread_context_t * ctx;
   int32_t prio;
 
   assert(thrptr != NULL);
@@ -118,21 +109,16 @@ ddsrt_thread_create(
   assert(attr != NULL);
   assert(start_routine != NULL);
 
-  if ((ctx = ddsrt_malloc(sizeof(*ctx))) == NULL ||
-      (ctx->name = ddsrt_strdup(name)) == NULL)
+  if ((ctx = ddsrt_malloc(sizeof(*ctx))) == NULL || (ctx->name = ddsrt_strdup(name)) == NULL)
     return DDS_RETCODE_OUT_OF_RESOURCES;
 
   ctx->routine = start_routine;
   ctx->arg = arg;
-  thr.handle = CreateThread(NULL,
-    (SIZE_T)attr->stackSize,
-    (LPTHREAD_START_ROUTINE)os_startRoutineWrapper,
-    (LPVOID)ctx,
-    (DWORD)0,
-    &thr.tid);
+  thr.handle = CreateThread(
+    NULL, (SIZE_T)attr->stackSize, (LPTHREAD_START_ROUTINE)os_startRoutineWrapper, (LPVOID)ctx,
+    (DWORD)0, &thr.tid);
 
-  if (thr.handle == NULL)
-    return DDS_RETCODE_ERROR;
+  if (thr.handle == NULL) return DDS_RETCODE_ERROR;
 
   *thrptr = thr;
 
@@ -171,23 +157,11 @@ ddsrt_thread_create(
   return DDS_RETCODE_OK;
 }
 
-ddsrt_tid_t
-ddsrt_gettid(void)
-{
-  return GetCurrentThreadId();
-}
+ddsrt_tid_t ddsrt_gettid(void) { return GetCurrentThreadId(); }
 
+ddsrt_tid_t ddsrt_gettid_for_thread(ddsrt_thread_t thread) { return (ddsrt_tid_t)thread.tid; }
 
-ddsrt_tid_t
-ddsrt_gettid_for_thread( ddsrt_thread_t thread)
-{
-  return (ddsrt_tid_t) thread.tid;
-
-}
-
-ddsrt_thread_t
-ddsrt_thread_self(
-    void)
+ddsrt_thread_t ddsrt_thread_self(void)
 {
   ddsrt_thread_t thr;
   thr.tid = GetCurrentThreadId();
@@ -196,49 +170,43 @@ ddsrt_thread_self(
   return thr;
 }
 
-bool ddsrt_thread_equal(ddsrt_thread_t a, ddsrt_thread_t b)
-{
-  return a.tid == b.tid;
-}
+bool ddsrt_thread_equal(ddsrt_thread_t a, ddsrt_thread_t b) { return a.tid == b.tid; }
 
 /* ES: dds2086: Close handle should not be performed here. Instead the handle
  * should not be closed until the os_threadWaitExit(...) call is called.
  * CloseHandle (threadHandle);
  */
-dds_return_t
-ddsrt_thread_join(
-  ddsrt_thread_t thread,
-  uint32_t *thread_result)
+dds_return_t ddsrt_thread_join(ddsrt_thread_t thread, uint32_t * thread_result)
 {
-    DWORD tr;
-    DWORD waitres;
-    BOOL status;
+  DWORD tr;
+  DWORD waitres;
+  BOOL status;
 
-    if (thread.handle == NULL) {
-        return DDS_RETCODE_BAD_PARAMETER;
-    }
+  if (thread.handle == NULL) {
+    return DDS_RETCODE_BAD_PARAMETER;
+  }
 
-    waitres = WaitForSingleObject(thread.handle, INFINITE);
-    if (waitres != WAIT_OBJECT_0) {
-        //err = GetLastError();
-        //OS_DEBUG_1("os_threadWaitExit", "WaitForSingleObject Failed %d", err);
-        return DDS_RETCODE_ERROR;
-    }
+  waitres = WaitForSingleObject(thread.handle, INFINITE);
+  if (waitres != WAIT_OBJECT_0) {
+    //err = GetLastError();
+    //OS_DEBUG_1("os_threadWaitExit", "WaitForSingleObject Failed %d", err);
+    return DDS_RETCODE_ERROR;
+  }
 
-    status = GetExitCodeThread(thread.handle, &tr);
-    if (!status) {
-       //err = GetLastError();
-       //OS_DEBUG_1("os_threadWaitExit", "GetExitCodeThread Failed %d", err);
-       return DDS_RETCODE_ERROR;
-    }
+  status = GetExitCodeThread(thread.handle, &tr);
+  if (!status) {
+    //err = GetLastError();
+    //OS_DEBUG_1("os_threadWaitExit", "GetExitCodeThread Failed %d", err);
+    return DDS_RETCODE_ERROR;
+  }
 
-    assert(tr != STILL_ACTIVE);
-    if (thread_result) {
-        *thread_result = tr;
-    }
-    CloseHandle(thread.handle);
+  assert(tr != STILL_ACTIVE);
+  if (thread_result) {
+    *thread_result = tr;
+  }
+  CloseHandle(thread.handle);
 
-    return DDS_RETCODE_OK;
+  return DDS_RETCODE_OK;
 }
 
 /* Thread names on Linux are limited to 16 bytes, no reason to provide
@@ -248,10 +216,7 @@ ddsrt_thread_join(
    the logging code and the overhead there matters. */
 static ddsrt_thread_local char thread_name[16] = "";
 
-size_t
-ddsrt_thread_getname(
-  char *__restrict str,
-  size_t size)
+size_t ddsrt_thread_getname(char * __restrict str, size_t size)
 {
   size_t cnt;
 
@@ -259,7 +224,7 @@ ddsrt_thread_getname(
 
   if ((cnt = ddsrt_strlcpy(str, thread_name, size)) == 0) {
     ddsrt_tid_t tid = ddsrt_gettid();
-    (void)snprintf(str, size, "%"PRIdTID, tid);
+    (void)snprintf(str, size, "%" PRIdTID, tid);
   }
 
   return cnt;
@@ -276,37 +241,33 @@ ddsrt_thread_getname(
  * regular libraries.
  */
 #ifndef __MINGW32__
-static const DWORD MS_VC_EXCEPTION=0x406D1388;
+static const DWORD MS_VC_EXCEPTION = 0x406D1388;
 #endif
 
-#pragma pack(push,8)
+#pragma pack(push, 8)
 typedef struct tagTHREADNAME_INFO
 {
-   DWORD dwType; /** Must be 0x1000. */
-   LPCSTR szName; /** Pointer to name (in user addr space). */
-   DWORD dwThreadID; /** Thread ID (-1=caller thread). */
-   DWORD dwFlags; /**  Reserved for future use, must be zero. */
+  DWORD dwType;     /** Must be 0x1000. */
+  LPCSTR szName;    /** Pointer to name (in user addr space). */
+  DWORD dwThreadID; /** Thread ID (-1=caller thread). */
+  DWORD dwFlags;    /**  Reserved for future use, must be zero. */
 } THREADNAME_INFO;
 #pragma pack(pop)
 
-void
-ddsrt_thread_setname(
-  const char *__restrict name)
+void ddsrt_thread_setname(const char * __restrict name)
 {
-  assert (name != NULL);
-  getset_threaddescription_addresses ();
-  if (SetThreadDescription_ptr != SetThreadDescription_dummy)
-  {
-    size_t size = strlen (name) + 1;
-    wchar_t *wname = malloc (size * sizeof (*wname));
+  assert(name != NULL);
+  getset_threaddescription_addresses();
+  if (SetThreadDescription_ptr != SetThreadDescription_dummy) {
+    size_t size = strlen(name) + 1;
+    wchar_t * wname = malloc(size * sizeof(*wname));
     size_t cnt = 0;
-    mbstowcs_s (&cnt, wname, size, name, _TRUNCATE);
-    SetThreadDescription_ptr (GetCurrentThread (), wname);
-    free (wname);
+    mbstowcs_s(&cnt, wname, size, name, _TRUNCATE);
+    SetThreadDescription_ptr(GetCurrentThread(), wname);
+    free(wname);
   }
 #ifndef __MINGW32__
-  else
-  {
+  else {
     THREADNAME_INFO info;
     info.dwType = 0x1000;
     info.szName = name;
@@ -316,80 +277,65 @@ ddsrt_thread_setname(
     /* Empty try/except that catches everything on purpose to set the thread
        name. See: http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx. */
 #pragma warning(push)
-#pragma warning(disable: 6320 6322)
-    __try
-    {
-        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info);
-    }
-    __except(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Suppress warnings. */
+#pragma warning(disable : 6320 6322)
+    __try {
+      RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR *)&info);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+      /* Suppress warnings. */
     }
 #pragma warning(pop)
   }
 #endif
-  (void)ddsrt_strlcpy (thread_name, name, sizeof (thread_name));
+  (void)ddsrt_strlcpy(thread_name, name, sizeof(thread_name));
 }
 
-dds_return_t
-ddsrt_thread_list (
-  ddsrt_thread_list_id_t * __restrict tids,
-  size_t size)
+dds_return_t ddsrt_thread_list(ddsrt_thread_list_id_t * __restrict tids, size_t size)
 {
   HANDLE hThreadSnap;
   THREADENTRY32 te32;
-  const DWORD pid = GetCurrentProcessId ();
+  const DWORD pid = GetCurrentProcessId();
   int32_t n = 0;
 
-  if ((hThreadSnap = CreateToolhelp32Snapshot (TH32CS_SNAPTHREAD, 0)) == INVALID_HANDLE_VALUE)
+  if ((hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0)) == INVALID_HANDLE_VALUE)
     return 0;
 
-  memset (&te32, 0, sizeof (te32));
-  te32.dwSize = sizeof (THREADENTRY32);
-  if (!Thread32First (hThreadSnap, &te32))
-  {
-    CloseHandle (hThreadSnap);
+  memset(&te32, 0, sizeof(te32));
+  te32.dwSize = sizeof(THREADENTRY32);
+  if (!Thread32First(hThreadSnap, &te32)) {
+    CloseHandle(hThreadSnap);
     return 0;
   }
 
   do {
-    if (te32.th32OwnerProcessID != pid)
-      continue;
-    if ((size_t) n < size)
-    {
+    if (te32.th32OwnerProcessID != pid) continue;
+    if ((size_t)n < size) {
       /* get a handle to the thread, not counting the thread the thread if no such
          handle is obtainable */
-      if ((tids[n] = OpenThread (THREAD_QUERY_INFORMATION, FALSE, te32.th32ThreadID)) == NULL)
+      if ((tids[n] = OpenThread(THREAD_QUERY_INFORMATION, FALSE, te32.th32ThreadID)) == NULL)
         continue;
     }
     n++;
-  } while (Thread32Next (hThreadSnap, &te32));
-  CloseHandle (hThreadSnap);
+  } while (Thread32Next(hThreadSnap, &te32));
+  CloseHandle(hThreadSnap);
   return n;
 }
 
-dds_return_t
-ddsrt_thread_getname_anythread (
-  ddsrt_thread_list_id_t tid,
-  char * __restrict name,
-  size_t size)
+dds_return_t ddsrt_thread_getname_anythread(
+  ddsrt_thread_list_id_t tid, char * __restrict name, size_t size)
 {
-  getset_threaddescription_addresses ();
-  if (size > 0)
-  {
+  getset_threaddescription_addresses();
+  if (size > 0) {
     PWSTR data;
-    HRESULT hr = GetThreadDescription_ptr (tid, &data);
-    if (! SUCCEEDED (hr))
+    HRESULT hr = GetThreadDescription_ptr(tid, &data);
+    if (!SUCCEEDED(hr))
       name[0] = 0;
-    else
-    {
+    else {
       size_t cnt;
-      wcstombs_s (&cnt, name, size, data, _TRUNCATE);
-      LocalFree (data);
+      wcstombs_s(&cnt, name, size, data, _TRUNCATE);
+      LocalFree(data);
     }
-    if (name[0] == 0)
-    {
-      snprintf (name, sizeof (name), "%"PRIdTID, (ddsrt_tid_t)GetThreadId (tid));
+    if (name[0] == 0) {
+      snprintf(name, sizeof(name), "%" PRIdTID, (ddsrt_tid_t)GetThreadId(tid));
     }
   }
   return DDS_RETCODE_OK;
@@ -400,35 +346,30 @@ ddsrt_thread_getname_anythread (
    which is destroyed before the destructor is invoked */
 static DWORD cleanup = TLS_OUT_OF_INDEXES;
 
-dds_return_t ddsrt_thread_cleanup_push(void (*routine)(void *), void *arg)
+dds_return_t ddsrt_thread_cleanup_push(void (*routine)(void *), void * arg)
 {
-  thread_cleanup_t *tail;
+  thread_cleanup_t * tail;
 
   assert(routine != NULL);
   assert(cleanup != TLS_OUT_OF_INDEXES);
 
-  if (!(tail = ddsrt_malloc(sizeof(thread_cleanup_t))))
-    return DDS_RETCODE_OUT_OF_RESOURCES;
+  if (!(tail = ddsrt_malloc(sizeof(thread_cleanup_t)))) return DDS_RETCODE_OUT_OF_RESOURCES;
   tail->prev = TlsGetValue(cleanup);
   tail->routine = routine;
   tail->arg = arg;
-  if (TlsSetValue(cleanup, tail))
-    return DDS_RETCODE_OK;
+  if (TlsSetValue(cleanup, tail)) return DDS_RETCODE_OK;
   ddsrt_free(tail);
   return DDS_RETCODE_OUT_OF_RESOURCES;
 }
 
 dds_return_t ddsrt_thread_cleanup_pop(int execute)
 {
-  thread_cleanup_t *tail;
+  thread_cleanup_t * tail;
 
   assert(cleanup != TLS_OUT_OF_INDEXES);
-  if (!(tail = TlsGetValue(cleanup)))
-    return DDS_RETCODE_OK;
-  if (!TlsSetValue(cleanup, tail->prev))
-    return DDS_RETCODE_OUT_OF_RESOURCES;
-  if (execute)
-    tail->routine(tail->arg);
+  if (!(tail = TlsGetValue(cleanup))) return DDS_RETCODE_OK;
+  if (!TlsSetValue(cleanup, tail->prev)) return DDS_RETCODE_OUT_OF_RESOURCES;
+  if (execute) tail->routine(tail->arg);
   ddsrt_free(tail);
   return DDS_RETCODE_OK;
 }
@@ -439,10 +380,8 @@ static void thread_cleanup_fini(void)
 
   assert(cleanup != TLS_OUT_OF_INDEXES);
   tail = TlsGetValue(cleanup);
-  if (!TlsSetValue(cleanup, NULL))
-    return;
-  while (tail != NULL)
-  {
+  if (!TlsSetValue(cleanup, NULL)) return;
+  while (tail != NULL) {
     prev = tail->prev;
     assert(tail->routine != NULL);
     tail->routine(tail->arg);
@@ -455,10 +394,8 @@ void ddsrt_thread_init(uint32_t reason)
 {
   assert(reason == DLL_PROCESS_ATTACH || reason == DLL_THREAD_ATTACH);
 
-  if (reason != DLL_PROCESS_ATTACH)
-    return;
-  if ((cleanup = TlsAlloc()) == TLS_OUT_OF_INDEXES)
-    abort();
+  if (reason != DLL_PROCESS_ATTACH) return;
+  if ((cleanup = TlsAlloc()) == TLS_OUT_OF_INDEXES) abort();
 }
 
 void ddsrt_thread_fini(uint32_t reason)
@@ -467,6 +404,5 @@ void ddsrt_thread_fini(uint32_t reason)
   assert(cleanup != TLS_OUT_OF_INDEXES);
 
   thread_cleanup_fini();
-  if (reason == DLL_PROCESS_DETACH)
-    TlsFree(cleanup);
+  if (reason == DLL_PROCESS_DETACH) TlsFree(cleanup);
 }

@@ -12,10 +12,10 @@
 #ifndef DDSI__DISCOVERY_TOPIC_H
 #define DDSI__DISCOVERY_TOPIC_H
 
-#include "dds/ddsi/ddsi_unused.h"
 #include "dds/ddsi/ddsi_domaingv.h"
+#include "dds/ddsi/ddsi_unused.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -32,17 +32,21 @@ struct ddsi_domaingv;
 struct ddsi_receiver_state;
 
 /** @component discovery */
-int ddsi_sedp_write_topic (struct ddsi_topic *tp, bool alive) ddsrt_nonnull_all;
+int ddsi_sedp_write_topic(struct ddsi_topic * tp, bool alive) ddsrt_nonnull_all;
 
 /** @component discovery */
-void ddsi_handle_sedp_alive_topic (const struct ddsi_receiver_state *rst, ddsi_seqno_t seq, ddsi_plist_t *datap /* note: potentially modifies datap */, const ddsi_guid_prefix_t *src_guid_prefix, ddsi_vendorid_t vendorid, ddsrt_wctime_t timestamp)
-  ddsrt_nonnull_all;
+void ddsi_handle_sedp_alive_topic(
+  const struct ddsi_receiver_state * rst, ddsi_seqno_t seq,
+  ddsi_plist_t * datap /* note: potentially modifies datap */,
+  const ddsi_guid_prefix_t * src_guid_prefix, ddsi_vendorid_t vendorid,
+  ddsrt_wctime_t timestamp) ddsrt_nonnull_all;
 
 /** @component discovery */
-void ddsi_handle_sedp_dead_topic (const struct ddsi_receiver_state *rst, ddsi_plist_t *datap, ddsrt_wctime_t timestamp)
-  ddsrt_nonnull_all;
+void ddsi_handle_sedp_dead_topic(
+  const struct ddsi_receiver_state * rst, ddsi_plist_t * datap,
+  ddsrt_wctime_t timestamp) ddsrt_nonnull_all;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

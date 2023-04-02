@@ -14,10 +14,7 @@
 
 #include "dds/ddsrt/sockets.h"
 
-dds_return_t
-ddsrt_gethostname(
-  char *name,
-  size_t len)
+dds_return_t ddsrt_gethostname(char * name, size_t len)
 {
   assert(name != NULL);
   assert(len <= INT_MAX);
@@ -28,7 +25,7 @@ ddsrt_gethostname(
     return DDS_RETCODE_OK;
   }
 
-  switch(WSAGetLastError()) {
+  switch (WSAGetLastError()) {
     case WSAEFAULT:
       return DDS_RETCODE_NOT_ENOUGH_SPACE;
     case WSAENETDOWN:

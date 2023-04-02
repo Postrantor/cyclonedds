@@ -10,24 +10,25 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 
-#include "dds/ddsrt/static_assert.h"
-#include "dds/ddsi/ddsi_protocol.h"
-#include "dds/ddsi/ddsi_log.h"
 #include "dds/ddsi/ddsi_domaingv.h"
-#include "ddsi__radmin.h"
-#include "ddsi__misc.h"
-#include "ddsi__xmsg.h"
-#include "ddsi__bitset.h"
+#include "dds/ddsi/ddsi_log.h"
+#include "dds/ddsi/ddsi_protocol.h"
+#include "dds/ddsrt/static_assert.h"
 #include "ddsi__acknack.h"
-#include "ddsi__entity_index.h"
+#include "ddsi__bitset.h"
 #include "ddsi__endpoint_match.h"
+#include "ddsi__entity_index.h"
+#include "ddsi__misc.h"
+#include "ddsi__radmin.h"
 #include "ddsi__security_omg.h"
-#include "ddsi__xqos.h"
 #include "ddsi__xevent.h"
+#include "ddsi__xmsg.h"
+#include "ddsi__xqos.h"
 
 #define ACK_REASON_IN_FLAGS 0
 
-static ddsi_seqno_t next_deliv_seq (const struct ddsi_proxy_writer *pwr, const ddsi_seqno_t next_seq)
+static ddsi_seqno_t next_deliv_seq(
+  const struct ddsi_proxy_writer * pwr, const ddsi_seqno_t next_seq)
 {
   /* We want to determine next_deliv_seq, the next sequence number to
      be delivered to all in-sync readers, so that we can acknowledge
@@ -67,52 +68,50 @@ static ddsi_seqno_t next_deliv_seq (const struct ddsi_proxy_writer *pwr, const d
      FIXME: next_seq - #dqueue could probably be used instead,
      provided #dqueue is decremented after delivery, rather than
      before delivery. */
-  const uint32_t lw = ddsrt_atomic_ld32 (&pwr->next_deliv_seq_lowword);
+  const uint32_t lw = ddsrt_atomic_ld32(&pwr->next_deliv_seq_lowword);
   ddsi_seqno_t next_deliv_seq;
   next_deliv_seq = (next_seq & ~(uint64_t)UINT32_MAX) | lw;
-  if (next_deliv_seq > next_seq)
-    next_deliv_seq -= ((uint64_t) 1) << 32;
-  assert (0 < next_deliv_seq && next_deliv_seq <= next_seq);
+  if (next_deliv_seq > next_seq) next_deliv_seq -= ((uint64_t)1) << 32;
+  assert(0 < next_deliv_seq && next_deliv_seq <= next_seq);
   return next_deliv_seq;
 }
 
-static void add_acknack_getsource (const struct ddsi_proxy_writer *pwr, const struct ddsi_pwr_rd_match *rwn, struct ddsi_reorder **reorder, ddsi_seqno_t *bitmap_base, int *notail)
+static void add_acknack_getsource(
+  const struct ddsi_proxy_writer * pwr, const struct ddsi_pwr_rd_match * rwn,
+  struct ddsi_reorder ** reorder, ddsi_seqno_t * bitmap_base, int * notail)
 {
   /* if in sync, look at proxy writer status, else look at proxy-writer--reader match status */
-  if (rwn->in_sync == PRMSS_OUT_OF_SYNC || rwn->filtered)
-  {
+  if (rwn->in_sync == PRMSS_OUT_OF_SYNC || rwn->filtered) {
     *reorder = rwn->u.not_in_sync.reorder;
-    *bitmap_base = ddsi_reorder_next_seq (*reorder);
+    *bitmap_base = ddsi_reorder_next_seq(*reorder);
     *notail = 0;
-  }
-  else
-  {
+  } else {
     *reorder = pwr->reorder;
-    if (!pwr->e.gv->config.late_ack_mode)
-    {
-      *bitmap_base = ddsi_reorder_next_seq (*reorder);
+    if (!pwr->e.gv->config.late_ack_mode) {
+      *bitmap_base = ddsi_reorder_next_seq(*reorder);
       *notail = 0;
-    }
-    else
-    {
-      *bitmap_base = next_deliv_seq (pwr, ddsi_reorder_next_seq (*reorder));
-      *notail = ddsi_dqueue_is_full (pwr->dqueue);
+    } else {
+      *bitmap_base = next_deliv_seq(pwr, ddsi_reorder_next_seq(*reorder));
+      *notail = ddsi_dqueue_is_full(pwr->dqueue);
     }
   }
 }
 
-static bool add_acknack_makebitmaps (const struct ddsi_proxy_writer *pwr, const struct ddsi_pwr_rd_match *rwn, struct ddsi_add_acknack_info *info)
+static bool add_acknack_makebitmaps(
+  const struct ddsi_proxy_writer * pwr, const struct ddsi_pwr_rd_match * rwn,
+  struct ddsi_add_acknack_info * info)
 {
-  struct ddsi_reorder *reorder;
+  struct ddsi_reorder * reorder;
   ddsi_seqno_t bitmap_base;
   int notail; /* notail = false: all known missing ones are nack'd */
-  add_acknack_getsource (pwr, rwn, &reorder, &bitmap_base, &notail);
+  add_acknack_getsource(pwr, rwn, &reorder, &bitmap_base, &notail);
 
   /* Make bitmap; note that we've made sure to have room for the maximum bitmap size. */
   const ddsi_seqno_t last_seq = rwn->filtered ? rwn->last_seq : pwr->last_seq;
-  const uint32_t numbits = ddsi_reorder_nackmap (reorder, bitmap_base, last_seq, &info->acknack.set, info->acknack.bits, DDSI_SEQUENCE_NUMBER_SET_MAX_BITS, notail);
-  if (numbits == 0)
-  {
+  const uint32_t numbits = ddsi_reorder_nackmap(
+    reorder, bitmap_base, last_seq, &info->acknack.set, info->acknack.bits,
+    DDSI_SEQUENCE_NUMBER_SET_MAX_BITS, notail);
+  if (numbits == 0) {
     info->nackfrag.seq = 0;
     return false;
   }
@@ -120,16 +119,15 @@ static bool add_acknack_makebitmaps (const struct ddsi_proxy_writer *pwr, const 
   /* Scan through bitmap, cutting it off at the first missing sample that the defragmenter
      knows about. Then note the sequence number & add a NACKFRAG for that sample */
   info->nackfrag.seq = 0;
-  const ddsi_seqno_t base = ddsi_from_seqno (info->acknack.set.bitmap_base);
-  for (uint32_t i = 0; i < numbits; i++)
-  {
-    if (!ddsi_bitset_isset (numbits, info->acknack.bits, i))
-      continue;
+  const ddsi_seqno_t base = ddsi_from_seqno(info->acknack.set.bitmap_base);
+  for (uint32_t i = 0; i < numbits; i++) {
+    if (!ddsi_bitset_isset(numbits, info->acknack.bits, i)) continue;
 
     const ddsi_seqno_t seq = base + i;
     const uint32_t fragnum = (seq == pwr->last_seq) ? pwr->last_fragnum : UINT32_MAX;
-    switch (ddsi_defrag_nackmap (pwr->defrag, seq, fragnum, &info->nackfrag.set, info->nackfrag.bits, DDSI_FRAGMENT_NUMBER_SET_MAX_BITS))
-    {
+    switch (ddsi_defrag_nackmap(
+      pwr->defrag, seq, fragnum, &info->nackfrag.set, info->nackfrag.bits,
+      DDSI_FRAGMENT_NUMBER_SET_MAX_BITS)) {
       case DDSI_DEFRAG_NACKMAP_UNKNOWN_SAMPLE:
         break;
       case DDSI_DEFRAG_NACKMAP_ALL_ADVERTISED_FRAGMENTS_KNOWN:
@@ -147,60 +145,68 @@ static bool add_acknack_makebitmaps (const struct ddsi_proxy_writer *pwr, const 
   return true;
 }
 
-static void add_NackFrag (struct ddsi_xmsg *msg, const struct ddsi_proxy_writer *pwr, const struct ddsi_pwr_rd_match *rwn, const struct ddsi_add_acknack_info *info)
+static void add_NackFrag(
+  struct ddsi_xmsg * msg, const struct ddsi_proxy_writer * pwr,
+  const struct ddsi_pwr_rd_match * rwn, const struct ddsi_add_acknack_info * info)
 {
   struct ddsi_xmsg_marker sm_marker;
-  ddsi_rtps_nackfrag_t *nf;
+  ddsi_rtps_nackfrag_t * nf;
 
-  assert (info->nackfrag.set.numbits > 0 && info->nackfrag.set.numbits <= DDSI_FRAGMENT_NUMBER_SET_MAX_BITS);
-  nf = ddsi_xmsg_append (msg, &sm_marker, DDSI_NACKFRAG_SIZE (info->nackfrag.set.numbits));
+  assert(
+    info->nackfrag.set.numbits > 0 &&
+    info->nackfrag.set.numbits <= DDSI_FRAGMENT_NUMBER_SET_MAX_BITS);
+  nf = ddsi_xmsg_append(msg, &sm_marker, DDSI_NACKFRAG_SIZE(info->nackfrag.set.numbits));
 
-  ddsi_xmsg_submsg_init (msg, sm_marker, DDSI_RTPS_SMID_NACK_FRAG);
-  nf->readerId = ddsi_hton_entityid (rwn->rd_guid.entityid);
-  nf->writerId = ddsi_hton_entityid (pwr->e.guid.entityid);
-  nf->writerSN = ddsi_to_seqno (info->nackfrag.seq);
+  ddsi_xmsg_submsg_init(msg, sm_marker, DDSI_RTPS_SMID_NACK_FRAG);
+  nf->readerId = ddsi_hton_entityid(rwn->rd_guid.entityid);
+  nf->writerId = ddsi_hton_entityid(pwr->e.guid.entityid);
+  nf->writerSN = ddsi_to_seqno(info->nackfrag.seq);
 #if ACK_REASON_IN_FLAGS
   nf->smhdr.flags |= info->flags;
 #endif
   // We use 0-based fragment numbers, but externally have to provide 1-based fragment numbers */
   nf->fragmentNumberState.bitmap_base = info->nackfrag.set.bitmap_base + 1;
   nf->fragmentNumberState.numbits = info->nackfrag.set.numbits;
-  memcpy (nf->bits, info->nackfrag.bits, DDSI_FRAGMENT_NUMBER_SET_BITS_SIZE (info->nackfrag.set.numbits));
+  memcpy(
+    nf->bits, info->nackfrag.bits, DDSI_FRAGMENT_NUMBER_SET_BITS_SIZE(info->nackfrag.set.numbits));
 
   // Count field is at a variable offset ... silly DDSI spec
   ddsi_count_t * const countp =
     (ddsi_count_t *) ((char *) nf + offsetof (ddsi_rtps_nackfrag_t, bits) + DDSI_FRAGMENT_NUMBER_SET_BITS_SIZE (nf->fragmentNumberState.numbits));
   *countp = pwr->nackfragcount;
 
-  ddsi_xmsg_submsg_setnext (msg, sm_marker);
+  ddsi_xmsg_submsg_setnext(msg, sm_marker);
 
-  if (pwr->e.gv->logconfig.c.mask & DDS_LC_TRACE)
-  {
-    ETRACE (pwr, "nackfrag #%"PRIu32":%"PRIu64"/%"PRIu32"/%"PRIu32":",
-            pwr->nackfragcount, ddsi_from_seqno (nf->writerSN),
-            nf->fragmentNumberState.bitmap_base, nf->fragmentNumberState.numbits);
+  if (pwr->e.gv->logconfig.c.mask & DDS_LC_TRACE) {
+    ETRACE(
+      pwr, "nackfrag #%" PRIu32 ":%" PRIu64 "/%" PRIu32 "/%" PRIu32 ":", pwr->nackfragcount,
+      ddsi_from_seqno(nf->writerSN), nf->fragmentNumberState.bitmap_base,
+      nf->fragmentNumberState.numbits);
     for (uint32_t ui = 0; ui != nf->fragmentNumberState.numbits; ui++)
-      ETRACE (pwr, "%c", ddsi_bitset_isset (nf->fragmentNumberState.numbits, nf->bits, ui) ? '1' : '0');
+      ETRACE(
+        pwr, "%c", ddsi_bitset_isset(nf->fragmentNumberState.numbits, nf->bits, ui) ? '1' : '0');
   }
 
   // Encode the sub-message when needed
-  ddsi_security_encode_datareader_submsg (msg, sm_marker, pwr, &rwn->rd_guid);
+  ddsi_security_encode_datareader_submsg(msg, sm_marker, pwr, &rwn->rd_guid);
 }
 
-static void add_acknack (struct ddsi_xmsg *msg, const struct ddsi_proxy_writer *pwr, const struct ddsi_pwr_rd_match *rwn, const struct ddsi_add_acknack_info *info)
+static void add_acknack(
+  struct ddsi_xmsg * msg, const struct ddsi_proxy_writer * pwr,
+  const struct ddsi_pwr_rd_match * rwn, const struct ddsi_add_acknack_info * info)
 {
   /* If pwr->have_seen_heartbeat == 0, no heartbeat has been received
      by this proxy writer yet, so we'll be sending a pre-emptive
      AckNack.  NACKing data now will most likely cause another NACK
      upon reception of the first heartbeat, and so cause the data to
      be resent twice. */
-  ddsi_rtps_acknack_t *an;
+  ddsi_rtps_acknack_t * an;
   struct ddsi_xmsg_marker sm_marker;
 
-  an = ddsi_xmsg_append (msg, &sm_marker, DDSI_ACKNACK_SIZE_MAX);
-  ddsi_xmsg_submsg_init (msg, sm_marker, DDSI_RTPS_SMID_ACKNACK);
-  an->readerId = ddsi_hton_entityid (rwn->rd_guid.entityid);
-  an->writerId = ddsi_hton_entityid (pwr->e.guid.entityid);
+  an = ddsi_xmsg_append(msg, &sm_marker, DDSI_ACKNACK_SIZE_MAX);
+  ddsi_xmsg_submsg_init(msg, sm_marker, DDSI_RTPS_SMID_ACKNACK);
+  an->readerId = ddsi_hton_entityid(rwn->rd_guid.entityid);
+  an->writerId = ddsi_hton_entityid(pwr->e.guid.entityid);
 
   // set FINAL flag late, in case it is decided that the "response_required" flag
   // should be set depending on the exact AckNack/NackFrag generated
@@ -209,30 +215,34 @@ static void add_acknack (struct ddsi_xmsg *msg, const struct ddsi_proxy_writer *
   an->smhdr.flags |= info->flags;
 #endif
   an->readerSNState = info->acknack.set;
-  memcpy (an->bits, info->acknack.bits, DDSI_SEQUENCE_NUMBER_SET_BITS_SIZE (an->readerSNState.numbits));
+  memcpy(
+    an->bits, info->acknack.bits, DDSI_SEQUENCE_NUMBER_SET_BITS_SIZE(an->readerSNState.numbits));
 
   // Count field is at a variable offset ... silly DDSI spec
   ddsi_count_t * const countp =
     (ddsi_count_t *) ((char *) an + offsetof (ddsi_rtps_acknack_t, bits) + DDSI_SEQUENCE_NUMBER_SET_BITS_SIZE (an->readerSNState.numbits));
   *countp = rwn->count;
   // Reset submessage size, now that we know the real size, and update the offset to the next submessage.
-  ddsi_xmsg_shrink (msg, sm_marker, DDSI_ACKNACK_SIZE (an->readerSNState.numbits));
-  ddsi_xmsg_submsg_setnext (msg, sm_marker);
+  ddsi_xmsg_shrink(msg, sm_marker, DDSI_ACKNACK_SIZE(an->readerSNState.numbits));
+  ddsi_xmsg_submsg_setnext(msg, sm_marker);
 
-  if (pwr->e.gv->logconfig.c.mask & DDS_LC_TRACE)
-  {
-    ETRACE (pwr, "acknack "PGUIDFMT" -> "PGUIDFMT": F#%"PRIu32":%"PRIu64"/%"PRIu32":",
-            PGUID (rwn->rd_guid), PGUID (pwr->e.guid), rwn->count,
-            ddsi_from_seqno (an->readerSNState.bitmap_base), an->readerSNState.numbits);
+  if (pwr->e.gv->logconfig.c.mask & DDS_LC_TRACE) {
+    ETRACE(
+      pwr, "acknack " PGUIDFMT " -> " PGUIDFMT ": F#%" PRIu32 ":%" PRIu64 "/%" PRIu32 ":",
+      PGUID(rwn->rd_guid), PGUID(pwr->e.guid), rwn->count,
+      ddsi_from_seqno(an->readerSNState.bitmap_base), an->readerSNState.numbits);
     for (uint32_t ui = 0; ui != an->readerSNState.numbits; ui++)
-      ETRACE (pwr, "%c", ddsi_bitset_isset (an->readerSNState.numbits, an->bits, ui) ? '1' : '0');
+      ETRACE(pwr, "%c", ddsi_bitset_isset(an->readerSNState.numbits, an->bits, ui) ? '1' : '0');
   }
 
   // Encode the sub-message when needed
-  ddsi_security_encode_datareader_submsg (msg, sm_marker, pwr, &rwn->rd_guid);
+  ddsi_security_encode_datareader_submsg(msg, sm_marker, pwr, &rwn->rd_guid);
 }
 
-static enum ddsi_add_acknack_result get_acknack_info (const struct ddsi_proxy_writer *pwr, const struct ddsi_pwr_rd_match *rwn, struct ddsi_last_nack_summary *nack_summary, struct ddsi_add_acknack_info *info, bool ackdelay_passed, bool nackdelay_passed)
+static enum ddsi_add_acknack_result get_acknack_info(
+  const struct ddsi_proxy_writer * pwr, const struct ddsi_pwr_rd_match * rwn,
+  struct ddsi_last_nack_summary * nack_summary, struct ddsi_add_acknack_info * info,
+  bool ackdelay_passed, bool nackdelay_passed)
 {
   /* If pwr->have_seen_heartbeat == 0, no heartbeat has been received
      by this proxy writer yet, so we'll be sending a pre-emptive
@@ -244,24 +254,22 @@ static enum ddsi_add_acknack_result get_acknack_info (const struct ddsi_proxy_wr
 #if ACK_REASON_IN_FLAGS
   info->flags = 0;
 #endif
-  if (!add_acknack_makebitmaps (pwr, rwn, info))
-  {
+  if (!add_acknack_makebitmaps(pwr, rwn, info)) {
     info->nack_sent_on_nackdelay = rwn->nack_sent_on_nackdelay;
-    nack_summary->seq_base = ddsi_from_seqno (info->acknack.set.bitmap_base);
+    nack_summary->seq_base = ddsi_from_seqno(info->acknack.set.bitmap_base);
     nack_summary->seq_end_p1 = 0;
     nack_summary->frag_base = 0;
     nack_summary->frag_end_p1 = 0;
     result = AANR_ACK;
-  }
-  else
-  {
+  } else {
     // [seq_base:0 .. seq_end_p1:0) + [seq_end_p1:frag_base .. seq_end_p1:frag_end_p1) if frag_end_p1 > 0
-    const ddsi_seqno_t seq_base = ddsi_from_seqno (info->acknack.set.bitmap_base);
-    assert (seq_base >= 1 && (info->acknack.set.numbits > 0 || info->nackfrag.seq > 0));
-    assert (info->nackfrag.seq == 0 || info->nackfrag.set.numbits > 0);
+    const ddsi_seqno_t seq_base = ddsi_from_seqno(info->acknack.set.bitmap_base);
+    assert(seq_base >= 1 && (info->acknack.set.numbits > 0 || info->nackfrag.seq > 0));
+    assert(info->nackfrag.seq == 0 || info->nackfrag.set.numbits > 0);
     const ddsi_seqno_t seq_end_p1 = seq_base + info->acknack.set.numbits;
     const uint32_t frag_base = (info->nackfrag.seq > 0) ? info->nackfrag.set.bitmap_base : 0;
-    const uint32_t frag_end_p1 = (info->nackfrag.seq > 0) ? info->nackfrag.set.bitmap_base + info->nackfrag.set.numbits : 0;
+    const uint32_t frag_end_p1 =
+      (info->nackfrag.seq > 0) ? info->nackfrag.set.bitmap_base + info->nackfrag.set.numbits : 0;
 
     /* Let caller know whether it is a nack, and, in steady state, set
        final to prevent a response if it isn't.  The initial
@@ -277,8 +285,9 @@ static enum ddsi_add_acknack_result get_acknack_info (const struct ddsi_proxy_wr
     nack_summary->frag_base = frag_base;
 
     // [seq_base:0 .. seq_end_p1:0) and [seq_end_p1:frag_base .. seq_end_p1:frag_end_p1) if frag_end_p1 > 0
-    if (seq_base > rwn->last_nack.seq_end_p1 || (seq_base == rwn->last_nack.seq_end_p1 && frag_base >= rwn->last_nack.frag_end_p1))
-    {
+    if (
+      seq_base > rwn->last_nack.seq_end_p1 ||
+      (seq_base == rwn->last_nack.seq_end_p1 && frag_base >= rwn->last_nack.frag_end_p1)) {
       // A NACK for something not previously NACK'd or NackDelay passed, update nack_{seq,frag} to reflect
       // the changed state
       info->nack_sent_on_nackdelay = false;
@@ -286,25 +295,19 @@ static enum ddsi_add_acknack_result get_acknack_info (const struct ddsi_proxy_wr
       info->flags = 0x10;
 #endif
       result = AANR_NACK;
-    }
-    else if (rwn->directed_heartbeat && (!rwn->nack_sent_on_nackdelay || nackdelay_passed))
-    {
+    } else if (rwn->directed_heartbeat && (!rwn->nack_sent_on_nackdelay || nackdelay_passed)) {
       info->nack_sent_on_nackdelay = false;
 #if ACK_REASON_IN_FLAGS
       info->flags = 0x20;
 #endif
       result = AANR_NACK;
-    }
-    else if (nackdelay_passed)
-    {
+    } else if (nackdelay_passed) {
       info->nack_sent_on_nackdelay = true;
 #if ACK_REASON_IN_FLAGS
       info->flags = 0x30;
 #endif
       result = AANR_NACK;
-    }
-    else
-    {
+    } else {
       // Overlap between this NACK and the previous one and NackDelay has not yet passed: clear numbits and
       // nackfrag_numbits to turn the NACK into an ACK and pretend to the caller nothing scary is going on.
 #if ACK_REASON_IN_FLAGS
@@ -317,16 +320,13 @@ static enum ddsi_add_acknack_result get_acknack_info (const struct ddsi_proxy_wr
     }
   }
 
-  if (result == AANR_ACK || result == AANR_SUPPRESSED_NACK)
-  {
+  if (result == AANR_ACK || result == AANR_SUPPRESSED_NACK) {
     // ACK and SUPPRESSED_NACK both end up being a pure ACK; send those only if we have to
     if (!(rwn->heartbeat_since_ack && rwn->ack_requested))
-      result = AANR_SUPPRESSED_ACK; // writer didn't ask for it
+      result = AANR_SUPPRESSED_ACK;  // writer didn't ask for it
     else if (!(nack_summary->seq_base > rwn->last_nack.seq_base || ackdelay_passed))
-      result = AANR_SUPPRESSED_ACK; // no progress since last, not enough time passed
-  }
-  else if (info->acknack.set.numbits == 0 && info->nackfrag.seq > 0 && !rwn->ack_requested)
-  {
+      result = AANR_SUPPRESSED_ACK;  // no progress since last, not enough time passed
+  } else if (info->acknack.set.numbits == 0 && info->nackfrag.seq > 0 && !rwn->ack_requested) {
     // if we are not NACK'ing full samples and we are NACK'ing fragments, skip the ACKNACK submessage if we
     // have no interest in a HEARTBEAT and the writer hasn't asked for an ACKNACK since the last one we sent.
     result = AANR_NACKFRAG_ONLY;
@@ -334,7 +334,9 @@ static enum ddsi_add_acknack_result get_acknack_info (const struct ddsi_proxy_wr
   return result;
 }
 
-void ddsi_sched_acknack_if_needed (struct ddsi_xevent *ev, struct ddsi_proxy_writer *pwr, struct ddsi_pwr_rd_match *rwn, ddsrt_mtime_t tnow, bool avoid_suppressed_nack)
+void ddsi_sched_acknack_if_needed(
+  struct ddsi_xevent * ev, struct ddsi_proxy_writer * pwr, struct ddsi_pwr_rd_match * rwn,
+  ddsrt_mtime_t tnow, bool avoid_suppressed_nack)
 {
   // This is the relatively expensive and precise code to determine what the ACKNACK event will do,
   // the alternative is to do:
@@ -355,49 +357,51 @@ void ddsi_sched_acknack_if_needed (struct ddsi_xevent *ev, struct ddsi_proxy_wri
   // downside to being precise.
 
   struct ddsi_domaingv * const gv = pwr->e.gv;
-  const bool ackdelay_passed = (tnow.v >= ddsrt_mtime_add_duration (rwn->t_last_ack, gv->config.ack_delay).v);
-  const bool nackdelay_passed = (tnow.v >= ddsrt_mtime_add_duration (rwn->t_last_nack, gv->config.nack_delay).v);
+  const bool ackdelay_passed =
+    (tnow.v >= ddsrt_mtime_add_duration(rwn->t_last_ack, gv->config.ack_delay).v);
+  const bool nackdelay_passed =
+    (tnow.v >= ddsrt_mtime_add_duration(rwn->t_last_nack, gv->config.nack_delay).v);
   struct ddsi_add_acknack_info info;
   struct ddsi_last_nack_summary nack_summary;
   const enum ddsi_add_acknack_result aanr =
-    get_acknack_info (pwr, rwn, &nack_summary, &info, ackdelay_passed, nackdelay_passed);
+    get_acknack_info(pwr, rwn, &nack_summary, &info, ackdelay_passed, nackdelay_passed);
   if (aanr == AANR_SUPPRESSED_ACK)
-    ; // nothing to be done now
+    ;  // nothing to be done now
   else if (avoid_suppressed_nack && aanr == AANR_SUPPRESSED_NACK)
-    (void) ddsi_resched_xevent_if_earlier (ev, ddsrt_mtime_add_duration (rwn->t_last_nack, gv->config.nack_delay));
+    (void)ddsi_resched_xevent_if_earlier(
+      ev, ddsrt_mtime_add_duration(rwn->t_last_nack, gv->config.nack_delay));
   else
-    (void) ddsi_resched_xevent_if_earlier (ev, tnow);
+    (void)ddsi_resched_xevent_if_earlier(ev, tnow);
 }
 
-struct ddsi_xmsg *ddsi_make_and_resched_acknack (struct ddsi_xevent *ev, struct ddsi_proxy_writer *pwr, struct ddsi_pwr_rd_match *rwn, ddsrt_mtime_t tnow, bool avoid_suppressed_nack)
+struct ddsi_xmsg * ddsi_make_and_resched_acknack(
+  struct ddsi_xevent * ev, struct ddsi_proxy_writer * pwr, struct ddsi_pwr_rd_match * rwn,
+  ddsrt_mtime_t tnow, bool avoid_suppressed_nack)
 {
   struct ddsi_domaingv * const gv = pwr->e.gv;
-  struct ddsi_xmsg *msg;
+  struct ddsi_xmsg * msg;
   struct ddsi_add_acknack_info info;
 
   struct ddsi_last_nack_summary nack_summary;
-  const enum ddsi_add_acknack_result aanr =
-    get_acknack_info (pwr, rwn, &nack_summary, &info,
-                      tnow.v >= ddsrt_mtime_add_duration (rwn->t_last_ack, gv->config.ack_delay).v,
-                      tnow.v >= ddsrt_mtime_add_duration (rwn->t_last_nack, gv->config.nack_delay).v);
+  const enum ddsi_add_acknack_result aanr = get_acknack_info(
+    pwr, rwn, &nack_summary, &info,
+    tnow.v >= ddsrt_mtime_add_duration(rwn->t_last_ack, gv->config.ack_delay).v,
+    tnow.v >= ddsrt_mtime_add_duration(rwn->t_last_nack, gv->config.nack_delay).v);
 
   if (aanr == AANR_SUPPRESSED_ACK)
     return NULL;
-  else if (avoid_suppressed_nack && aanr == AANR_SUPPRESSED_NACK)
-  {
-    (void) ddsi_resched_xevent_if_earlier (ev, ddsrt_mtime_add_duration (rwn->t_last_nack, gv->config.nack_delay));
+  else if (avoid_suppressed_nack && aanr == AANR_SUPPRESSED_NACK) {
+    (void)ddsi_resched_xevent_if_earlier(
+      ev, ddsrt_mtime_add_duration(rwn->t_last_nack, gv->config.nack_delay));
     return NULL;
-  }
-  else if (!(rwn->heartbeat_since_ack || rwn->heartbeatfrag_since_ack))
-  {
+  } else if (!(rwn->heartbeat_since_ack || rwn->heartbeatfrag_since_ack)) {
     // Not really allowed to send an ACKNACK by the spec, except we do it sometimes to recover
     // from packet loss after an asymmetrical disconnect where the writer never has any reason
     // to send a heartbeat
-    switch (aanr)
-    {
+    switch (aanr) {
       case AANR_SUPPRESSED_ACK:
         // handled above
-        assert (0);
+        assert(0);
       case AANR_ACK:
         // we only break the rules if we need retransmits
         return NULL;
@@ -405,14 +409,16 @@ struct ddsi_xmsg *ddsi_make_and_resched_acknack (struct ddsi_xevent *ev, struct 
       case AANR_NACKFRAG_ONLY:
       case AANR_SUPPRESSED_NACK:
         // suppress these spontaneous NACKs if they be more frequent than the auto-resched nack_delay
-        if (tnow.v < ddsrt_mtime_add_duration (rwn->t_last_nack, gv->config.auto_resched_nack_delay).v)
-        {
-          (void) ddsi_resched_xevent_if_earlier (ev, ddsrt_mtime_add_duration (rwn->t_last_nack, gv->config.auto_resched_nack_delay));
+        if (
+          tnow.v <
+          ddsrt_mtime_add_duration(rwn->t_last_nack, gv->config.auto_resched_nack_delay).v) {
+          (void)ddsi_resched_xevent_if_earlier(
+            ev, ddsrt_mtime_add_duration(rwn->t_last_nack, gv->config.auto_resched_nack_delay));
           return NULL;
         }
         break;
     }
- }
+  }
 
   // Committing to sending a message in response: update the state.  Note that there's still a
   // possibility of not sending a message, but that is only in case of failures of some sort.
@@ -423,52 +429,47 @@ struct ddsi_xmsg *ddsi_make_and_resched_acknack (struct ddsi_xevent *ev, struct 
   rwn->heartbeatfrag_since_ack = 0;
   rwn->nack_sent_on_nackdelay = (info.nack_sent_on_nackdelay ? 1 : 0);
 
-  struct ddsi_participant *pp = NULL;
-  if (ddsi_omg_proxy_participant_is_secure (pwr->c.proxypp))
-  {
-    struct ddsi_reader *rd = ddsi_entidx_lookup_reader_guid (pwr->e.gv->entity_index, &rwn->rd_guid);
-    if (rd)
-      pp = rd->c.pp;
+  struct ddsi_participant * pp = NULL;
+  if (ddsi_omg_proxy_participant_is_secure(pwr->c.proxypp)) {
+    struct ddsi_reader * rd =
+      ddsi_entidx_lookup_reader_guid(pwr->e.gv->entity_index, &rwn->rd_guid);
+    if (rd) pp = rd->c.pp;
   }
 
-  if ((msg = ddsi_xmsg_new (gv->xmsgpool, &rwn->rd_guid, pp, DDSI_ACKNACK_SIZE_MAX, DDSI_XMSG_KIND_CONTROL)) == NULL)
-  {
+  if (
+    (msg = ddsi_xmsg_new(
+       gv->xmsgpool, &rwn->rd_guid, pp, DDSI_ACKNACK_SIZE_MAX, DDSI_XMSG_KIND_CONTROL)) == NULL) {
     return NULL;
   }
 
-  ddsi_xmsg_setdst_pwr (msg, pwr);
-  if (gv->config.meas_hb_to_ack_latency && rwn->hb_timestamp.v)
-  {
+  ddsi_xmsg_setdst_pwr(msg, pwr);
+  if (gv->config.meas_hb_to_ack_latency && rwn->hb_timestamp.v) {
     // If HB->ACK latency measurement is enabled, and we have a
     // timestamp available, add it and clear the time stamp.  There
     // is no real guarantee that the two match, but I haven't got a
     // solution for that yet ...  If adding the time stamp fails,
     // too bad, but no reason to get worried. */
-    ddsi_xmsg_add_timestamp (msg, rwn->hb_timestamp);
+    ddsi_xmsg_add_timestamp(msg, rwn->hb_timestamp);
     rwn->hb_timestamp.v = 0;
   }
 
-  if (aanr != AANR_NACKFRAG_ONLY)
-    add_acknack (msg, pwr, rwn, &info);
-  if (info.nackfrag.seq > 0)
-  {
-    ETRACE (pwr, " + ");
-    add_NackFrag (msg, pwr, rwn, &info);
+  if (aanr != AANR_NACKFRAG_ONLY) add_acknack(msg, pwr, rwn, &info);
+  if (info.nackfrag.seq > 0) {
+    ETRACE(pwr, " + ");
+    add_NackFrag(msg, pwr, rwn, &info);
   }
-  ETRACE (pwr, "\n");
-  if (ddsi_xmsg_size (msg) == 0)
-  {
+  ETRACE(pwr, "\n");
+  if (ddsi_xmsg_size(msg) == 0) {
     // attempt at encoding the message caused it to be dropped
-    ddsi_xmsg_free (msg);
+    ddsi_xmsg_free(msg);
     return NULL;
   }
 
   rwn->count++;
-  switch (aanr)
-  {
+  switch (aanr) {
     case AANR_SUPPRESSED_ACK:
       // no message: caught by the size = 0 check
-      assert (0);
+      assert(0);
       break;
     case AANR_ACK:
       rwn->ack_requested = 0;
@@ -477,10 +478,8 @@ struct ddsi_xmsg *ddsi_make_and_resched_acknack (struct ddsi_xevent *ev, struct 
       break;
     case AANR_NACK:
     case AANR_NACKFRAG_ONLY:
-      if (nack_summary.frag_end_p1 != 0)
-        pwr->nackfragcount++;
-      if (aanr != AANR_NACKFRAG_ONLY)
-      {
+      if (nack_summary.frag_end_p1 != 0) pwr->nackfragcount++;
+      if (aanr != AANR_NACKFRAG_ONLY) {
         rwn->ack_requested = 0;
         rwn->t_last_ack = tnow;
       }
@@ -491,15 +490,18 @@ struct ddsi_xmsg *ddsi_make_and_resched_acknack (struct ddsi_xevent *ev, struct 
        HEARTBEAT, I've seen too many cases of not sending an NACK
        because the writing side got confused ...  Better to recover
        eventually. */
-      (void) ddsi_resched_xevent_if_earlier (ev, ddsrt_mtime_add_duration (tnow, gv->config.auto_resched_nack_delay));
+      (void)ddsi_resched_xevent_if_earlier(
+        ev, ddsrt_mtime_add_duration(tnow, gv->config.auto_resched_nack_delay));
       break;
     case AANR_SUPPRESSED_NACK:
       rwn->ack_requested = 0;
       rwn->t_last_ack = tnow;
       rwn->last_nack.seq_base = nack_summary.seq_base;
-      (void) ddsi_resched_xevent_if_earlier (ev, ddsrt_mtime_add_duration (rwn->t_last_nack, gv->config.nack_delay));
+      (void)ddsi_resched_xevent_if_earlier(
+        ev, ddsrt_mtime_add_duration(rwn->t_last_nack, gv->config.nack_delay));
       break;
   }
-  GVTRACE ("send acknack(rd "PGUIDFMT" -> pwr "PGUIDFMT")\n", PGUID (rwn->rd_guid), PGUID (pwr->e.guid));
+  GVTRACE(
+    "send acknack(rd " PGUIDFMT " -> pwr " PGUIDFMT ")\n", PGUID(rwn->rd_guid), PGUID(pwr->e.guid));
   return msg;
 }

@@ -23,9 +23,6 @@ enum idl_equality {
   IDL_GREATER,
 };
 
-IDL_EXPORT idl_equality_t
-idl_compare(
-  const idl_const_expr_t *lhs,
-  const idl_const_expr_t *rhs);
+IDL_EXPORT idl_equality_t idl_compare(const idl_const_expr_t * lhs, const idl_const_expr_t * rhs);
 
 #endif /* IDL_EXPRESSION_H */

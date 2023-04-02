@@ -12,10 +12,10 @@
 #ifndef DDSRT_ENVIRON_H
 #define DDSRT_ENVIRON_H
 
-#include "dds/export.h"
 #include "dds/ddsrt/attributes.h"
 #include "dds/ddsrt/expand_vars.h"
 #include "dds/ddsrt/retcode.h"
+#include "dds/export.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -40,11 +40,7 @@ extern "C" {
  * @retval DDS_RETCODE_ERROR
  *             Unspecified error.
  */
-DDS_EXPORT dds_return_t
-ddsrt_getenv(
-  const char *name,
-  const char **value)
-ddsrt_nonnull_all;
+DDS_EXPORT dds_return_t ddsrt_getenv(const char * name, const char ** value) ddsrt_nonnull_all;
 
 /**
  * @brief Set environment variable value.
@@ -66,11 +62,7 @@ ddsrt_nonnull_all;
  * @retval DDS_RETCODE_ERROR
  *             Unspecified system error.
  */
-DDS_EXPORT dds_return_t
-ddsrt_setenv(
-  const char *name,
-  const char *value)
-ddsrt_nonnull_all;
+DDS_EXPORT dds_return_t ddsrt_setenv(const char * name, const char * value) ddsrt_nonnull_all;
 
 /**
  * @brief Unset environment variable value.
@@ -88,10 +80,7 @@ ddsrt_nonnull_all;
  * @retval DDS_RETCODE_ERROR
  *             Unspecified system error.
  */
-DDS_EXPORT dds_return_t
-ddsrt_unsetenv(
-  const char *name)
-ddsrt_nonnull_all;
+DDS_EXPORT dds_return_t ddsrt_unsetenv(const char * name) ddsrt_nonnull_all;
 
 /**
  * @brief Expand environment variables within string.
@@ -114,10 +103,7 @@ ddsrt_nonnull_all;
  *             Copy of the string argument with the environment
  *             variables expanded.
  */
-DDS_EXPORT char*
-ddsrt_expand_envvars(
-  const char *string,
-  uint32_t domid);
+DDS_EXPORT char * ddsrt_expand_envvars(const char * string, uint32_t domid);
 
 /**
  * @brief Expand environment variables within string.
@@ -137,11 +123,7 @@ ddsrt_expand_envvars(
  *             Copy of the string argument with the environment
  *             variables expanded.
  */
-DDS_EXPORT char*
-ddsrt_expand_envvars_sh(
-  const char *string,
-  uint32_t domid);
-
+DDS_EXPORT char * ddsrt_expand_envvars_sh(const char * string, uint32_t domid);
 
 #if defined(__cplusplus)
 }

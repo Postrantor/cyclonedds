@@ -20,11 +20,11 @@
 #define NOMINMAX
 #endif
 
-#include <windows.h>
 #include <VersionHelpers.h>
-#include <stdint.h>
 #include <inttypes.h>
+#include <stdint.h>
 #include <wchar.h>
+#include <windows.h>
 
 typedef SSIZE_T ssize_t;
 

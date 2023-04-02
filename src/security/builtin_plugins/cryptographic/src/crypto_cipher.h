@@ -12,8 +12,8 @@
 #ifndef CRYPTO_CIPHER_H
 #define CRYPTO_CIPHER_H
 
-#include "dds/ddsrt/types.h"
 #include "crypto_objects.h"
+#include "dds/ddsrt/types.h"
 
 /**
  * @brief Encodes the provide data using the provided key
@@ -42,10 +42,15 @@
  * @param[in,out] tag           Contains on return the mac value calculated over the provided data
  * @param[in,out] ex            Security exception
  */
-bool crypto_cipher_encrypt_data(const crypto_session_key_t *session_key, uint32_t key_size, const struct init_vector *iv, const size_t num_inp, const trusted_crypto_data_t *inpdata, trusted_crypto_data_t *outpdata, crypto_hmac_t *tag, DDS_Security_SecurityException *ex)
+bool crypto_cipher_encrypt_data(
+  const crypto_session_key_t * session_key, uint32_t key_size, const struct init_vector * iv,
+  const size_t num_inp, const trusted_crypto_data_t * inpdata, trusted_crypto_data_t * outpdata,
+  crypto_hmac_t * tag, DDS_Security_SecurityException * ex)
   ddsrt_nonnull((1, 3, 5, 7, 8)) ddsrt_attribute_warn_unused_result;
 
-bool crypto_cipher_calc_hmac (const crypto_session_key_t *session_key, uint32_t key_size, const struct init_vector *iv, const tainted_crypto_data_t *inpdata, crypto_hmac_t *tag, DDS_Security_SecurityException *ex)
+bool crypto_cipher_calc_hmac(
+  const crypto_session_key_t * session_key, uint32_t key_size, const struct init_vector * iv,
+  const tainted_crypto_data_t * inpdata, crypto_hmac_t * tag, DDS_Security_SecurityException * ex)
   ddsrt_nonnull((1, 3, 4, 5, 6)) ddsrt_attribute_warn_unused_result;
 
 /**
@@ -71,7 +76,10 @@ bool crypto_cipher_calc_hmac (const crypto_session_key_t *session_key, uint32_t 
  * @param[in,out] tag           The mac value which has to be verified
  * @param[in,out] ex            Security exception
  */
-bool crypto_cipher_decrypt_data(const remote_session_info *session, const struct init_vector *iv, const size_t num_inp, const const_tainted_crypto_data_t *inpdata, tainted_crypto_data_t *outpdata, crypto_hmac_t *tag, DDS_Security_SecurityException *ex)
+bool crypto_cipher_decrypt_data(
+  const remote_session_info * session, const struct init_vector * iv, const size_t num_inp,
+  const const_tainted_crypto_data_t * inpdata, tainted_crypto_data_t * outpdata,
+  crypto_hmac_t * tag, DDS_Security_SecurityException * ex)
   ddsrt_nonnull((1, 2, 4, 6, 7)) ddsrt_attribute_warn_unused_result;
 
 #endif /* CRYPTO_CIPHER_H */

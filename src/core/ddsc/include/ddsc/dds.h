@@ -12,9 +12,17 @@
 #ifndef DDSC_DDS_H
 #define DDSC_DDS_H
 
-/* All header files distributed with Cyclone DDS reside in dds. This file is
-   merely a proxy for dds/dds.h and must be considered deprecated. */
+/**
+ * @file
+ * @brief 本文件是 Cyclone DDS 的代理头文件，用于包含 dds/dds.h。请注意，该文件已被视为弃用。(This
+ * file is a proxy header for including dds/dds.h in Cyclone DDS. Please note that this file is
+ * considered deprecated.)
+ */
+
+/* 所有与 Cyclone DDS 分发的头文件都位于 dds 目录中。此文件仅作为 dds/dds.h 的代理，必须视为已弃用。
+ * (All header files distributed with Cyclone DDS reside in the dds directory. This file is merely a
+ * proxy for dds/dds.h and must be considered deprecated.)
+ */
 #include "dds/dds.h"
 
 #endif /* DDSC_DDS_H */
-

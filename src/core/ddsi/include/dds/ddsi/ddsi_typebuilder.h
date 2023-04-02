@@ -12,28 +12,29 @@
 #ifndef DDSI_TYPEBUILDER_H
 #define DDSI_TYPEBUILDER_H
 
-#include "dds/features.h"
-
 #include <stdbool.h>
 #include <stdint.h>
+
 #include "dds/dds.h"
 #include "dds/ddsi/ddsi_typelib.h"
+#include "dds/features.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 #ifdef DDS_HAS_TYPE_DISCOVERY
 
 /** @component dynamic_types */
-dds_return_t ddsi_topic_descriptor_from_type (struct ddsi_domaingv *gv, dds_topic_descriptor_t *desc, const struct ddsi_type *type);
+dds_return_t ddsi_topic_descriptor_from_type(
+  struct ddsi_domaingv * gv, dds_topic_descriptor_t * desc, const struct ddsi_type * type);
 
 /** @component dynamic_types */
-void ddsi_topic_descriptor_fini (dds_topic_descriptor_t *desc);
+void ddsi_topic_descriptor_fini(dds_topic_descriptor_t * desc);
 
 #endif /* DDS_HAS_TYPE_DISCOVERY */
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

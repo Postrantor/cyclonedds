@@ -12,11 +12,6 @@
 #ifndef MCPP_OUT_H
 #define MCPP_OUT_H
 
-typedef enum {
-  MCPP_OUT,
-  MCPP_ERR,
-  MCPP_DBG,
-  MCPP_NUM_OUTDEST
-} MCPP_OUTDEST;
+typedef enum { MCPP_OUT, MCPP_ERR, MCPP_DBG, MCPP_NUM_OUTDEST } MCPP_OUTDEST;
 
 #endif /* MCPP_OUT_H */

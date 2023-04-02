@@ -9,40 +9,41 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include <stdio.h>
+
+#include "CUnit/Test.h"
 #include "dds/dds.h"
 #include "dds/ddsrt/misc.h"
-
-#include <stdio.h>
-#include "CUnit/Test.h"
 
 /* We are deliberately testing some bad arguments that SAL will complain about.
  * So, silence SAL regarding these issues. */
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 6387 28020)
+#pragma warning(disable : 6387 28020)
 #endif
 
-static void on_data_available(dds_entity_t reader, void* arg)
+static void on_data_available(dds_entity_t reader, void * arg)
 {
   (void)reader;
   (void)arg;
 }
 
-static void on_publication_matched(dds_entity_t writer, const dds_publication_matched_status_t status, void* arg)
+static void on_publication_matched(
+  dds_entity_t writer, const dds_publication_matched_status_t status, void * arg)
 {
   (void)writer;
   (void)status;
   (void)arg;
 }
 
-CU_Test(ddsc_subscriber, notify_readers) {
+CU_Test(ddsc_subscriber, notify_readers)
+{
   dds_entity_t participant;
   dds_entity_t subscriber;
   dds_return_t ret;
 
   participant = dds_create_participant(DDS_DOMAIN_DEFAULT, NULL, NULL);
   CU_ASSERT_FATAL(participant > 0);
-
 
   subscriber = dds_create_subscriber(participant, NULL, NULL);
   CU_ASSERT_FATAL(subscriber > 0);
@@ -55,12 +56,12 @@ CU_Test(ddsc_subscriber, notify_readers) {
   dds_delete(participant);
 }
 
-CU_Test(ddsc_subscriber, create) {
-
+CU_Test(ddsc_subscriber, create)
+{
   dds_entity_t participant;
   dds_entity_t subscriber;
-  dds_listener_t *listener;
-  dds_qos_t *sqos;
+  dds_listener_t * listener;
+  dds_qos_t * sqos;
 
   participant = dds_create_participant(DDS_DOMAIN_DEFAULT, NULL, NULL);
   CU_ASSERT_FATAL(participant > 0);
@@ -83,18 +84,19 @@ CU_Test(ddsc_subscriber, create) {
   dds_delete_qos(sqos);
 
   sqos = dds_create_qos();
-  DDSRT_WARNING_CLANG_OFF(assign-enum);
-  dds_qset_destination_order(sqos, 3); /* Set invalid dest. order (ignored, not applicable for subscriber) */
-  DDSRT_WARNING_CLANG_ON(assign-enum);
+  DDSRT_WARNING_CLANG_OFF(assign - enum);
+  dds_qset_destination_order(
+    sqos, 3); /* Set invalid dest. order (ignored, not applicable for subscriber) */
+  DDSRT_WARNING_CLANG_ON(assign - enum);
   subscriber = dds_create_subscriber(participant, sqos, NULL);
   CU_ASSERT_FATAL(subscriber > 0);
   dds_delete(subscriber);
   dds_delete_qos(sqos);
 
   sqos = dds_create_qos();
-  DDSRT_WARNING_CLANG_OFF(assign-enum);
+  DDSRT_WARNING_CLANG_OFF(assign - enum);
   dds_qset_presentation(sqos, 123, 1, 1); /* Set invalid presentation policy */
-  DDSRT_WARNING_CLANG_ON(assign-enum);
+  DDSRT_WARNING_CLANG_ON(assign - enum);
   subscriber = dds_create_subscriber(participant, sqos, NULL);
   CU_ASSERT_EQUAL_FATAL(subscriber, DDS_RETCODE_BAD_PARAMETER);
   dds_delete_qos(sqos);
@@ -115,7 +117,9 @@ CU_Test(ddsc_subscriber, create) {
   dds_delete_listener(listener);
 
   listener = dds_create_listener(NULL);
-  dds_lset_publication_matched(listener, &on_publication_matched); /* Set on_publication_matched listener (ignored, not applicable for subscriber) */
+  dds_lset_publication_matched(
+    listener,
+    &on_publication_matched); /* Set on_publication_matched listener (ignored, not applicable for subscriber) */
   subscriber = dds_create_subscriber(participant, NULL, listener);
   CU_ASSERT_FATAL(subscriber > 0);
   dds_delete(subscriber);
@@ -131,13 +135,13 @@ CU_Test(ddsc_subscriber, create) {
 CU_Test(ddsc_subscriber, invalid_qos)
 {
   dds_entity_t participant, subscriber;
-  dds_qos_t *qos;
+  dds_qos_t * qos;
   dds_return_t rc;
 
-  participant = dds_create_participant (DDS_DOMAIN_DEFAULT, NULL, NULL);
-  CU_ASSERT_FATAL(participant >  0);
+  participant = dds_create_participant(DDS_DOMAIN_DEFAULT, NULL, NULL);
+  CU_ASSERT_FATAL(participant > 0);
 
-  qos = dds_create_qos ();
+  qos = dds_create_qos();
   CU_ASSERT_NOT_EQUAL_FATAL(qos, NULL);
 
   // deliberately set an invalid value for the access scope kind, this should
@@ -147,8 +151,7 @@ CU_Test(ddsc_subscriber, invalid_qos)
   subscriber = dds_create_subscriber(participant, qos, NULL);
   CU_ASSERT_FATAL(subscriber == DDS_RETCODE_BAD_PARAMETER);
 
-  dds_delete_qos (qos);
+  dds_delete_qos(qos);
   rc = dds_delete(participant);
-  CU_ASSERT_FATAL (rc == 0);
+  CU_ASSERT_FATAL(rc == 0);
 }
-

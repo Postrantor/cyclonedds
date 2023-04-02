@@ -12,28 +12,20 @@
 #ifndef DDS_SECURITY_BUITIN_TEST_CRYPTO_HELPER_H
 #define DDS_SECURITY_BUITIN_TEST_CRYPTO_HELPER_H
 
+#include "crypto_objects.h"
 #include "dds/ddsrt/types.h"
 #include "dds/security/dds_security_api.h"
-#include "crypto_objects.h"
 
-bool
-crypto_calculate_session_key_test(
-    crypto_session_key_t *session_key,
-    uint32_t session_id,
-    const unsigned char *master_salt,
-    const unsigned char *master_key,
-    DDS_Security_CryptoTransformKind_Enum transformation_kind);
+bool crypto_calculate_session_key_test(
+  crypto_session_key_t * session_key, uint32_t session_id, const unsigned char * master_salt,
+  const unsigned char * master_key, DDS_Security_CryptoTransformKind_Enum transformation_kind);
 
 bool calculate_receiver_specific_key_test(
-    crypto_session_key_t *session_key,
-    uint32_t session_id,
-    const unsigned char *master_salt,
-    const unsigned char *master_key,
-    DDS_Security_CryptoTransformKind_Enum transformation_kind);
+  crypto_session_key_t * session_key, uint32_t session_id, const unsigned char * master_salt,
+  const unsigned char * master_key, DDS_Security_CryptoTransformKind_Enum transformation_kind);
 
-int master_salt_not_empty(master_key_material *keymat);
-int master_key_not_empty(master_key_material *keymat);
-int master_receiver_specific_key_not_empty(master_key_material *keymat);
+int master_salt_not_empty(master_key_material * keymat);
+int master_key_not_empty(master_key_material * keymat);
+int master_receiver_specific_key_not_empty(master_key_material * keymat);
 
 #endif /* DDS_SECURITY_BUITIN_TEST_CRYPTO_HELPER_H */
-

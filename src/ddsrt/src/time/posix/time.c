@@ -9,14 +9,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/time.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <time.h>
 #include <sys/time.h>
-
-#include "dds/ddsrt/time.h"
+#include <time.h>
 
 dds_time_t dds_time(void)
 {
@@ -29,14 +29,14 @@ ddsrt_wctime_t ddsrt_time_wallclock(void)
 {
   struct timespec ts;
   (void)clock_gettime(CLOCK_REALTIME, &ts);
-  return (ddsrt_wctime_t) { (ts.tv_sec * DDS_NSECS_IN_SEC) + ts.tv_nsec };
+  return (ddsrt_wctime_t){(ts.tv_sec * DDS_NSECS_IN_SEC) + ts.tv_nsec};
 }
 
 ddsrt_mtime_t ddsrt_time_monotonic(void)
 {
   struct timespec ts;
   (void)clock_gettime(CLOCK_MONOTONIC, &ts);
-  return (ddsrt_mtime_t) { (ts.tv_sec * DDS_NSECS_IN_SEC) + ts.tv_nsec };
+  return (ddsrt_mtime_t){(ts.tv_sec * DDS_NSECS_IN_SEC) + ts.tv_nsec};
 }
 
 ddsrt_etime_t ddsrt_time_elapsed(void)
@@ -44,5 +44,5 @@ ddsrt_etime_t ddsrt_time_elapsed(void)
   /* Elapsed time clock not worth the bother for now. */
   struct timespec ts;
   (void)clock_gettime(CLOCK_MONOTONIC, &ts);
-  return (ddsrt_etime_t) { (ts.tv_sec * DDS_NSECS_IN_SEC) + ts.tv_nsec };
+  return (ddsrt_etime_t){(ts.tv_sec * DDS_NSECS_IN_SEC) + ts.tv_nsec};
 }

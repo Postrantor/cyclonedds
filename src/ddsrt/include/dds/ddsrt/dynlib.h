@@ -13,22 +13,20 @@
 #ifndef DDSRT_DYNLIB_H
 #define DDSRT_DYNLIB_H
 
-#include "dds/export.h"
 #include "dds/config.h"
-#include "dds/ddsrt/types.h"
-#include "dds/ddsrt/retcode.h"
 #include "dds/ddsrt/attributes.h"
+#include "dds/ddsrt/retcode.h"
+#include "dds/ddsrt/types.h"
+#include "dds/export.h"
 
 #if DDSRT_HAVE_DYNLIB
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-
 //typedef void *ddsrt_dynlib_t;
-typedef struct ddsrt_dynlib *ddsrt_dynlib_t;
-
+typedef struct ddsrt_dynlib * ddsrt_dynlib_t;
 
 /**
  * @brief Load a dynamic shared library.
@@ -60,11 +58,8 @@ typedef struct ddsrt_dynlib *ddsrt_dynlib_t;
  *             Loading failed.
  *             Use ddsrt_dlerror() to diagnose the failure.
  */
-dds_return_t
-ddsrt_dlopen(
-    const char *name,
-    bool translate,
-    ddsrt_dynlib_t *handle) ddsrt_nonnull_all;
+dds_return_t ddsrt_dlopen(const char * name, bool translate, ddsrt_dynlib_t * handle)
+  ddsrt_nonnull_all;
 
 /**
  * @brief Close the library.
@@ -84,9 +79,7 @@ ddsrt_dlopen(
  *             Library closing failed.
  *             Use ddsrt_dlerror() to diagnose the failure.
  */
-dds_return_t
-ddsrt_dlclose(
-    ddsrt_dynlib_t handle);
+dds_return_t ddsrt_dlclose(ddsrt_dynlib_t handle);
 
 /**
  * @brief Get the memory address of a symbol.
@@ -107,11 +100,7 @@ ddsrt_dlclose(
  *             Symbol was not found.
  *             Use ddsrt_dlerror() to diagnose the failure.
  */
-dds_return_t
-ddsrt_dlsym(
-    ddsrt_dynlib_t handle,
-    const char *symbol,
-    void **address);
+dds_return_t ddsrt_dlsym(ddsrt_dynlib_t handle, const char * symbol, void ** address);
 
 /**
  * @brief Get the most recent library related error.
@@ -135,12 +124,9 @@ ddsrt_dlsym(
  * @retval DDS_RETCODE_NOT_ENOUGH_SPACE
  *             Buffer is not large enough to hold the error message
  */
-dds_return_t
-ddsrt_dlerror(
-    char *buf,
-    size_t buflen);
+dds_return_t ddsrt_dlerror(char * buf, size_t buflen);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

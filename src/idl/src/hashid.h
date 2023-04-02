@@ -16,6 +16,6 @@
 
 #include "idl/export.h"
 
-IDL_EXPORT uint32_t idl_hashid(const char *str);
+IDL_EXPORT uint32_t idl_hashid(const char * str);
 
 #endif /* HASHID_H */

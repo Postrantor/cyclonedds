@@ -13,7 +13,7 @@
 #define DDSI_UNUSED_H
 
 #ifdef __GNUC__
-#define UNUSED_ARG(x) x __attribute__ ((unused))
+#define UNUSED_ARG(x) x __attribute__((unused))
 #else
 #define UNUSED_ARG(x) x
 #endif
@@ -21,7 +21,7 @@
 #ifndef NDEBUG
 #define UNUSED_ARG_NDEBUG(x) x
 #else
-#define UNUSED_ARG_NDEBUG(x) UNUSED_ARG (x)
+#define UNUSED_ARG_NDEBUG(x) UNUSED_ARG(x)
 #endif
 
 #endif /* DDSI_UNUSED_H */

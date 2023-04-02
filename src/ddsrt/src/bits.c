@@ -11,6 +11,7 @@
  */
 
 #include "dds/ddsrt/bits.h"
+
 #include "dds/ddsrt/static_assert.h"
 
-DDS_EXPORT extern inline uint32_t ddsrt_ffs32u (uint32_t x);
+DDS_EXPORT extern inline uint32_t ddsrt_ffs32u(uint32_t x);

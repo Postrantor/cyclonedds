@@ -19,13 +19,13 @@
 #else
 #define DDSRT_HAVE_THREAD_SETNAME (1)
 #endif
-#if defined (__linux) || defined (__APPLE__)
+#if defined(__linux) || defined(__APPLE__)
 #define DDSRT_HAVE_THREAD_LIST (1)
 #else
 #define DDSRT_HAVE_THREAD_LIST (0)
 #endif
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -39,8 +39,8 @@ typedef long int ddsrt_thread_list_id_t;
 typedef int ddsrt_tid_t;
 #define PRIdTID "d"
 /* __FreeBSD__ */
-#elif defined(__APPLE__) && !(defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && \
-                                      __MAC_OS_X_VERSION_MIN_REQUIRED < 1060)
+#elif defined(__APPLE__) && \
+  !(defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED < 1060)
 /* macOS X >= 10.6 */
 typedef uint64_t ddsrt_tid_t;
 #define PRIdTID PRIu64
@@ -50,11 +50,11 @@ typedef uint32_t ddsrt_thread_list_id_t;
 #elif defined(__VXWORKS__)
 /* TODO: Verify taskIdSelf is the right function to use on VxWorks */
 typedef TASK_ID ddsrt_tid_t;
-# if defined(_WRS_CONFIG_LP64)
-#   define PRIdPID PRIuPTR /* typedef struct windTcb *TASK_ID */
-# else
-#   define PRIdPID "d" /* typedef int TASK_ID */
-# endif
+#if defined(_WRS_CONFIG_LP64)
+#define PRIdPID PRIuPTR /* typedef struct windTcb *TASK_ID */
+#else
+#define PRIdPID "d" /* typedef int TASK_ID */
+#endif
 /* __VXWORKS__ */
 #else
 typedef uintptr_t ddsrt_tid_t;
@@ -62,11 +62,12 @@ typedef uintptr_t ddsrt_tid_t;
 #endif
 
 /* Wrapped in a struct to force conformation to abstraction. */
-typedef struct {
-    pthread_t v;
+typedef struct
+{
+  pthread_t v;
 } ddsrt_thread_t;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

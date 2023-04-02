@@ -9,25 +9,21 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/io.h"
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
 #include "dds/ddsrt/heap.h"
-#include "dds/ddsrt/io.h"
 
-int
-ddsrt_vasprintf(
-  char **strp,
-  const char *fmt,
-  va_list ap)
-{
+int ddsrt_vasprintf(char** strp, const char* fmt, va_list ap) {
   int ret;
   unsigned int len;
 #if !defined(_WIN32)
-  char buf[1] = { '\0' };
+  char buf[1] = {'\0'};
 #endif
-  char *str = NULL;
+  char* str = NULL;
   va_list ap2;
 
   assert(strp != NULL);
@@ -58,12 +54,7 @@ ddsrt_vasprintf(
   return ret;
 }
 
-int
-ddsrt_asprintf(
-  char **strp,
-  const char *fmt,
-  ...)
-{
+int ddsrt_asprintf(char** strp, const char* fmt, ...) {
   int ret;
   va_list args;
 
@@ -78,13 +69,7 @@ ddsrt_asprintf(
 }
 
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
-int
-snprintf(
-  char *str,
-  size_t size,
-  const char *fmt,
-  ...)
-{
+int snprintf(char* str, size_t size, const char* fmt, ...) {
   int cnt;
   va_list args;
 

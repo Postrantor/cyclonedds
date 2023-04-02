@@ -15,11 +15,9 @@
 
 #include "dds_security_api_err.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
-
-
 
 /**************************************************************************
  *                                                                        *
@@ -27,12 +25,12 @@ extern "C" {
  *                                                                        *
  **************************************************************************/
 typedef enum {
-    DDS_SECURITY_VALIDATION_OK,
-    DDS_SECURITY_VALIDATION_FAILED,
-    DDS_SECURITY_VALIDATION_PENDING_RETRY,
-    DDS_SECURITY_VALIDATION_PENDING_HANDSHAKE_REQUEST,
-    DDS_SECURITY_VALIDATION_PENDING_HANDSHAKE_MESSAGE,
-    DDS_SECURITY_VALIDATION_OK_FINAL_MESSAGE
+  DDS_SECURITY_VALIDATION_OK,
+  DDS_SECURITY_VALIDATION_FAILED,
+  DDS_SECURITY_VALIDATION_PENDING_RETRY,
+  DDS_SECURITY_VALIDATION_PENDING_HANDSHAKE_REQUEST,
+  DDS_SECURITY_VALIDATION_PENDING_HANDSHAKE_MESSAGE,
+  DDS_SECURITY_VALIDATION_OK_FINAL_MESSAGE
 } DDS_Security_ValidationResult_t;
 
 #define DDS_SECURITY_HANDLE_NIL (0)
@@ -40,39 +38,35 @@ typedef enum {
 #define DDS_SECURITY_SUCCESS (0)
 #define DDS_SECURITY_FAILED (-1)
 
-
 /**************************************************************************
  *                                                                        *
  * Attribute flags.                                                       *
  *                                                                        *
  **************************************************************************/
-#define DDS_SECURITY_PARTICIPANT_ATTRIBUTES_FLAG_IS_RTPS_PROTECTED                      (1u      )
-#define DDS_SECURITY_PARTICIPANT_ATTRIBUTES_FLAG_IS_DISCOVERY_PROTECTED                 (1u <<  1)
-#define DDS_SECURITY_PARTICIPANT_ATTRIBUTES_FLAG_IS_LIVELINESS_PROTECTED                (1u <<  2)
-#define DDS_SECURITY_PARTICIPANT_ATTRIBUTES_FLAG_IS_VALID                               (1u << 31)
+#define DDS_SECURITY_PARTICIPANT_ATTRIBUTES_FLAG_IS_RTPS_PROTECTED (1u)
+#define DDS_SECURITY_PARTICIPANT_ATTRIBUTES_FLAG_IS_DISCOVERY_PROTECTED (1u << 1)
+#define DDS_SECURITY_PARTICIPANT_ATTRIBUTES_FLAG_IS_LIVELINESS_PROTECTED (1u << 2)
+#define DDS_SECURITY_PARTICIPANT_ATTRIBUTES_FLAG_IS_VALID (1u << 31)
 
-#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_RTPS_ENCRYPTED               (1u      )
-#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_DISCOVERY_ENCRYPTED          (1u <<  1)
-#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_LIVELINESS_ENCRYPTED         (1u <<  2)
-#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_RTPS_AUTHENTICATED           (1u <<  3)
-#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_DISCOVERY_AUTHENTICATED      (1u <<  4)
-#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_LIVELINESS_AUTHENTICATED     (1u <<  5)
+#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_RTPS_ENCRYPTED (1u)
+#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_DISCOVERY_ENCRYPTED (1u << 1)
+#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_LIVELINESS_ENCRYPTED (1u << 2)
+#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_RTPS_AUTHENTICATED (1u << 3)
+#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_DISCOVERY_AUTHENTICATED (1u << 4)
+#define DDS_SECURITY_PLUGIN_PARTICIPANT_ATTRIBUTES_FLAG_IS_LIVELINESS_AUTHENTICATED (1u << 5)
 
-#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_READ_PROTECTED                         (1u      )
-#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_WRITE_PROTECTED                        (1u <<  1)
-#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_DISCOVERY_PROTECTED                    (1u <<  2)
-#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_SUBMESSAGE_PROTECTED                   (1u <<  3)
-#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_PAYLOAD_PROTECTED                      (1u <<  4)
-#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_KEY_PROTECTED                          (1u <<  5)
-#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_LIVELINESS_PROTECTED                   (1u <<  6)
-#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_VALID                                  (1u << 31)
+#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_READ_PROTECTED (1u)
+#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_WRITE_PROTECTED (1u << 1)
+#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_DISCOVERY_PROTECTED (1u << 2)
+#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_SUBMESSAGE_PROTECTED (1u << 3)
+#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_PAYLOAD_PROTECTED (1u << 4)
+#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_KEY_PROTECTED (1u << 5)
+#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_LIVELINESS_PROTECTED (1u << 6)
+#define DDS_SECURITY_ENDPOINT_ATTRIBUTES_FLAG_IS_VALID (1u << 31)
 
-#define DDS_SECURITY_PLUGIN_ENDPOINT_ATTRIBUTES_FLAG_IS_SUBMESSAGE_ENCRYPTED            (1u      )
-#define DDS_SECURITY_PLUGIN_ENDPOINT_ATTRIBUTES_FLAG_IS_PAYLOAD_ENCRYPTED               (1u <<  1)
-#define DDS_SECURITY_PLUGIN_ENDPOINT_ATTRIBUTES_FLAG_IS_SUBMESSAGE_ORIGIN_AUTHENTICATED (1u <<  2)
-
-
-
+#define DDS_SECURITY_PLUGIN_ENDPOINT_ATTRIBUTES_FLAG_IS_SUBMESSAGE_ENCRYPTED (1u)
+#define DDS_SECURITY_PLUGIN_ENDPOINT_ATTRIBUTES_FLAG_IS_PAYLOAD_ENCRYPTED (1u << 1)
+#define DDS_SECURITY_PLUGIN_ENDPOINT_ATTRIBUTES_FLAG_IS_SUBMESSAGE_ORIGIN_AUTHENTICATED (1u << 2)
 
 /**************************************************************************
  *                                                                        *
@@ -80,21 +74,18 @@ typedef enum {
  *                                                                        *
  **************************************************************************/
 typedef enum {
-    DDS_SECURITY_PROTECTION_KIND_ENCRYPT_WITH_ORIGIN_AUTHENTICATION,
-    DDS_SECURITY_PROTECTION_KIND_SIGN_WITH_ORIGIN_AUTHENTICATION,
-    DDS_SECURITY_PROTECTION_KIND_ENCRYPT,
-    DDS_SECURITY_PROTECTION_KIND_SIGN,
-    DDS_SECURITY_PROTECTION_KIND_NONE
+  DDS_SECURITY_PROTECTION_KIND_ENCRYPT_WITH_ORIGIN_AUTHENTICATION,
+  DDS_SECURITY_PROTECTION_KIND_SIGN_WITH_ORIGIN_AUTHENTICATION,
+  DDS_SECURITY_PROTECTION_KIND_ENCRYPT,
+  DDS_SECURITY_PROTECTION_KIND_SIGN,
+  DDS_SECURITY_PROTECTION_KIND_NONE
 } DDS_Security_ProtectionKind;
 
 typedef enum {
-    DDS_SECURITY_BASICPROTECTION_KIND_ENCRYPT,
-    DDS_SECURITY_BASICPROTECTION_KIND_SIGN,
-    DDS_SECURITY_BASICPROTECTION_KIND_NONE
+  DDS_SECURITY_BASICPROTECTION_KIND_ENCRYPT,
+  DDS_SECURITY_BASICPROTECTION_KIND_SIGN,
+  DDS_SECURITY_BASICPROTECTION_KIND_NONE
 } DDS_Security_BasicProtectionKind;
-
-
-
 
 /**************************************************************************
  *                                                                        *
@@ -102,13 +93,10 @@ typedef enum {
  *                                                                        *
  **************************************************************************/
 typedef enum {
-    DDS_SECURITY_INFO_SUBMESSAGE,
-    DDS_SECURITY_DATAWRITER_SUBMESSAGE,
-    DDS_SECURITY_DATAREADER_SUBMESSAGE
+  DDS_SECURITY_INFO_SUBMESSAGE,
+  DDS_SECURITY_DATAWRITER_SUBMESSAGE,
+  DDS_SECURITY_DATAREADER_SUBMESSAGE
 } DDS_Security_SecureSubmessageCategory_t;
-
-
-
 
 /**************************************************************************
  *                                                                        *
@@ -116,58 +104,50 @@ typedef enum {
  *                                                                        *
  **************************************************************************/
 typedef enum {
-    DDS_SECURITY_AUTOMATIC_LIVELINESS_QOS,
-    DDS_SECURITY_MANUAL_BY_PARTICIPANT_LIVELINESS_QOS,
-    DDS_SECURITY_MANUAL_BY_TOPIC_LIVELINESS_QOS
+  DDS_SECURITY_AUTOMATIC_LIVELINESS_QOS,
+  DDS_SECURITY_MANUAL_BY_PARTICIPANT_LIVELINESS_QOS,
+  DDS_SECURITY_MANUAL_BY_TOPIC_LIVELINESS_QOS
 } DDS_Security_LivelinessQosPolicyKind;
 
 typedef enum {
-    DDS_SECURITY_BEST_EFFORT_RELIABILITY_QOS,
-    DDS_SECURITY_RELIABLE_RELIABILITY_QOS
+  DDS_SECURITY_BEST_EFFORT_RELIABILITY_QOS,
+  DDS_SECURITY_RELIABLE_RELIABILITY_QOS
 } DDS_Security_ReliabilityQosPolicyKind;
 
-typedef enum  {
-    DDS_SECURITY_BY_RECEPTION_TIMESTAMP_DESTINATIONORDER_QOS,
-    DDS_SECURITY_BY_SOURCE_TIMESTAMP_DESTINATIONORDER_QOS
+typedef enum {
+  DDS_SECURITY_BY_RECEPTION_TIMESTAMP_DESTINATIONORDER_QOS,
+  DDS_SECURITY_BY_SOURCE_TIMESTAMP_DESTINATIONORDER_QOS
 } DDS_Security_DestinationOrderQosPolicyKind;
 
 typedef enum {
-    DDS_SECURITY_INSTANCE_PRESENTATION_QOS,
-    DDS_SECURITY_TOPIC_PRESENTATION_QOS,
-    DDS_SECURITY_GROUP_PRESENTATION_QOS
+  DDS_SECURITY_INSTANCE_PRESENTATION_QOS,
+  DDS_SECURITY_TOPIC_PRESENTATION_QOS,
+  DDS_SECURITY_GROUP_PRESENTATION_QOS
 } DDS_Security_PresentationQosPolicyAccessScopeKind;
 
 typedef enum {
-    DDS_SECURITY_KEEP_LAST_HISTORY_QOS,
-    DDS_SECURITY_KEEP_ALL_HISTORY_QOS
+  DDS_SECURITY_KEEP_LAST_HISTORY_QOS,
+  DDS_SECURITY_KEEP_ALL_HISTORY_QOS
 } DDS_Security_HistoryQosPolicyKind;
 
 typedef enum {
-    DDS_SECURITY_VOLATILE_DURABILITY_QOS,
-    DDS_SECURITY_TRANSIENT_LOCAL_DURABILITY_QOS,
-    DDS_SECURITY_TRANSIENT_DURABILITY_QOS,
-    DDS_SECURITY_PERSISTENT_DURABILITY_QOS
+  DDS_SECURITY_VOLATILE_DURABILITY_QOS,
+  DDS_SECURITY_TRANSIENT_LOCAL_DURABILITY_QOS,
+  DDS_SECURITY_TRANSIENT_DURABILITY_QOS,
+  DDS_SECURITY_PERSISTENT_DURABILITY_QOS
 } DDS_Security_DurabilityQosPolicyKind;
 
 typedef enum {
-    DDS_SECURITY_SHARED_OWNERSHIP_QOS,
-    DDS_SECURITY_EXCLUSIVE_OWNERSHIP_QOS
+  DDS_SECURITY_SHARED_OWNERSHIP_QOS,
+  DDS_SECURITY_EXCLUSIVE_OWNERSHIP_QOS
 } DDS_Security_OwnershipQosPolicyKind;
-
-
-
 
 /**************************************************************************
  *                                                                        *
  * Listener information.                                                  *
  *                                                                        *
  **************************************************************************/
-typedef enum {
-    DDS_SECURITY_IDENTITY_STATUS
-} DDS_Security_AuthStatusKind;
-
-
-
+typedef enum { DDS_SECURITY_IDENTITY_STATUS } DDS_Security_AuthStatusKind;
 
 /**************************************************************************
  *                                                                        *
@@ -214,9 +194,8 @@ typedef enum {
 #define DDS_SEC_PROP_BUILTIN_ENDPOINT_NAME DDS_SEC_PROP_PREFIX "builtin_endpoint_name"
 #define DDS_SEC_PROP_CRYPTO_KEYSIZE DDS_SEC_PROP_PREFIX "crypto.keysize"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
-
 
 #endif /* DDS_SECURITY_API_DEF_H */

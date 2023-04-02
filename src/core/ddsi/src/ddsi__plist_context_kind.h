@@ -34,10 +34,10 @@
  details on what it means to handle these parameter lists in a particular context becomes
  local to the (de)serialiser. */
 enum ddsi_plist_context_kind {
-  DDSI_PLIST_CONTEXT_PARTICIPANT,   /**< for SPDP, maps "participant lease duration" to "liveliness" */
-  DDSI_PLIST_CONTEXT_ENDPOINT,      /**< for endpoint discovery ("liveliness" is just that) */
-  DDSI_PLIST_CONTEXT_TOPIC,         /**< for topics (equivalent to ENDPOINT for current specs) */
-  DDSI_PLIST_CONTEXT_INLINE_QOS,    /**< for inline QoS interpretation (equivalent to ENDPOINT for current specs) */
+  DDSI_PLIST_CONTEXT_PARTICIPANT, /**< for SPDP, maps "participant lease duration" to "liveliness" */
+  DDSI_PLIST_CONTEXT_ENDPOINT,    /**< for endpoint discovery ("liveliness" is just that) */
+  DDSI_PLIST_CONTEXT_TOPIC,       /**< for topics (equivalent to ENDPOINT for current specs) */
+  DDSI_PLIST_CONTEXT_INLINE_QOS, /**< for inline QoS interpretation (equivalent to ENDPOINT for current specs) */
   DDSI_PLIST_CONTEXT_QOS_DISALLOWED /**< contexts where QoS are disallowed (currently only used for "pserop" serdes) */
 };
 

@@ -12,13 +12,12 @@
 #ifndef DDSI__SERDATA_PSEROP_H
 #define DDSI__SERDATA_PSEROP_H
 
+#include "dds/dds.h"
 #include "dds/ddsi/ddsi_serdata.h"
 #include "dds/ddsi/ddsi_sertype.h"
 #include "ddsi__plist_generic.h"
 
-#include "dds/dds.h"
-
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -28,16 +27,17 @@ extern "C" {
    one where the appropriate amount of padding is inserted */
 #define DDSI_SERDATA_PSEROP_PREPAD    \
   struct ddsi_serdata c;              \
-  void *sample;                       \
+  void * sample;                      \
   bool keyless; /*cached from topic*/ \
   uint32_t pos;                       \
   uint32_t size
-#define DDSI_SERDATA_PSEROP_POSTPAD   \
-  uint16_t identifier;                \
-  uint16_t options;                   \
+#define DDSI_SERDATA_PSEROP_POSTPAD \
+  uint16_t identifier;              \
+  uint16_t options;                 \
   char data[]
 
-struct ddsi_serdata_pserop_unpadded {
+struct ddsi_serdata_pserop_unpadded
+{
   DDSI_SERDATA_PSEROP_PREPAD;
   DDSI_SERDATA_PSEROP_POSTPAD;
 };
@@ -48,9 +48,10 @@ struct ddsi_serdata_pserop_unpadded {
 #define DDSI_SERDATA_PSEROP_PAD(n) (n)
 #endif
 
-struct ddsi_serdata_pserop {
+struct ddsi_serdata_pserop
+{
   DDSI_SERDATA_PSEROP_PREPAD;
-  char pad[DDSI_SERDATA_PSEROP_PAD (8 - (offsetof (struct ddsi_serdata_pserop_unpadded, data) % 8))];
+  char pad[DDSI_SERDATA_PSEROP_PAD(8 - (offsetof(struct ddsi_serdata_pserop_unpadded, data) % 8))];
   DDSI_SERDATA_PSEROP_POSTPAD;
 };
 
@@ -58,20 +59,21 @@ struct ddsi_serdata_pserop {
 #undef DDSI_SERDATA_PSEROP_POSTPAD
 #undef DDSI_SERDATA_PSEROP_PREPAD
 
-struct ddsi_sertype_pserop {
+struct ddsi_sertype_pserop
+{
   struct ddsi_sertype c;
   uint16_t encoding_format; /* DDSI_RTPS_CDR_ENC_FORMAT_(PLAIN|DELIMITED|PL) */
   size_t memsize;
   size_t nops;
-  const enum ddsi_pserop *ops;
+  const enum ddsi_pserop * ops;
   size_t nops_key;
-  const enum ddsi_pserop *ops_key; /* NULL <=> no key; != NULL <=> 16-byte key at offset 0 */
+  const enum ddsi_pserop * ops_key; /* NULL <=> no key; != NULL <=> 16-byte key at offset 0 */
 };
 
 extern const struct ddsi_sertype_ops ddsi_sertype_ops_pserop;
 extern const struct ddsi_serdata_ops ddsi_serdata_ops_pserop;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

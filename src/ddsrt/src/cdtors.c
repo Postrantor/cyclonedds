@@ -9,11 +9,12 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#include "dds/ddsrt/atomics.h"
 #include "dds/ddsrt/cdtors.h"
+
+#include "dds/ddsrt/atomics.h"
+#include "dds/ddsrt/random.h"
 #include "dds/ddsrt/sync.h"
 #include "dds/ddsrt/time.h"
-#include "dds/ddsrt/random.h"
 
 #if _WIN32
 /* Sockets API initialization is only necessary on Microsoft Windows. The
@@ -30,7 +31,7 @@ static ddsrt_atomic_uint32_t init_status = DDSRT_ATOMIC_UINT32_INIT(0);
 static ddsrt_mutex_t init_mutex;
 static ddsrt_cond_t init_cond;
 
-void ddsrt_init (void)
+void ddsrt_init(void)
 {
   uint32_t v;
   v = ddsrt_atomic_inc32_nv(&init_status);
@@ -62,7 +63,7 @@ retry:
   }
 }
 
-void ddsrt_fini (void)
+void ddsrt_fini(void)
 {
   uint32_t v, nv;
   do {
@@ -73,8 +74,7 @@ void ddsrt_fini (void)
       nv = v - 1;
     }
   } while (!ddsrt_atomic_cas32(&init_status, v, nv));
-  if (nv == 1)
-  {
+  if (nv == 1) {
     ddsrt_cond_destroy(&init_cond);
     ddsrt_mutex_destroy(&init_mutex);
     ddsrt_random_fini();
@@ -87,27 +87,20 @@ void ddsrt_fini (void)
   }
 }
 
-ddsrt_mutex_t *ddsrt_get_singleton_mutex(void)
-{
-  return &init_mutex;
-}
+ddsrt_mutex_t * ddsrt_get_singleton_mutex(void) { return &init_mutex; }
 
-ddsrt_cond_t *ddsrt_get_singleton_cond(void)
-{
-  return &init_cond;
-}
+ddsrt_cond_t * ddsrt_get_singleton_cond(void) { return &init_cond; }
 
 #ifdef _WIN32
-#include "dds/ddsrt/threads.h"
 #include "dds/ddsrt/misc.h"
+#include "dds/ddsrt/threads.h"
 
-DDSRT_WARNING_GNUC_OFF(missing-prototypes)
-DDSRT_WARNING_CLANG_OFF(missing-prototypes)
+DDSRT_WARNING_GNUC_OFF(missing - prototypes)
+DDSRT_WARNING_CLANG_OFF(missing - prototypes)
 
 /* Executed before DllMain within the context of the thread. Located here too
    avoid removal due to link time optimization. */
-void WINAPI
-ddsrt_cdtor(PVOID handle, DWORD reason, PVOID reserved)
+void WINAPI ddsrt_cdtor(PVOID handle, DWORD reason, PVOID reserved)
 {
   (void)handle;
   (void)reason;
@@ -131,8 +124,8 @@ ddsrt_cdtor(PVOID handle, DWORD reason, PVOID reserved)
   }
 }
 
-DDSRT_WARNING_GNUC_ON(missing-prototypes)
-DDSRT_WARNING_CLANG_ON(missing-prototypes)
+DDSRT_WARNING_GNUC_ON(missing - prototypes)
+DDSRT_WARNING_CLANG_ON(missing - prototypes)
 
 /* These instructions are very specific to the Windows platform. They register
    a function (or multiple) as a TLS initialization function. TLS initializers
@@ -150,32 +143,25 @@ DDSRT_WARNING_CLANG_ON(missing-prototypes)
    logic isn't exactly as trivial as for example determining the endianness of
    a platform, so keeping this close to the implementation is probably wise. */
 #if __MINGW32__
-  PIMAGE_TLS_CALLBACK __crt_xl_tls_callback__ __attribute__ ((section(".CRT$XLZ"))) = ddsrt_cdtor;
+PIMAGE_TLS_CALLBACK __crt_xl_tls_callback__ __attribute__((section(".CRT$XLZ"))) = ddsrt_cdtor;
 #elif _WIN64
-  #pragma comment (linker, "/INCLUDE:_tls_used")
-  #pragma comment (linker, "/INCLUDE:tls_callback_func")
-  #pragma const_seg(".CRT$XLZ")
-  EXTERN_C const PIMAGE_TLS_CALLBACK tls_callback_func = ddsrt_cdtor;
-  #pragma const_seg()
+#pragma comment(linker, "/INCLUDE:_tls_used")
+#pragma comment(linker, "/INCLUDE:tls_callback_func")
+#pragma const_seg(".CRT$XLZ")
+EXTERN_C const PIMAGE_TLS_CALLBACK tls_callback_func = ddsrt_cdtor;
+#pragma const_seg()
 #else
-  #pragma comment (linker, "/INCLUDE:__tls_used")
-  #pragma comment (linker, "/INCLUDE:_tls_callback_func")
-  #pragma data_seg(".CRT$XLZ")
-  EXTERN_C PIMAGE_TLS_CALLBACK tls_callback_func = ddsrt_cdtor;
-  #pragma data_seg()
- #endif
-#else /* _WIN32 */
+#pragma comment(linker, "/INCLUDE:__tls_used")
+#pragma comment(linker, "/INCLUDE:_tls_callback_func")
+#pragma data_seg(".CRT$XLZ")
+EXTERN_C PIMAGE_TLS_CALLBACK tls_callback_func = ddsrt_cdtor;
+#pragma data_seg()
+#endif
+#else  /* _WIN32 */
 void __attribute__((constructor)) ddsrt_ctor(void);
 void __attribute__((destructor)) ddsrt_dtor(void);
 
-void __attribute__((constructor)) ddsrt_ctor(void)
-{
-  ddsrt_init();
-}
+void __attribute__((constructor)) ddsrt_ctor(void) { ddsrt_init(); }
 
-void __attribute__((destructor)) ddsrt_dtor(void)
-{
-  ddsrt_fini();
-}
+void __attribute__((destructor)) ddsrt_dtor(void) { ddsrt_fini(); }
 #endif /* _WIN32 */
-

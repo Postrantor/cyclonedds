@@ -27,19 +27,12 @@ struct plugins_hdl;
 
  @returns pointer to opaque handle for unloading the plugins, or NULL on failure
  */
-struct plugins_hdl*
-load_plugins(
-        dds_security_access_control **ac,
-        dds_security_authentication **auth,
-        dds_security_cryptography   **crypto,
-        const struct ddsi_domaingv *init_gv);
+struct plugins_hdl * load_plugins(
+  dds_security_access_control ** ac, dds_security_authentication ** auth,
+  dds_security_cryptography ** crypto, const struct ddsi_domaingv * init_gv);
 
-void
-unload_plugins(
-        struct plugins_hdl *plugins);
+void unload_plugins(struct plugins_hdl * plugins);
 
-char*
-load_file_contents(
-        const char *filename);
+char * load_file_contents(const char * filename);
 
 #endif

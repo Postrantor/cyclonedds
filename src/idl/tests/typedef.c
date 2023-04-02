@@ -10,18 +10,17 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-
-#include "idl/processor.h"
 
 #include "CUnit/Test.h"
+#include "idl/processor.h"
 
 CU_Test(idl_typedef, bogus_type)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
   const char str[] = "typedef foo bar;";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -35,9 +34,9 @@ CU_Test(idl_typedef, bogus_type)
 CU_Test(idl_typedef, simple_declarator)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
-  idl_typedef_t *t;
-  idl_declarator_t *d;
+  idl_pstate_t * pstate = NULL;
+  idl_typedef_t * t;
+  idl_declarator_t * d;
 
   const char str[] = "typedef char foo;";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -69,9 +68,9 @@ CU_Test(idl_typedef, simple_declarator)
 CU_Test(idl_typedef, simple_declarators)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
-  idl_typedef_t *t;
-  idl_declarator_t *d;
+  idl_pstate_t * pstate = NULL;
+  idl_typedef_t * t;
+  idl_declarator_t * d;
 
   const char str[] = "typedef char foo, bar, baz;";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -122,10 +121,10 @@ CU_Test(idl_typedef, simple_declarators)
 CU_Test(idl_typedef, sequence)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate;
-  idl_typedef_t *t;
-  idl_struct_t *s;
-  idl_member_t *m;
+  idl_pstate_t * pstate;
+  idl_typedef_t * t;
+  idl_struct_t * s;
+  idl_member_t * m;
 
   const char str[] = "typedef sequence<long> t; struct s { t m; };";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -153,15 +152,15 @@ CU_Test(idl_typedef, sequence)
 CU_Test(idl_typedef, typedef_of_typedef_sequence)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
   idl_module_t *m1, *m2;
   idl_typedef_t *t0, *t1, *t2, *t3;
-  idl_struct_t *s1;
-  idl_sequence_t *s2;
+  idl_struct_t * s1;
+  idl_sequence_t * s2;
   idl_member_t *m_t2, *m_t3;
 
   const char str[] =
-    "module m1 {\n"\
+    "module m1 {\n"
     "  typedef long t0;\n"
     "  typedef t0 t1;\n"
     "  typedef t1 t2;\n"
@@ -215,13 +214,12 @@ CU_Test(idl_typedef, typedef_of_typedef_sequence)
   idl_delete_pstate(pstate);
 }
 
-static idl_retcode_t parse_string(const char *str, idl_pstate_t **pstatep)
+static idl_retcode_t parse_string(const char * str, idl_pstate_t ** pstatep)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
-  if ((ret = idl_create_pstate(IDL_FLAG_EXTENDED_DATA_TYPES, NULL, &pstate)))
-    return ret;
+  if ((ret = idl_create_pstate(IDL_FLAG_EXTENDED_DATA_TYPES, NULL, &pstate))) return ret;
   if ((ret = idl_parse_string(pstate, str)))
     idl_delete_pstate(pstate);
   else
@@ -231,27 +229,27 @@ static idl_retcode_t parse_string(const char *str, idl_pstate_t **pstatep)
 
 CU_Test(idl_typedef, forward_declaration)
 {
-  static const struct {
+  static const struct
+  {
     idl_retcode_t retcode;
     idl_type_t type;
-    const char *idl;
+    const char * idl;
   } tests[] = {
-    { IDL_RETCODE_SEMANTIC_ERROR, IDL_STRUCT, "typedef struct a b;" },
-    { IDL_RETCODE_OK, IDL_STRUCT, "typedef struct a b; struct a { long b; };" },
-    { IDL_RETCODE_SEMANTIC_ERROR, IDL_UNION, "typedef union a b;" },
-    { IDL_RETCODE_OK, IDL_UNION, "typedef union a b; union a switch (short) { case 1: long b; };" }
-  };
+    {IDL_RETCODE_SEMANTIC_ERROR, IDL_STRUCT, "typedef struct a b;"},
+    {IDL_RETCODE_OK, IDL_STRUCT, "typedef struct a b; struct a { long b; };"},
+    {IDL_RETCODE_SEMANTIC_ERROR, IDL_UNION, "typedef union a b;"},
+    {IDL_RETCODE_OK, IDL_UNION, "typedef union a b; union a switch (short) { case 1: long b; };"}};
 
-  for (size_t i = 0; i < sizeof(tests)/sizeof(tests[0]); i++) {
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     idl_retcode_t ret;
-    idl_pstate_t *pstate = NULL;
+    idl_pstate_t * pstate = NULL;
     printf("test idl: %s\n", tests[i].idl);
     ret = parse_string(tests[i].idl, &pstate);
     CU_ASSERT_EQUAL_FATAL(ret, tests[i].retcode);
     if (ret == IDL_RETCODE_OK) {
-      const idl_forward_t *forward;
-      const idl_typedef_t *alias;
-      const idl_type_spec_t *type_spec;
+      const idl_forward_t * forward;
+      const idl_typedef_t * alias;
+      const idl_type_spec_t * type_spec;
       forward = (const idl_forward_t *)pstate->root;
       CU_ASSERT_FATAL(idl_is_forward(forward));
       alias = idl_next(forward);
@@ -267,25 +265,25 @@ CU_Test(idl_typedef, forward_declaration)
 
 CU_Test(idl_typedef, backwards_forward_declaration)
 {
-  static const struct {
+  static const struct
+  {
     idl_retcode_t retcode;
     idl_type_t type;
-    const char *idl;
+    const char * idl;
   } tests[] = {
-    { IDL_RETCODE_OK, IDL_STRUCT, "struct a { long b; }; typedef struct a b;" },
-    { IDL_RETCODE_OK, IDL_UNION, "union a switch (short) { case 1: long b; }; typedef union a b;" }
-  };
+    {IDL_RETCODE_OK, IDL_STRUCT, "struct a { long b; }; typedef struct a b;"},
+    {IDL_RETCODE_OK, IDL_UNION, "union a switch (short) { case 1: long b; }; typedef union a b;"}};
 
-  for (size_t i = 0; i < sizeof(tests)/sizeof(tests[0]); i++) {
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     idl_retcode_t ret;
-    idl_pstate_t *pstate = NULL;
+    idl_pstate_t * pstate = NULL;
     printf("test idl: %s\n", tests[i].idl);
     ret = parse_string(tests[i].idl, &pstate);
     CU_ASSERT_EQUAL_FATAL(ret, tests[i].retcode);
     if (ret == IDL_RETCODE_OK) {
-      const idl_forward_t *forward;
-      const idl_typedef_t *alias;
-      const idl_type_spec_t *type_spec;
+      const idl_forward_t * forward;
+      const idl_typedef_t * alias;
+      const idl_type_spec_t * type_spec;
       type_spec = (const idl_type_spec_t *)pstate->root;
       CU_ASSERT_EQUAL_FATAL(idl_type(type_spec), tests[i].type);
       forward = idl_next(type_spec);
@@ -301,26 +299,26 @@ CU_Test(idl_typedef, backwards_forward_declaration)
 
 CU_Test(idl_typedef, constructed_type)
 {
-  static const struct {
+  static const struct
+  {
     idl_retcode_t retcode;
     idl_type_t type;
-    const char *idl;
+    const char * idl;
   } tests[] = {
-    { IDL_RETCODE_OK, IDL_STRUCT, "typedef struct a { long b; } c;" },
-    { IDL_RETCODE_OK, IDL_UNION, "typedef union a switch (short) { case 1: long b; } c;" },
-    { IDL_RETCODE_OK, IDL_ENUM, "typedef enum a { b, c } d;" },
-    { IDL_RETCODE_OK, IDL_BITMASK, "typedef bitmask a { b } c;" }
-  };
+    {IDL_RETCODE_OK, IDL_STRUCT, "typedef struct a { long b; } c;"},
+    {IDL_RETCODE_OK, IDL_UNION, "typedef union a switch (short) { case 1: long b; } c;"},
+    {IDL_RETCODE_OK, IDL_ENUM, "typedef enum a { b, c } d;"},
+    {IDL_RETCODE_OK, IDL_BITMASK, "typedef bitmask a { b } c;"}};
 
-  for (size_t i = 0; i < sizeof(tests)/sizeof(tests[0]); i++) {
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     idl_retcode_t ret;
-    idl_pstate_t *pstate = NULL;
+    idl_pstate_t * pstate = NULL;
     printf("test idl: %s\n", tests[i].idl);
     ret = parse_string(tests[i].idl, &pstate);
     CU_ASSERT_EQUAL_FATAL(ret, tests[i].retcode);
     if (ret == IDL_RETCODE_OK) {
-      const idl_type_spec_t *type_spec;
-      const idl_typedef_t *alias;
+      const idl_type_spec_t * type_spec;
+      const idl_typedef_t * alias;
       type_spec = (const idl_type_spec_t *)pstate->root;
       CU_ASSERT_EQUAL_FATAL(idl_type(type_spec), tests[i].type);
       alias = idl_next(type_spec);
@@ -333,18 +331,19 @@ CU_Test(idl_typedef, constructed_type)
 
 CU_Test(idl_typedef, scoped_name)
 {
-  static const struct {
+  static const struct
+  {
     idl_retcode_t retcode;
-    const char *idl;
+    const char * idl;
   } tests[] = {
-    { IDL_RETCODE_OK, "module m1 { struct a { long f1; }; }; typedef m1::a b;" },
-    { IDL_RETCODE_OK, "module m1 { module m2 { struct a { long f1; }; }; }; typedef m1::m2::a b;" },
-    { IDL_RETCODE_OK, "module m1 { module m2 { struct a { long f1; }; }; typedef m2::a b; };" },
+    {IDL_RETCODE_OK, "module m1 { struct a { long f1; }; }; typedef m1::a b;"},
+    {IDL_RETCODE_OK, "module m1 { module m2 { struct a { long f1; }; }; }; typedef m1::m2::a b;"},
+    {IDL_RETCODE_OK, "module m1 { module m2 { struct a { long f1; }; }; typedef m2::a b; };"},
   };
 
-  for (size_t i = 0; i < sizeof(tests)/sizeof(tests[0]); i++) {
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     idl_retcode_t ret;
-    idl_pstate_t *pstate = NULL;
+    idl_pstate_t * pstate = NULL;
     printf("test idl: %s\n", tests[i].idl);
     ret = parse_string(tests[i].idl, &pstate);
     CU_ASSERT_EQUAL_FATAL(ret, tests[i].retcode);

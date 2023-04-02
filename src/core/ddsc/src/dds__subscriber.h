@@ -15,7 +15,7 @@
 #include "dds/dds.h"
 #include "dds__entity.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -31,7 +31,10 @@ DEFINE_ENTITY_LOCK_UNLOCK(dds_subscriber, DDS_KIND_SUBSCRIBER, subscriber)
  * @param listener 存储在订阅者中的监听器对象 (listener object that is stored in the subscriber)
  * @return dds_entity_t 类型的实体 (dds_entity_t type entity)
  */
-dds_entity_t dds__create_subscriber_l(struct dds_participant *participant, bool implicit, const dds_qos_t *qos, const dds_listener_t *listener);
+dds_entity_t dds__create_subscriber_l(struct dds_participant* participant,
+                                      bool implicit,
+                                      const dds_qos_t* qos,
+                                      const dds_listener_t* listener);
 
 /**
  * @brief 开始一致性操作 (Begin coherent operation)
@@ -40,7 +43,7 @@ dds_entity_t dds__create_subscriber_l(struct dds_participant *participant, bool 
  * @param e 实体类型参数 (Entity type parameter)
  * @return dds_return_t 类型的返回值 (dds_return_t type return value)
  */
-dds_return_t dds_subscriber_begin_coherent (dds_entity_t e);
+dds_return_t dds_subscriber_begin_coherent(dds_entity_t e);
 
 /**
  * @brief 结束一致性操作 (End coherent operation)
@@ -49,16 +52,17 @@ dds_return_t dds_subscriber_begin_coherent (dds_entity_t e);
  * @param e 实体类型参数 (Entity type parameter)
  * @return dds_return_t 类型的返回值 (dds_return_t type return value)
  */
-dds_return_t dds_subscriber_end_coherent (dds_entity_t e);
+dds_return_t dds_subscriber_end_coherent(dds_entity_t e);
 
 /**
  * @brief 计算锁定的读取器上的数据 (Compute data on locked readers)
  * @component 订阅者组件 (subscriber component)
  *
  * @param sub 订阅者指针 (Pointer to subscriber)
- * @return 布尔值，表示是否计算成功 (Boolean value indicating whether the calculation was successful)
+ * @return 布尔值，表示是否计算成功 (Boolean value indicating whether the calculation was
+ * successful)
  */
-bool dds_subscriber_compute_data_on_readers_locked (dds_subscriber *sub);
+bool dds_subscriber_compute_data_on_readers_locked(dds_subscriber* sub);
 
 /**
  * @brief 调整读取器上的数据实例化 (Adjust materialize data on readers)
@@ -67,9 +71,10 @@ bool dds_subscriber_compute_data_on_readers_locked (dds_subscriber *sub);
  * @param sub 订阅者指针 (Pointer to subscriber)
  * @param materialization_needed 是否需要实例化 (Whether materialization is needed)
  */
-void dds_subscriber_adjust_materialize_data_on_readers (dds_subscriber *sub, bool materialization_needed) ddsrt_nonnull_all;
+void dds_subscriber_adjust_materialize_data_on_readers(
+    dds_subscriber* sub, bool materialization_needed) ddsrt_nonnull_all;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

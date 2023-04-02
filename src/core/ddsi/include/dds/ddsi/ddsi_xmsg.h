@@ -16,7 +16,7 @@
 
 #include "dds/features.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -24,21 +24,21 @@ struct ddsi_domaingv;
 struct ddsi_xpack;
 
 /** @component rtps_msg */
-struct ddsi_xpack * ddsi_xpack_new (struct ddsi_domaingv *gv, bool async_mode);
+struct ddsi_xpack * ddsi_xpack_new(struct ddsi_domaingv * gv, bool async_mode);
 
 /** @component rtps_msg */
-void ddsi_xpack_free (struct ddsi_xpack *xp);
+void ddsi_xpack_free(struct ddsi_xpack * xp);
 
 /** @component rtps_msg */
-void ddsi_xpack_send (struct ddsi_xpack *xp, bool immediately /* unused */);
+void ddsi_xpack_send(struct ddsi_xpack * xp, bool immediately /* unused */);
 
 /** @component rtps_msg */
-void ddsi_xpack_sendq_init (struct ddsi_domaingv *gv);
+void ddsi_xpack_sendq_init(struct ddsi_domaingv * gv);
 
 /** @component rtps_msg */
-void ddsi_xpack_sendq_start (struct ddsi_domaingv *gv);
+void ddsi_xpack_sendq_start(struct ddsi_domaingv * gv);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif /* DDSI_XMSG_H */

@@ -14,15 +14,16 @@
 
 #if _WIN32
 typedef unsigned ddsrt_iov_len_t;
-typedef struct ddsrt_iovec {
+typedef struct ddsrt_iovec
+{
   ddsrt_iov_len_t iov_len;
-  void *iov_base;
+  void * iov_base;
 } ddsrt_iovec_t;
 
 // Equivalent to a DWORD
 typedef unsigned long ddsrt_msg_iovlen_t;
 
-#else // _WIN32
+#else  // _WIN32
 
 #if DDSRT_WITH_LWIP
 #include <lwip/sockets.h>
@@ -40,6 +41,6 @@ typedef size_t ddsrt_msg_iovlen_t;
 typedef int ddsrt_msg_iovlen_t;
 #endif
 
-#endif // _WIN32
+#endif  // _WIN32
 
 #endif

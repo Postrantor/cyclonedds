@@ -12,11 +12,11 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #include "CUnit/CUnit.h"
 #include "CUnit/Test.h"
-#include "assert.h"
 #include "access_control_utils.h"
-
+#include "assert.h"
 
 CU_Test(ddssec_builtin_access_control_fnmatch, basic)
 {

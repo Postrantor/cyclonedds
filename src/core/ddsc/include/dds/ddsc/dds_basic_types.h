@@ -19,29 +19,31 @@
 #include <stdint.h>
 
 /**
- * @brief Handle to an entity
+ * @brief 实体句柄 (Handle to an entity)
  * @ingroup entity
  *
- * A valid entity handle will always have a positive integer value.
- * Should the value be negative, it is one of the DDS_RETCODE_*
- * error codes.
+ * 有效的实体句柄总是具有正整数值。 (A valid entity handle will always have a positive integer
+ * value.) 如果值为负，则为 DDS_RETCODE_* 错误代码之一。 (Should the value be negative, it is one of
+ * the DDS_RETCODE_* error codes.)
  */
 typedef int32_t dds_entity_t;
 
 /**
  * @anchor DDS_MIN_PSEUDO_HANDLE
  * @ingroup internal
- * @brief Pseudo Handle origin
+ * @brief 伪句柄起点 (Pseudo Handle origin)
  *
- * Some handles in CycloneDDS are 'fake', most importantly the builtin topic handles.
- * These handles are derived from this constant.
+ * CycloneDDS 中的一些句柄是“假”的，最重要的是内置主题句柄。 (Some handles in CycloneDDS are 'fake',
+ * most importantly the builtin topic handles.) 这些句柄源自此常量。 (These handles are derived from
+ * this constant.)
  */
 #define DDS_MIN_PSEUDO_HANDLE ((dds_entity_t)0x7fff0000)
 
 /**
  * @anchor DDS_CYCLONEDDS_HANDLE
  * @ingroup internal
- * @brief Special handle representing the entity corresponding to the CycloneDDS library itself
+ * @brief 表示与 CycloneDDS 库本身对应的实体的特殊句柄 (Special handle representing the entity
+ * corresponding to the CycloneDDS library itself)
  */
 #define DDS_CYCLONEDDS_HANDLE ((dds_entity_t)(DDS_MIN_PSEUDO_HANDLE + 256))
 

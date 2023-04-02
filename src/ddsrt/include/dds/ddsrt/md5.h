@@ -63,6 +63,7 @@
 #define DDSRT_MD5_H
 
 #include <stddef.h>
+
 #include "dds/export.h"
 
 /*
@@ -76,31 +77,32 @@
  */
 
 typedef unsigned char ddsrt_md5_byte_t; /* 8-bit byte */
-typedef unsigned int ddsrt_md5_word_t; /* 32-bit word */
+typedef unsigned int ddsrt_md5_word_t;  /* 32-bit word */
 
 /* Define the state of the MD5 Algorithm. */
-typedef struct ddsrt_md5_state_s {
-    ddsrt_md5_word_t count[2];        /* message length in bits, lsw first */
-    ddsrt_md5_word_t abcd[4];         /* digest buffer */
-    ddsrt_md5_byte_t buf[64];         /* accumulate block */
+typedef struct ddsrt_md5_state_s
+{
+  ddsrt_md5_word_t count[2]; /* message length in bits, lsw first */
+  ddsrt_md5_word_t abcd[4];  /* digest buffer */
+  ddsrt_md5_byte_t buf[64];  /* accumulate block */
 } ddsrt_md5_state_t;
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Initialize the algorithm. */
-DDS_EXPORT void ddsrt_md5_init(ddsrt_md5_state_t *pms);
+DDS_EXPORT void ddsrt_md5_init(ddsrt_md5_state_t * pms);
 
 /* Append a string to the message. */
-DDS_EXPORT void ddsrt_md5_append(ddsrt_md5_state_t *pms, const ddsrt_md5_byte_t *data, unsigned nbytes);
+DDS_EXPORT void ddsrt_md5_append(
+  ddsrt_md5_state_t * pms, const ddsrt_md5_byte_t * data, unsigned nbytes);
 
 /* Finish the message and return the digest. */
-DDS_EXPORT void ddsrt_md5_finish(ddsrt_md5_state_t *pms, ddsrt_md5_byte_t digest[16]);
+DDS_EXPORT void ddsrt_md5_finish(ddsrt_md5_state_t * pms, ddsrt_md5_byte_t digest[16]);
 
 #ifdef __cplusplus
-}  /* end extern "C" */
+} /* end extern "C" */
 #endif
 
 #endif /* DDSRT_MD5_H */

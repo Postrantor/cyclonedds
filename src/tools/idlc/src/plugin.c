@@ -36,14 +36,14 @@ static const char ext[] = "so";
 #define SUBPROCESS_PCLOSE pclose
 #endif
 
-#include "plugin.h"
 #include "idl/heap.h"
 #include "idl/string.h"
 #include "idlc/generator.h"
+#include "plugin.h"
 
 static size_t extlen = sizeof(ext) - 1;
 
-static void *openlib(const char *filename)
+static void * openlib(const char * filename)
 {
 #if WIN32
   return (void *)LoadLibrary(filename);
@@ -52,7 +52,7 @@ static void *openlib(const char *filename)
 #endif
 }
 
-static void closelib(void *handle)
+static void closelib(void * handle)
 {
 #if WIN32
   (void)FreeLibrary((HMODULE)handle);
@@ -61,7 +61,7 @@ static void closelib(void *handle)
 #endif
 }
 
-static void *loadsym(void *handle, const char *symbol)
+static void * loadsym(void * handle, const char * symbol)
 {
 #if WIN32
   return (void *)GetProcAddress((HMODULE)handle, symbol);
@@ -70,21 +70,15 @@ static void *loadsym(void *handle, const char *symbol)
 #endif
 }
 
-static void liberror(char *buffer, size_t bufferlen)
+static void liberror(char * buffer, size_t bufferlen)
 {
   assert(buffer != NULL);
   assert(bufferlen > 0);
 #if WIN32
   DWORD error = GetLastError();
-  (void)FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
-    FORMAT_MESSAGE_IGNORE_INSERTS |
-    FORMAT_MESSAGE_MAX_WIDTH_MASK,
-    NULL,
-    (DWORD)error,
-    0,
-    (LPTSTR)buffer,
-    (DWORD)(bufferlen - 1),
-    NULL);
+  (void)FormatMessage(
+    FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+    NULL, (DWORD)error, 0, (LPTSTR)buffer, (DWORD)(bufferlen - 1), NULL);
   SetLastError(error);
 #else
   strncpy(buffer, dlerror(), bufferlen - 1);
@@ -93,16 +87,17 @@ static void liberror(char *buffer, size_t bufferlen)
 }
 
 #define SUBPROCESS_PIPE_MEMORY_LIMIT 1024 * 1024
-static int run_library_locator(const char *command, char **out_output) {
+static int run_library_locator(const char * command, char ** out_output)
+{
   size_t output_size = 0;
   size_t output_pt = 0;
-  char *output = NULL;
-  FILE *pipe;
+  char * output = NULL;
+  FILE * pipe;
   int ret = 0;
   bool success = true;
   int c;
 
-  if ((pipe = SUBPROCESS_POPEN (command, "r")) == NULL) {
+  if ((pipe = SUBPROCESS_POPEN(command, "r")) == NULL) {
     // broken-pipe
     return -1;
   }
@@ -119,7 +114,7 @@ static int run_library_locator(const char *command, char **out_output) {
         break;
       }
 
-      char* new = (char*) idl_realloc(output, output_size);
+      char * new = (char *)idl_realloc(output, output_size);
       if (!new) {
         success = false;
         break;
@@ -127,10 +122,10 @@ static int run_library_locator(const char *command, char **out_output) {
       output = new;
     }
 
-    output[output_pt++] = (char) c;
+    output[output_pt++] = (char)c;
   }
 
-  ret = SUBPROCESS_PCLOSE (pipe);
+  ret = SUBPROCESS_PCLOSE(pipe);
 
   if (success && output != NULL && ret == 0) {
     // ensure proper string termination (might be newline)
@@ -148,17 +143,15 @@ static int run_library_locator(const char *command, char **out_output) {
   return -1;
 }
 
+extern const idlc_option_t ** idlc_generator_options(void);
+extern int idlc_generate(const idl_pstate_t * pstate, const idlc_generator_config_t * config);
 
-extern const idlc_option_t** idlc_generator_options(void);
-extern int idlc_generate(const idl_pstate_t *pstate, const idlc_generator_config_t *config);
-
-int32_t
-idlc_load_generator(idlc_generator_plugin_t *plugin, const char *lang)
+int32_t idlc_load_generator(idlc_generator_plugin_t * plugin, const char * lang)
 {
   char buf[64], *file = NULL;
-  const char *path;
+  const char * path;
   size_t len = strlen(lang);
-  void *handle = NULL;
+  void * handle = NULL;
   idlc_generate_t generate = 0;
 
   /* short-circuit on builtin generator */
@@ -183,7 +176,7 @@ idlc_load_generator(idlc_generator_plugin_t *plugin, const char *lang)
     if (run_library_locator("python3 -m cyclonedds.__idlc__", &file) != 0) {
       return -1;
     }
-    path = (const char*) file;
+    path = (const char *)file;
   }
 
   /* figure out if user passed library or language */
@@ -198,10 +191,10 @@ idlc_load_generator(idlc_generator_plugin_t *plugin, const char *lang)
     assert(cnt != -1);
     if ((size_t)cnt < sizeof(buf)) {
       path = (const char *)buf;
-    } else if (!(file = idl_malloc((size_t)cnt+1))) {
+    } else if (!(file = idl_malloc((size_t)cnt + 1))) {
       return -1;
     } else {
-      cnt = snprintf(file, (size_t)cnt+1, fmt, lib, lang, ext);
+      cnt = snprintf(file, (size_t)cnt + 1, fmt, lib, lang, ext);
       assert(cnt != -1);
       path = (const char *)file;
     }
@@ -220,8 +213,7 @@ idlc_load_generator(idlc_generator_plugin_t *plugin, const char *lang)
       fprintf(stderr, "Symbol 'generate' not found in %s\n", path);
       closelib(handle);
     }
-  }
-  else {
+  } else {
     char errmsg[300];
     liberror(errmsg, sizeof(errmsg));
     fprintf(stderr, "Cannot load generator %s: %s\n", path, errmsg);
@@ -234,10 +226,9 @@ idlc_load_generator(idlc_generator_plugin_t *plugin, const char *lang)
   return (handle && generate) ? 0 : -1;
 }
 
-void idlc_unload_generator(idlc_generator_plugin_t *plugin)
+void idlc_unload_generator(idlc_generator_plugin_t * plugin)
 {
-  if (!plugin || !plugin->handle)
-    return;
+  if (!plugin || !plugin->handle) return;
   closelib(plugin->handle);
   plugin->handle = NULL;
   plugin->generator_options = 0;

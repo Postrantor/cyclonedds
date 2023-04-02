@@ -19,10 +19,10 @@
 #ifndef DDSRT_STRTOD_H
 #define DDSRT_STRTOD_H
 
-#include "dds/export.h"
 #include "dds/ddsrt/retcode.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -36,8 +36,7 @@ extern "C" {
  *
  * @returns A dds_return_t indicating success or failure.
  */
-dds_return_t
-ddsrt_strtod(const char *nptr, char **endptr, double *dblptr);
+dds_return_t ddsrt_strtod(const char * nptr, char ** endptr, double * dblptr);
 
 /**
  * @brief Convert a string to a floating point number.
@@ -49,8 +48,7 @@ ddsrt_strtod(const char *nptr, char **endptr, double *dblptr);
  *
  * @returns A dds_return_t indicating success or failure.
  */
-dds_return_t
-ddsrt_strtof(const char *nptr, char **endptr, float *fltptr);
+dds_return_t ddsrt_strtof(const char * nptr, char ** endptr, float * fltptr);
 
 /**
  * @brief Convert a double-precision floating-point number to a string.
@@ -61,8 +59,7 @@ ddsrt_strtof(const char *nptr, char **endptr, float *fltptr);
  *
  * @returns The number of bytes written (excluding the null terminating byte).
  */
-int
-ddsrt_dtostr(double src, char *str, size_t size);
+int ddsrt_dtostr(double src, char * str, size_t size);
 
 /**
  * @brief convert a floating-point number to a string.
@@ -73,10 +70,9 @@ ddsrt_dtostr(double src, char *str, size_t size);
  *
  * @returns The number of bytes written (exluding the null terminating byte).
  */
-int
-ddsrt_ftostr(float src, char *str, size_t size);
+int ddsrt_ftostr(float src, char * str, size_t size);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

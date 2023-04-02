@@ -10,22 +10,21 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 #include <assert.h>
-#include <stdint.h>
 #include <inttypes.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-
-#include "idl/string.h"
-#include "idl/processor.h"
 
 #include "CUnit/Theory.h"
+#include "idl/processor.h"
+#include "idl/string.h"
 
 /* a union must have at least one case */
 CU_Test(idl_union, no_case)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
   const char str[] = "union u switch(char) { };";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -39,10 +38,11 @@ CU_Test(idl_union, no_case)
 CU_Test(idl_union, name_clash)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
-  const char str[] = "union u switch (long) { case 1: char c; };\n"
-                     "union u switch (long) { case 1: char c; };";
+  const char str[] =
+    "union u switch (long) { case 1: char c; };\n"
+    "union u switch (long) { case 1: char c; };";
   ret = idl_create_pstate(0u, NULL, &pstate);
   CU_ASSERT_EQUAL_FATAL(ret, IDL_RETCODE_OK);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pstate);
@@ -54,9 +54,9 @@ CU_Test(idl_union, name_clash)
 CU_Test(idl_union, single_case)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
-  idl_union_t *u;
-  idl_case_t *c;
+  idl_pstate_t * pstate = NULL;
+  idl_union_t * u;
+  idl_case_t * c;
 
   const char str[] = "union u switch(long) { case 1: char c; };";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -83,9 +83,9 @@ CU_Test(idl_union, single_case)
 CU_Test(idl_union, single_default_case)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
-  idl_union_t *u;
-  idl_case_t *c;
+  idl_pstate_t * pstate = NULL;
+  idl_union_t * u;
+  idl_case_t * c;
 
   const char str[] = "union u switch(char) { default: char c; };";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -126,15 +126,16 @@ CU_Test(idl_union, single_default_case)
 CU_Test(idl_union, enumerator_switch_type)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
-  idl_enum_t *e;
-  idl_enumerator_t *el;
-  idl_union_t *u;
-  idl_case_t *c;
-  const char *str;
+  idl_pstate_t * pstate = NULL;
+  idl_enum_t * e;
+  idl_enumerator_t * el;
+  idl_union_t * u;
+  idl_case_t * c;
+  const char * str;
 
-  str = "enum Color { Red, Yellow, Blue };\n"
-        "union u switch(Color) { case Red: char c; default: long l; };";
+  str =
+    "enum Color { Red, Yellow, Blue };\n"
+    "union u switch(Color) { case Red: char c; default: long l; };";
 
   ret = idl_create_pstate(0u, NULL, &pstate);
   CU_ASSERT_EQUAL_FATAL(ret, IDL_RETCODE_OK);
@@ -171,11 +172,11 @@ CU_Test(idl_union, enumerator_switch_type)
 CU_Test(idl_union, typedef_switch_types)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
-  idl_module_t *m;
-  idl_typedef_t *t;
-  idl_union_t *u;
-  const char *str;
+  idl_pstate_t * pstate = NULL;
+  idl_module_t * m;
+  idl_typedef_t * t;
+  idl_union_t * u;
+  const char * str;
 
   ret = idl_create_pstate(0u, NULL, &pstate);
   CU_ASSERT_EQUAL_FATAL(ret, IDL_RETCODE_OK);
@@ -230,20 +231,16 @@ CU_Test(idl_union, typedef_switch_types)
 }
 
 CU_TheoryDataPoints(idl_union, bad_switch_types) = {
-  CU_DataPoints(const char *,
-    S("baz") U("baz"),
-    U("baz"),
-    M("foo", T("float", "baz")) M("bar", U("foo::baz"))),
-  CU_DataPoints(idl_retcode_t,
-    IDL_RETCODE_SEMANTIC_ERROR,
-    IDL_RETCODE_SEMANTIC_ERROR,
-    IDL_RETCODE_SEMANTIC_ERROR)
-};
+  CU_DataPoints(
+    const char *, S("baz") U("baz"), U("baz"), M("foo", T("float", "baz")) M("bar", U("foo::baz"))),
+  CU_DataPoints(
+    idl_retcode_t, IDL_RETCODE_SEMANTIC_ERROR, IDL_RETCODE_SEMANTIC_ERROR,
+    IDL_RETCODE_SEMANTIC_ERROR)};
 
-CU_Theory((const char *str, idl_retcode_t expret), idl_union, bad_switch_types)
+CU_Theory((const char * str, idl_retcode_t expret), idl_union, bad_switch_types)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
   ret = idl_create_pstate(0u, NULL, &pstate);
   CU_ASSERT_EQUAL_FATAL(ret, IDL_RETCODE_OK);
@@ -253,13 +250,12 @@ CU_Theory((const char *str, idl_retcode_t expret), idl_union, bad_switch_types)
   idl_delete_pstate(pstate);
 }
 
-static idl_retcode_t parse_string(const char *str, idl_pstate_t **pstatep)
+static idl_retcode_t parse_string(const char * str, idl_pstate_t ** pstatep)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
-  if ((ret = idl_create_pstate(IDL_FLAG_EXTENDED_DATA_TYPES, NULL, &pstate)))
-    return ret;
+  if ((ret = idl_create_pstate(IDL_FLAG_EXTENDED_DATA_TYPES, NULL, &pstate))) return ret;
   if ((ret = idl_parse_string(pstate, str)))
     idl_delete_pstate(pstate);
   else
@@ -270,43 +266,36 @@ static idl_retcode_t parse_string(const char *str, idl_pstate_t **pstatep)
 CU_Test(idl_union, default_discriminator_bool)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate;
+  idl_pstate_t * pstate;
   char buf[256];
-  const char *fmt = "union u switch(boolean) { %s };";
+  const char * fmt = "union u switch(boolean) { %s };";
 
-  static const struct {
-    const char *cases;
+  static const struct
+  {
+    const char * cases;
     idl_retcode_t result;
     enum { FIRST_DISCRIMINANT, DEFAULT_CASE, IMPLICIT_DEFAULT_CASE } condition;
     bool discriminant;
   } tests[] = {
-    { "case FALSE: char x;",
-      IDL_RETCODE_OK, IMPLICIT_DEFAULT_CASE, true },
-    { "case FALSE: char x; default: char y;",
-      IDL_RETCODE_OK, DEFAULT_CASE, true },
-    { "case TRUE:  char x;",
-      IDL_RETCODE_OK, IMPLICIT_DEFAULT_CASE, false },
-    { "case TRUE:  char x; default: char y;",
-      IDL_RETCODE_OK, DEFAULT_CASE, false },
-    { "case FALSE: char x; case TRUE:  char y;",
-      IDL_RETCODE_OK, FIRST_DISCRIMINANT, false },
-    { "case TRUE:  char x; case FALSE: char y;",
-      IDL_RETCODE_OK, FIRST_DISCRIMINANT, true },
-    { "case FALSE: char x; case TRUE:  char y; default: char z;",
-      IDL_RETCODE_SEMANTIC_ERROR, DEFAULT_CASE, false }
-  };
+    {"case FALSE: char x;", IDL_RETCODE_OK, IMPLICIT_DEFAULT_CASE, true},
+    {"case FALSE: char x; default: char y;", IDL_RETCODE_OK, DEFAULT_CASE, true},
+    {"case TRUE:  char x;", IDL_RETCODE_OK, IMPLICIT_DEFAULT_CASE, false},
+    {"case TRUE:  char x; default: char y;", IDL_RETCODE_OK, DEFAULT_CASE, false},
+    {"case FALSE: char x; case TRUE:  char y;", IDL_RETCODE_OK, FIRST_DISCRIMINANT, false},
+    {"case TRUE:  char x; case FALSE: char y;", IDL_RETCODE_OK, FIRST_DISCRIMINANT, true},
+    {"case FALSE: char x; case TRUE:  char y; default: char z;", IDL_RETCODE_SEMANTIC_ERROR,
+     DEFAULT_CASE, false}};
 
-  for (size_t i=0, n=sizeof(tests)/sizeof(tests[0]); i < n; i++) {
-
+  for (size_t i = 0, n = sizeof(tests) / sizeof(tests[0]); i < n; i++) {
     pstate = NULL;
     idl_snprintf(buf, sizeof(buf), fmt, tests[i].cases);
     ret = parse_string(buf, &pstate);
     CU_ASSERT_EQUAL(ret, tests[i].result);
     if (ret == IDL_RETCODE_OK) {
-      const idl_case_t *c;
-      const idl_case_label_t *cl;
-      const idl_literal_t *l;
-      const idl_union_t *u;
+      const idl_case_t * c;
+      const idl_case_label_t * cl;
+      const idl_literal_t * l;
+      const idl_union_t * u;
 
       CU_ASSERT_PTR_NOT_NULL_FATAL(pstate);
       assert(pstate);
@@ -349,34 +338,27 @@ CU_Test(idl_union, default_discriminator_bool)
 
 CU_Test(idl_union, default_discriminator_signed_int)
 {
-#define IMPLICIT \
-  "union u switch(int8) { case %"PRId8": int8 i1; };"
-#define EXPLICIT \
-  "union u switch(int8) { case %"PRId8": int8 i1; default: int8 i2; };"
+#define IMPLICIT "union u switch(int8) { case %" PRId8 ": int8 i1; };"
+#define EXPLICIT "union u switch(int8) { case %" PRId8 ": int8 i1; default: int8 i2; };"
 
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
   char buf[256];
 
-  static struct {
+  static struct
+  {
     int8_t label;
     int8_t discriminant;
     bool branch;
-    const char *format;
-  } tests[] = {
-    { -1, 0, false, IMPLICIT },
-    {  0, 1, false, IMPLICIT },
-    {  1, 0, false, IMPLICIT },
-    { -1, 0, true,  EXPLICIT },
-    {  0, 1, true,  EXPLICIT },
-    {  1, 0, true,  EXPLICIT }
-  };
+    const char * format;
+  } tests[] = {{-1, 0, false, IMPLICIT}, {0, 1, false, IMPLICIT}, {1, 0, false, IMPLICIT},
+               {-1, 0, true, EXPLICIT},  {0, 1, true, EXPLICIT},  {1, 0, true, EXPLICIT}};
 
-  for (size_t i=0, n=sizeof(tests)/sizeof(tests[0]); i < n; i++) {
-    const idl_case_t *c;
-    const idl_case_label_t *cl;
-    const idl_literal_t *l;
-    const idl_union_t *u;
+  for (size_t i = 0, n = sizeof(tests) / sizeof(tests[0]); i < n; i++) {
+    const idl_case_t * c;
+    const idl_case_label_t * cl;
+    const idl_literal_t * l;
+    const idl_union_t * u;
 
     pstate = NULL;
     idl_snprintf(buf, sizeof(buf), tests[i].format, tests[i].label);
@@ -416,32 +398,30 @@ CU_Test(idl_union, default_discriminator_signed_int)
 
 CU_Test(idl_union, default_discriminator_unsigned_int)
 {
-#define IMPLICIT \
-  "union u switch(uint8) { case %" PRIu8 ": uint8 i1; };"
-#define EXPLICIT \
-  "union u switch(uint8) { case %" PRIu8 ": uint8 i1; default: uint8 i2; };"
+#define IMPLICIT "union u switch(uint8) { case %" PRIu8 ": uint8 i1; };"
+#define EXPLICIT "union u switch(uint8) { case %" PRIu8 ": uint8 i1; default: uint8 i2; };"
 
   idl_retcode_t ret;
-  idl_pstate_t *pstate;
+  idl_pstate_t * pstate;
   char buf[256];
 
-  static const struct {
+  static const struct
+  {
     uint8_t label;
     uint8_t discriminant;
     bool branch;
-    const char *format;
+    const char * format;
   } tests[] = {
-    {  0, 1, false, IMPLICIT },
-    {  1, 0, false, IMPLICIT },
-    {  0, 1, true,  EXPLICIT },
-    {  1, 0, true,  EXPLICIT }
-  };
+    {0, 1, false, IMPLICIT},
+    {1, 0, false, IMPLICIT},
+    {0, 1, true, EXPLICIT},
+    {1, 0, true, EXPLICIT}};
 
-  for (size_t i=0, n=sizeof(tests)/sizeof(tests[0]); i < n; i++) {
-    const idl_case_t *c;
-    const idl_case_label_t *cl;
-    const idl_literal_t *l;
-    const idl_union_t *u;
+  for (size_t i = 0, n = sizeof(tests) / sizeof(tests[0]); i < n; i++) {
+    const idl_case_t * c;
+    const idl_case_label_t * cl;
+    const idl_literal_t * l;
+    const idl_union_t * u;
 
     pstate = NULL;
     idl_snprintf(buf, sizeof(buf), tests[i].format, tests[i].label);
@@ -484,16 +464,17 @@ CU_Test(idl_union, default_discriminator_unsigned_int)
 CU_Test(idl_union, default_discriminator_enum)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
-  const idl_case_t *c;
-  const idl_case_label_t *cl;
-  const idl_enum_t *e1;
-  const idl_enumerator_t *e1x;
-  const idl_union_t *u1;
-  const char *idl;
+  idl_pstate_t * pstate = NULL;
+  const idl_case_t * c;
+  const idl_case_label_t * cl;
+  const idl_enum_t * e1;
+  const idl_enumerator_t * e1x;
+  const idl_union_t * u1;
+  const char * idl;
 
-  idl = "enum e1 { e11, e12 };\n"
-        "union u1 switch(e1) { case e12: char c; };";
+  idl =
+    "enum e1 { e11, e12 };\n"
+    "union u1 switch(e1) { case e12: char c; };";
   pstate = NULL;
   ret = parse_string(idl, &pstate);
   CU_ASSERT_EQUAL_FATAL(ret, IDL_RETCODE_OK);
@@ -509,8 +490,9 @@ CU_Test(idl_union, default_discriminator_enum)
   CU_ASSERT(u1->default_case && u1->default_case->const_expr == e1x);
   idl_delete_pstate(pstate);
 
-  idl = "enum e1 { e11, e12 };\n"
-        "union u1 switch(e1) { case e11: char c; };";
+  idl =
+    "enum e1 { e11, e12 };\n"
+    "union u1 switch(e1) { case e11: char c; };";
   pstate = NULL;
   ret = parse_string(idl, &pstate);
   CU_ASSERT_EQUAL_FATAL(ret, IDL_RETCODE_OK);
@@ -526,8 +508,9 @@ CU_Test(idl_union, default_discriminator_enum)
   CU_ASSERT(u1->default_case && u1->default_case->const_expr == e1x);
   idl_delete_pstate(pstate);
 
-  idl = "enum e1 { e11, e12 };\n"
-        "union u1 switch(e1) { case e12: char c; default: long l; };";
+  idl =
+    "enum e1 { e11, e12 };\n"
+    "union u1 switch(e1) { case e12: char c; default: long l; };";
   pstate = NULL;
   ret = parse_string(idl, &pstate);
   CU_ASSERT_EQUAL_FATAL(ret, IDL_RETCODE_OK);
@@ -548,8 +531,9 @@ CU_Test(idl_union, default_discriminator_enum)
   CU_ASSERT(u1->default_case && u1->default_case->const_expr == e1x);
   idl_delete_pstate(pstate);
 
-  idl = "enum e1 { e11, e12 };\n"
-        "union u1 switch(e1) { case e12: char c; case e11: long l; };";
+  idl =
+    "enum e1 { e11, e12 };\n"
+    "union u1 switch(e1) { case e12: char c; case e11: long l; };";
   pstate = NULL;
   ret = parse_string(idl, &pstate);
   CU_ASSERT_EQUAL_FATAL(ret, IDL_RETCODE_OK);
@@ -570,8 +554,9 @@ CU_Test(idl_union, default_discriminator_enum)
   CU_ASSERT_PTR_EQUAL(u1->default_case, cl);
   idl_delete_pstate(pstate);
 
-  idl = "enum e1 { e11, e12 };\n"
-        "union u1 switch(e1) { case e11: char c; case e12: long l; default: double d; };";
+  idl =
+    "enum e1 { e11, e12 };\n"
+    "union u1 switch(e1) { case e11: char c; case e12: long l; default: double d; };";
   pstate = NULL;
   ret = parse_string(idl, &pstate);
   CU_ASSERT_EQUAL(ret, IDL_RETCODE_SEMANTIC_ERROR);
@@ -582,11 +567,12 @@ CU_Test(idl_union, default_discriminator_enum)
 CU_Test(idl_union, two_unions_one_enum)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
-  const char str[] = "enum aap { noot, mies };\n"
-                     "union wim switch (aap) { case mies: double zus; };\n"
-                     "union jet switch (aap) { case noot: double zus; };";
+  const char str[] =
+    "enum aap { noot, mies };\n"
+    "union wim switch (aap) { case mies: double zus; };\n"
+    "union jet switch (aap) { case noot: double zus; };";
 
   ret = idl_create_pstate(0u, NULL, &pstate);
   CU_ASSERT_EQUAL_FATAL(ret, IDL_RETCODE_OK);

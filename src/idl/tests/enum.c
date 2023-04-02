@@ -13,14 +13,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "idl/processor.h"
-
 #include "CUnit/Test.h"
+#include "idl/processor.h"
 
 CU_Test(idl_enum, no_enumerator)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
   const char str[] = "enum foo { };";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -36,7 +35,7 @@ CU_Test(idl_enum, no_enumerator)
 CU_Test(idl_enum, duplicate_enumerators)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
   const char str[] = "enum foo { bar, bar };";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -52,7 +51,7 @@ CU_Test(idl_enum, duplicate_enumerators)
 CU_Test(idl_enum, enumerator_matches_enum)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
+  idl_pstate_t * pstate = NULL;
 
   const char str[] = "enum foo { foo };";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -82,9 +81,9 @@ CU _ Test(idl_enum, enumerator_used_name)
 CU_Test(idl_enum, single_enumerator)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
-  idl_enum_t *e;
-  idl_enumerator_t *er;
+  idl_pstate_t * pstate = NULL;
+  idl_enum_t * e;
+  idl_enumerator_t * er;
 
   const char str[] = "enum foo { bar };";
   ret = idl_create_pstate(0u, NULL, &pstate);
@@ -106,9 +105,9 @@ CU_Test(idl_enum, single_enumerator)
 CU_Test(idl_enum, multiple_enumerators)
 {
   idl_retcode_t ret;
-  idl_pstate_t *pstate = NULL;
-  idl_enum_t *e;
-  idl_enumerator_t *er;
+  idl_pstate_t * pstate = NULL;
+  idl_enum_t * e;
+  idl_enumerator_t * er;
 
   const char str[] = "enum foo { bar, baz };";
   ret = idl_create_pstate(0u, NULL, &pstate);

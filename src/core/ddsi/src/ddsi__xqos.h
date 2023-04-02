@@ -12,15 +12,14 @@
 #ifndef DDSI__XQOS_H
 #define DDSI__XQOS_H
 
-#include "dds/features.h"
-
-#include "dds/ddsi/ddsi_protocol.h"
-#include "dds/ddsi/ddsi_log.h"
-#include "dds/ddsi/ddsi_xqos.h"
 #include "dds/ddsc/dds_public_qosdefs.h"
+#include "dds/ddsi/ddsi_log.h"
+#include "dds/ddsi/ddsi_protocol.h"
+#include "dds/ddsi/ddsi_xqos.h"
+#include "dds/features.h"
 #include "ddsi__plist_context_kind.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -37,7 +36,7 @@ struct ddsi_xmsg;
  * @param[in,out] xqos   qos object for which to replace all aliased memory by owned
  *                       copies
  */
-void ddsi_xqos_unalias (dds_qos_t *xqos);
+void ddsi_xqos_unalias(dds_qos_t * xqos);
 
 /**
  * @brief Free memory owned by "xqos" for a subset of the entries
@@ -51,7 +50,7 @@ void ddsi_xqos_unalias (dds_qos_t *xqos);
  * @param[in,out] xqos   dds_qos_t for which to free memory
  * @param[in]     mask   entries to free (if DDSI_QP_X is set, free X if present)
  */
-void ddsi_xqos_fini_mask (dds_qos_t *xqos, uint64_t mask);
+void ddsi_xqos_fini_mask(dds_qos_t * xqos, uint64_t mask);
 
 /**
  * @brief Add selected entries in "xqos" to a message in native endianness.
@@ -68,7 +67,9 @@ void ddsi_xqos_fini_mask (dds_qos_t *xqos, uint64_t mask);
  * @param[in]     wanted   subset to be added (if DDSI_QP_X is set, add X if present)
  * @param[in]     context_kind  context for interpretation of QoS settings
  */
-void ddsi_xqos_addtomsg (struct ddsi_xmsg *m, const dds_qos_t *xqos, uint64_t wanted, enum ddsi_plist_context_kind context_kind);
+void ddsi_xqos_addtomsg(
+  struct ddsi_xmsg * m, const dds_qos_t * xqos, uint64_t wanted,
+  enum ddsi_plist_context_kind context_kind);
 
 /**
  * @brief Formats xqos using `ddsi_xqos_print` and writes it to the trace.
@@ -78,7 +79,7 @@ void ddsi_xqos_addtomsg (struct ddsi_xmsg *m, const dds_qos_t *xqos, uint64_t wa
  * @param[in] logcfg     logging configuration
  * @param[in] xqos       qos object to be logged
  */
-void ddsi_xqos_log (uint32_t cat, const struct ddsrt_log_cfg *logcfg, const dds_qos_t *xqos);
+void ddsi_xqos_log(uint32_t cat, const struct ddsrt_log_cfg * logcfg, const dds_qos_t * xqos);
 
 /**
  * @brief Formats xqos into a buffer
@@ -95,7 +96,7 @@ void ddsi_xqos_log (uint32_t cat, const struct ddsrt_log_cfg *logcfg, const dds_
  *
  * @returns number of bytes written to buf, excluding a terminating 0.
  */
-size_t ddsi_xqos_print (char * __restrict buf, size_t bufsize, const dds_qos_t *xqos);
+size_t ddsi_xqos_print(char * __restrict buf, size_t bufsize, const dds_qos_t * xqos);
 
 /**
  * @brief Check if "xqos" includes properties with a name starting with "nameprefix"
@@ -109,7 +110,7 @@ size_t ddsi_xqos_print (char * __restrict buf, size_t bufsize, const dds_qos_t *
  *
  * @returns true iff xqos contains a matching property
  */
-bool ddsi_xqos_has_prop_prefix (const dds_qos_t *xqos, const char *nameprefix);
+bool ddsi_xqos_has_prop_prefix(const dds_qos_t * xqos, const char * nameprefix);
 
 /**
  * @brief Lookup property "name" in "xqos" and return a pointer to its value
@@ -124,18 +125,19 @@ bool ddsi_xqos_has_prop_prefix (const dds_qos_t *xqos, const char *nameprefix);
  *
  * @returns true iff xqos contains the property
  */
-bool ddsi_xqos_find_prop (const dds_qos_t *xqos, const char *name, const char **value);
+bool ddsi_xqos_find_prop(const dds_qos_t * xqos, const char * name, const char ** value);
 
 #ifdef DDS_HAS_SECURITY
 
 struct ddsi_config_omg_security;
 
 /** @component qos_handling */
-void ddsi_xqos_mergein_security_config (dds_qos_t *xqos, const struct ddsi_config_omg_security *cfg);
+void ddsi_xqos_mergein_security_config(
+  dds_qos_t * xqos, const struct ddsi_config_omg_security * cfg);
 
 #endif /* DDS_HAS_SECURITY */
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

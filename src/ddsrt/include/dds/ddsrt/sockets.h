@@ -3,20 +3,20 @@
 
 #include <stdbool.h>
 
-#include "dds/export.h"
 #include "dds/config.h"
-#include "dds/ddsrt/types.h"
 #include "dds/ddsrt/attributes.h"
+#include "dds/ddsrt/misc.h"
 #include "dds/ddsrt/retcode.h"
 #include "dds/ddsrt/time.h"
-#include "dds/ddsrt/misc.h"
+#include "dds/ddsrt/types.h"
+#include "dds/export.h"
 #if _WIN32
 #include "dds/ddsrt/sockets/windows.h"
 #else
 #include "dds/ddsrt/sockets/posix.h"
 #endif
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -31,98 +31,43 @@ extern const struct in6_addr ddsrt_in6addr_loopback;
 #define DDSRT_AF_TERM (-1)
 
 #if DDSRT_HAVE_GETHOSTNAME
-DDS_EXPORT dds_return_t
-ddsrt_gethostname(
-  char *hostname,
-  size_t buffersize);
+DDS_EXPORT dds_return_t ddsrt_gethostname(char * hostname, size_t buffersize);
 #endif
 
-dds_return_t
-ddsrt_socket(
-  ddsrt_socket_t *sockptr,
-  int domain,
-  int type,
-  int protocol);
+dds_return_t ddsrt_socket(ddsrt_socket_t * sockptr, int domain, int type, int protocol);
 
-dds_return_t
-ddsrt_close(
-  ddsrt_socket_t sock);
+dds_return_t ddsrt_close(ddsrt_socket_t sock);
 
-dds_return_t
-ddsrt_connect(
-  ddsrt_socket_t sock,
-  const struct sockaddr *addr,
-  socklen_t addrlen);
+dds_return_t ddsrt_connect(ddsrt_socket_t sock, const struct sockaddr * addr, socklen_t addrlen);
 
-dds_return_t
-ddsrt_accept(
-  ddsrt_socket_t sock,
-  struct sockaddr *addr,
-  socklen_t *addrlen,
-  ddsrt_socket_t *connptr);
+dds_return_t ddsrt_accept(
+  ddsrt_socket_t sock, struct sockaddr * addr, socklen_t * addrlen, ddsrt_socket_t * connptr);
 
-dds_return_t
-ddsrt_listen(
-  ddsrt_socket_t sock,
-  int backlog);
+dds_return_t ddsrt_listen(ddsrt_socket_t sock, int backlog);
 
-dds_return_t
-ddsrt_bind(
-  ddsrt_socket_t sock,
-  const struct sockaddr *addr,
-  socklen_t addrlen);
+dds_return_t ddsrt_bind(ddsrt_socket_t sock, const struct sockaddr * addr, socklen_t addrlen);
 
-dds_return_t
-ddsrt_getsockname(
-  ddsrt_socket_t sock,
-  struct sockaddr *addr,
-  socklen_t *addrlen);
+dds_return_t ddsrt_getsockname(ddsrt_socket_t sock, struct sockaddr * addr, socklen_t * addrlen);
 
-dds_return_t
-ddsrt_send(
-  ddsrt_socket_t sock,
-  const void *buf,
-  size_t len,
-  int flags,
-  ssize_t *sent);
+dds_return_t ddsrt_send(
+  ddsrt_socket_t sock, const void * buf, size_t len, int flags, ssize_t * sent);
 
-dds_return_t
-ddsrt_sendmsg(
-  ddsrt_socket_t sock,
-  const ddsrt_msghdr_t *msg,
-  int flags,
-  ssize_t *sent);
+dds_return_t ddsrt_sendmsg(
+  ddsrt_socket_t sock, const ddsrt_msghdr_t * msg, int flags, ssize_t * sent);
 
-dds_return_t
-ddsrt_recv(
-  ddsrt_socket_t sock,
-  void *buf,
-  size_t len,
-  int flags,
-  ssize_t *rcvd);
+dds_return_t ddsrt_recv(ddsrt_socket_t sock, void * buf, size_t len, int flags, ssize_t * rcvd);
 
-dds_return_t
-ddsrt_recvmsg(
-  ddsrt_socket_t sock,
-  ddsrt_msghdr_t *msg,
-  int flags,
-  ssize_t *rcvd);
+dds_return_t ddsrt_recvmsg(ddsrt_socket_t sock, ddsrt_msghdr_t * msg, int flags, ssize_t * rcvd);
 
-dds_return_t
-ddsrt_getsockopt(
-  ddsrt_socket_t sock,
-  int32_t level, /* SOL_SOCKET */
+dds_return_t ddsrt_getsockopt(
+  ddsrt_socket_t sock, int32_t level, /* SOL_SOCKET */
   int32_t optname, /* SO_REUSEADDR, SO_DONTROUTE, SO_BROADCAST, SO_SNDBUF, SO_RCVBUF, ... */
-  void *optval,
-  socklen_t *optlen);
+  void * optval, socklen_t * optlen);
 
-dds_return_t
-ddsrt_setsockopt(
-  ddsrt_socket_t sock,
-  int32_t level, /* SOL_SOCKET */
+dds_return_t ddsrt_setsockopt(
+  ddsrt_socket_t sock, int32_t level, /* SOL_SOCKET */
   int32_t optname, /* SO_REUSEADDR, SO_DONTROUTE, SO_BROADCAST, SO_SNDBUF, SO_RCVBUF, ... */
-  const void *optval,
-  socklen_t optlen);
+  const void * optval, socklen_t optlen);
 
 /**
  * @brief Set the I/O on the socket to blocking or non-nonblocking.
@@ -141,10 +86,7 @@ ddsrt_setsockopt(
  * @retval DDS_RETCODE_ERROR
  *             An unknown error error occurred.
  */
-dds_return_t
-ddsrt_setsocknonblocking(
-  ddsrt_socket_t sock,
-  bool nonblock);
+dds_return_t ddsrt_setsocknonblocking(ddsrt_socket_t sock, bool nonblock);
 
 /**
  * @brief Set whether a port may be shared with other sockets
@@ -168,10 +110,7 @@ ddsrt_setsocknonblocking(
  * @retval DDS_RETCODE_ERROR
  *             An unknown error occurred.
  */
-dds_return_t
-ddsrt_setsockreuse(
-  ddsrt_socket_t sock,
-  bool reuse);
+dds_return_t ddsrt_setsockreuse(ddsrt_socket_t sock, bool reuse);
 
 /**
  * @brief Monitor multiple sockets, waiting until one or more become ready.
@@ -184,13 +123,8 @@ ddsrt_setsockreuse(
  *
  * @returns The number of sockets ready in the sets or a return code.
  */
-dds_return_t
-ddsrt_select(
-  int32_t nfds,
-  fd_set *readfds,
-  fd_set *writefds,
-  fd_set *errorfds,
-  dds_duration_t reltime);
+dds_return_t ddsrt_select(
+  int32_t nfds, fd_set * readfds, fd_set * writefds, fd_set * errorfds, dds_duration_t reltime);
 
 #if _WIN32
 /* SOCKETs on Windows are NOT integers. The nfds parameter is only there for
@@ -198,7 +132,7 @@ ddsrt_select(
    warnings though, therefore ddsrt_select is redefined to discard the
    parameter on Windows. */
 #define ddsrt_select(nfds, readfds, writefds, errorfds, timeout) \
-    ddsrt_select(-1, readfds, writefds, errorfds, timeout)
+  ddsrt_select(-1, readfds, writefds, errorfds, timeout)
 #endif /* _WIN32 */
 
 /**
@@ -209,9 +143,7 @@ ddsrt_select(
  * @returns Size of the socket address based on the address family, or 0 if
  *          the address family is unknown.
  */
-socklen_t
-ddsrt_sockaddr_get_size(
-  const struct sockaddr *const sa) ddsrt_nonnull_all;
+socklen_t ddsrt_sockaddr_get_size(const struct sockaddr * const sa) ddsrt_nonnull_all;
 
 /**
  * @brief Get the port number from a socket address.
@@ -220,9 +152,7 @@ ddsrt_sockaddr_get_size(
  *
  * @return Port number in host order.
  */
-uint16_t
-ddsrt_sockaddr_get_port(
-  const struct sockaddr *const sa) ddsrt_nonnull_all;
+uint16_t ddsrt_sockaddr_get_port(const struct sockaddr * const sa) ddsrt_nonnull_all;
 
 /**
  * @brief Check if the given address is unspecified.
@@ -231,9 +161,7 @@ ddsrt_sockaddr_get_port(
  *
  * @return true if the address is unspecified, false otherwise.
  */
-bool
-ddsrt_sockaddr_isunspecified(
-  const struct sockaddr *__restrict sa) ddsrt_nonnull_all;
+bool ddsrt_sockaddr_isunspecified(const struct sockaddr * __restrict sa) ddsrt_nonnull_all;
 
 /**
  * @brief Check if the given address is a loopback address.
@@ -242,9 +170,7 @@ ddsrt_sockaddr_isunspecified(
  *
  * @return true if the address is a loopback address, false otherwise.
  */
-bool
-ddsrt_sockaddr_isloopback(
-  const struct sockaddr *__restrict sa) ddsrt_nonnull_all;
+bool ddsrt_sockaddr_isloopback(const struct sockaddr * __restrict sa) ddsrt_nonnull_all;
 
 /**
  * @brief Check if given socket IP addresses reside in the same subnet.
@@ -258,24 +184,18 @@ ddsrt_sockaddr_isloopback(
  *
  * @returns true if both addresses reside in the same subnet, false otherwise.
  */
-bool
-ddsrt_sockaddr_insamesubnet(
-  const struct sockaddr *sa1,
-  const struct sockaddr *sa2,
-  const struct sockaddr *mask)
-ddsrt_nonnull_all;
+bool ddsrt_sockaddr_insamesubnet(
+  const struct sockaddr * sa1, const struct sockaddr * sa2,
+  const struct sockaddr * mask) ddsrt_nonnull_all;
 
-dds_return_t
-ddsrt_sockaddrfromstr(
-  int af, const char *str, void *sa);
+dds_return_t ddsrt_sockaddrfromstr(int af, const char * str, void * sa);
 
-dds_return_t
-ddsrt_sockaddrtostr(
-  const void *sa, char *buf, size_t size);
+dds_return_t ddsrt_sockaddrtostr(const void * sa, char * buf, size_t size);
 
 #if DDSRT_HAVE_DNS
 DDSRT_WARNING_MSVC_OFF(4200)
-typedef struct {
+typedef struct
+{
   size_t naddrs;
   struct sockaddr_storage addrs[];
 } ddsrt_hostent_t;
@@ -301,14 +221,10 @@ DDSRT_WARNING_MSVC_ON(4200)
  * @retval DDS_RETCODE_TRY_AGAIN
  *             Nonauthoratitative host not found.
  */
-dds_return_t
-ddsrt_gethostbyname(
-  const char *name,
-  int af,
-  ddsrt_hostent_t **hentp);
+dds_return_t ddsrt_gethostbyname(const char * name, int af, ddsrt_hostent_t ** hentp);
 #endif
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

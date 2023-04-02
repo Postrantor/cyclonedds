@@ -14,12 +14,8 @@
 
 #include "idl/processor.h"
 
-extern const idl_builtin_annotation_t *builtin_annotations;
+extern const idl_builtin_annotation_t * builtin_annotations;
 
-idl_retcode_t
-idl_annotate(
-  idl_pstate_t *pstate,
-  void *node,
-  idl_annotation_appl_t *annotations);
+idl_retcode_t idl_annotate(idl_pstate_t * pstate, void * node, idl_annotation_appl_t * annotations);
 
 #endif /* ANNOTATION_H */

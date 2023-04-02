@@ -22,7 +22,8 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
   TaskHandle_t task;
 } ddsrt_thread_t;
 

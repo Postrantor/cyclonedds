@@ -15,15 +15,31 @@
 #include "dds__types.h"
 
 #if defined(__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
-  /** @component domain */
-  dds_entity_t dds_domain_create_internal(dds_domain **domain_out, dds_domainid_t id, bool implicit, const char *config) ddsrt_nonnull((1, 4));
+/**
+ * @brief 创建一个内部 DDS 域 (Create an internal DDS domain)
+ *
+ * @param[out] domain_out 输出的 DDS 域指针 (Output pointer to the created DDS domain)
+ * @param[in] id 要创建的域的 ID (The ID of the domain to be created)
+ * @param[in] implicit 是否为隐式创建 (Whether it is implicitly created)
+ * @param[in] config 配置字符串 (Configuration string)
+ * @return 返回创建的 DDS 实体 (Returns the created DDS entity)
+ */
+dds_entity_t dds_domain_create_internal(dds_domain** domain_out,
+                                        dds_domainid_t id,
+                                        bool implicit,
+                                        const char* config) ddsrt_nonnull((1, 4));
 
-  /** @component domain */
-  dds_domain *dds_domain_find_locked(dds_domainid_t id);
+/**
+ * @brief 在锁定状态下查找 DDS 域 (Find a DDS domain in locked state)
+ *
+ * @param[in] id 要查找的域的 ID (The ID of the domain to find)
+ * @return 返回找到的 DDS 域指针，如果没有找到则返回 NULL (Returns the pointer to the found DDS
+ * domain, or NULL if not found)
+ */
+dds_domain* dds_domain_find_locked(dds_domainid_t id);
 
 #if defined(__cplusplus)
 }

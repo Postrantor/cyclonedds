@@ -11,7 +11,7 @@
  */
 #include "dds/ddsrt/attributes.h"
 #include "dds/ddsrt/heap.h"
-#include "ddsi__list_tmpl.h"
 #include "ddsi__list_genptr.h"
+#include "ddsi__list_tmpl.h"
 
 DDSI_LIST_CODE_TMPL(extern, generic_ptr_list, void *, NULL, ddsrt_malloc, ddsrt_free)

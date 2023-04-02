@@ -9,32 +9,30 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/dynlib.h"
+
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
-
-#include "dds/ddsrt/dynlib.h"
-#include "dds/ddsrt/heap.h"
-#include "dds/ddsrt/string.h"
-#include "dds/ddsrt/environ.h"
 
 #include "CUnit/Test.h"
-
+#include "dds/ddsrt/environ.h"
+#include "dds/ddsrt/heap.h"
+#include "dds/ddsrt/string.h"
 #include "dl.h"
 
-#define TEST_LIB_ABSOLUTE ""TEST_LIB_DIR""TEST_LIB_SEP""TEST_LIB_FILE""
+#define TEST_LIB_ABSOLUTE "" TEST_LIB_DIR "" TEST_LIB_SEP "" TEST_LIB_FILE ""
 
-#define TEST_ABORT_IF_NULL(var, msg) \
-do { \
-  if (var == NULL) { \
-    char err[256]; \
-    r = ddsrt_dlerror(err, sizeof(err)); \
-    CU_ASSERT_FATAL(r > 0 || r == DDS_RETCODE_NOT_ENOUGH_SPACE); \
-    printf("\n%s", err); \
-    CU_FAIL_FATAL(msg); \
-  } \
-} while(0)
-
+#define TEST_ABORT_IF_NULL(var, msg)                               \
+  do {                                                             \
+    if (var == NULL) {                                             \
+      char err[256];                                               \
+      r = ddsrt_dlerror(err, sizeof(err));                         \
+      CU_ASSERT_FATAL(r > 0 || r == DDS_RETCODE_NOT_ENOUGH_SPACE); \
+      printf("\n%s", err);                                         \
+      CU_FAIL_FATAL(msg);                                          \
+    }                                                              \
+  } while (0)
 
 /*
  * Load a library.
@@ -42,7 +40,7 @@ do { \
 CU_Test(ddsrt_library, dlopen_path)
 {
   dds_return_t r;
-  ddsrt_dynlib_t  l;
+  ddsrt_dynlib_t l;
 
   printf("Absolute lib: %s\n", TEST_LIB_ABSOLUTE);
   r = ddsrt_dlopen(TEST_LIB_ABSOLUTE, false, &l);
@@ -101,7 +99,7 @@ CU_Test(ddsrt_library, dlsym)
 {
   dds_return_t r;
   ddsrt_dynlib_t l;
-  void* f;
+  void * f;
 
   r = ddsrt_dlopen(TEST_LIB_NAME, true, &l);
   CU_ASSERT_PTR_NOT_NULL(l);
@@ -122,12 +120,12 @@ CU_Test(ddsrt_library, dlsym_unknown)
   char buffer[256];
   dds_return_t r;
   ddsrt_dynlib_t l;
-  void* f;
+  void * f;
 
   r = ddsrt_dlopen(TEST_LIB_NAME, true, &l);
   CU_ASSERT_EQUAL(r, DDS_RETCODE_OK);
   CU_ASSERT_PTR_NOT_NULL(l);
-  TEST_ABORT_IF_NULL(l,"ddsrt_dlopen() failed. Is the proper library path set?");
+  TEST_ABORT_IF_NULL(l, "ddsrt_dlopen() failed. Is the proper library path set?");
 
   r = ddsrt_dlsym(l, "UnknownSym", &f);
   CU_ASSERT_EQUAL(r, DDS_RETCODE_ERROR);
@@ -142,7 +140,7 @@ CU_Test(ddsrt_library, dlsym_unknown)
 }
 
 typedef void (*func_set_int)(int val);
-typedef int  (*func_get_int)(void);
+typedef int (*func_get_int)(void);
 CU_Test(ddsrt_library, call)
 {
   int get_int = 0;
@@ -178,17 +176,17 @@ CU_Test(ddsrt_library, call)
 
 CU_Test(ddsrt_library, dlclose_error)
 {
-    dds_return_t r;
-    ddsrt_dynlib_t l;
+  dds_return_t r;
+  ddsrt_dynlib_t l;
 
-    r = ddsrt_dlopen(TEST_LIB_NAME, true, &l);
-    CU_ASSERT_EQUAL(r, DDS_RETCODE_OK);
-    CU_ASSERT_PTR_NOT_NULL(l);
-    TEST_ABORT_IF_NULL(l, "ddsrt_dlopen() failed. Is the proper library path set?");
+  r = ddsrt_dlopen(TEST_LIB_NAME, true, &l);
+  CU_ASSERT_EQUAL(r, DDS_RETCODE_OK);
+  CU_ASSERT_PTR_NOT_NULL(l);
+  TEST_ABORT_IF_NULL(l, "ddsrt_dlopen() failed. Is the proper library path set?");
 
-    r = ddsrt_dlclose(l);
-    CU_ASSERT_EQUAL(r, DDS_RETCODE_OK);
+  r = ddsrt_dlclose(l);
+  CU_ASSERT_EQUAL(r, DDS_RETCODE_OK);
 
-    r = ddsrt_dlclose( l ); /*already closed handle */
-    CU_ASSERT_EQUAL(r, DDS_RETCODE_ERROR);
+  r = ddsrt_dlclose(l); /*already closed handle */
+  CU_ASSERT_EQUAL(r, DDS_RETCODE_ERROR);
 }

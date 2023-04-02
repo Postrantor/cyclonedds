@@ -9,14 +9,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/time.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <time.h>
 #include <sys/time.h>
-
-#include "dds/ddsrt/time.h"
+#include <time.h>
 
 dds_time_t dds_time(void)
 {
@@ -26,17 +26,8 @@ dds_time_t dds_time(void)
   return (ts.tv_sec * DDS_NSECS_IN_SEC) + ts.tv_nsec;
 }
 
-ddsrt_wctime_t ddsrt_time_wallclock(void)
-{
-  return (ddsrt_wctime_t) { dds_time() };
-}
+ddsrt_wctime_t ddsrt_time_wallclock(void) { return (ddsrt_wctime_t){dds_time()}; }
 
-ddsrt_mtime_t ddsrt_time_monotonic(void)
-{
-  return (ddsrt_mtime_t) { gethrtime () };
-}
+ddsrt_mtime_t ddsrt_time_monotonic(void) { return (ddsrt_mtime_t){gethrtime()}; }
 
-ddsrt_etime_t ddsrt_time_elapsed(void)
-{
-  return (ddsrt_etime_t) { gethrtime () };
-}
+ddsrt_etime_t ddsrt_time_elapsed(void) { return (ddsrt_etime_t){gethrtime()}; }

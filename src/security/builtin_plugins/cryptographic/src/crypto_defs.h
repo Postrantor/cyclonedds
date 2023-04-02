@@ -15,7 +15,6 @@
 #include "dds/security/core/dds_security_types.h"
 #include "dds/security/dds_security_api.h"
 
-
 #define DDS_CRYPTO_PLUGIN_CONTEXT "Cryptographic"
 
 #define CRYPTO_HMAC_SIZE 16
@@ -28,7 +27,6 @@
 #define CRYPTO_INIT_VECTOR_SIZE (CRYPTO_SESSION_ID_SIZE + CRYPTO_INIT_VECTOR_SUFFIX_SIZE)
 #define CRYPTO_CIPHER_BLOCK_SIZE 16
 
-
 typedef struct crypto_session_key_t
 {
   unsigned char data[CRYPTO_KEY_SIZE_MAX];
@@ -39,8 +37,7 @@ typedef struct crypto_hmac_t
   unsigned char data[CRYPTO_HMAC_SIZE];
 } crypto_hmac_t;
 
-typedef enum RTPS_Message_Type
-{
+typedef enum RTPS_Message_Type {
   /** The Constant PAD. */
   RTPS_Message_Type_PAD = 0x01,
 
@@ -105,7 +102,8 @@ typedef enum RTPS_Message_Type
   RTPS_Message_Type_SRTPS_POSTFIX = 0x34
 } RTPS_Message_Type;
 
-struct init_vector {
+struct init_vector
+{
   unsigned char u[CRYPTO_INIT_VECTOR_SIZE];
 };
 
@@ -115,17 +113,20 @@ struct receiver_specific_mac
   crypto_hmac_t receiver_mac;
 };
 
-typedef struct const_tainted_crypto_data {
-  const unsigned char *base;
+typedef struct const_tainted_crypto_data
+{
+  const unsigned char * base;
   size_t length;
 } const_tainted_crypto_data_t;
 
-typedef struct tainted_crypto_data {
-  unsigned char *base;
+typedef struct tainted_crypto_data
+{
+  unsigned char * base;
   size_t length;
 } tainted_crypto_data_t;
 
-typedef struct trusted_crypto_data {
+typedef struct trusted_crypto_data
+{
   tainted_crypto_data_t x;
 } trusted_crypto_data_t;
 

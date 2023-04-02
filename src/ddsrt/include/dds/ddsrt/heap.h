@@ -20,10 +20,10 @@
 
 #include <stddef.h>
 
-#include "dds/export.h"
 #include "dds/ddsrt/attributes.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -38,11 +38,7 @@ extern "C" {
  * @returns A pointer to the allocated block of memory. abort() is called if
  *          not enough free memory was available.
  */
-DDS_EXPORT void *
-ddsrt_malloc(
-  size_t size)
-ddsrt_attribute_malloc
-ddsrt_attribute_alloc_size((1));
+DDS_EXPORT void * ddsrt_malloc(size_t size) ddsrt_attribute_malloc ddsrt_attribute_alloc_size((1));
 
 /**
  * @brief Allocate memory from heap.
@@ -55,11 +51,8 @@ ddsrt_attribute_alloc_size((1));
  * @returns A pointer to the allocated block of memory, NULL if not enough
  *          memory was available.
  */
-DDS_EXPORT void *
-ddsrt_malloc_s(
-  size_t size)
-ddsrt_attribute_malloc
-ddsrt_attribute_alloc_size((1));
+DDS_EXPORT void * ddsrt_malloc_s(size_t size) ddsrt_attribute_malloc
+  ddsrt_attribute_alloc_size((1));
 
 /**
  * @brief Allocate memory from heap for an array of @count elements of @size
@@ -74,12 +67,8 @@ ddsrt_attribute_alloc_size((1));
  * @returns A pointer to the allocated memory. abort() is called if not enough
  *          free memory was available.
  */
-DDS_EXPORT void *
-ddsrt_calloc(
-  size_t count,
-  size_t size)
-ddsrt_attribute_malloc
-ddsrt_attribute_alloc_size((1,2));
+DDS_EXPORT void * ddsrt_calloc(size_t count, size_t size) ddsrt_attribute_malloc
+  ddsrt_attribute_alloc_size((1, 2));
 
 /**
  * @brief Allocate memory from heap for an array of @count elements of @size
@@ -94,12 +83,8 @@ ddsrt_attribute_alloc_size((1,2));
  * @returns A pointer to the allocated memory, or NULL if not enough memory was
  *          available.
  */
-DDS_EXPORT void *
-ddsrt_calloc_s(
-  size_t count,
-  size_t size)
-ddsrt_attribute_malloc
-ddsrt_attribute_alloc_size((1,2));
+DDS_EXPORT void * ddsrt_calloc_s(size_t count, size_t size) ddsrt_attribute_malloc
+  ddsrt_attribute_alloc_size((1, 2));
 
 /**
  * @brief Reallocate memory from heap.
@@ -112,12 +97,8 @@ ddsrt_attribute_alloc_size((1,2));
  * @returns A pointer to reallocated memory. Calls abort() if not enough free
  *          memory was available.
  */
-DDS_EXPORT void *
-ddsrt_realloc(
-  void *memblk,
-  size_t size)
-ddsrt_attribute_malloc
-ddsrt_attribute_alloc_size((2));
+DDS_EXPORT void * ddsrt_realloc(void * memblk, size_t size) ddsrt_attribute_malloc
+  ddsrt_attribute_alloc_size((2));
 
 /**
  * @brief Reallocate memory from heap.
@@ -130,12 +111,8 @@ ddsrt_attribute_alloc_size((2));
  * @returns A pointer to reallocated memory, or NULL if not enough free memory
  *          was available.
  */
-DDS_EXPORT void *
-ddsrt_realloc_s(
-  void *memblk,
-  size_t size)
-ddsrt_attribute_malloc
-ddsrt_attribute_alloc_size((2));
+DDS_EXPORT void * ddsrt_realloc_s(void * memblk, size_t size) ddsrt_attribute_malloc
+  ddsrt_attribute_alloc_size((2));
 
 /**
  * @brief Free a previously allocated block of memory and return it to heap.
@@ -145,10 +122,9 @@ ddsrt_attribute_alloc_size((2));
  *
  * @param[in]  ptr  Pointer to previously allocated block of memory.
  */
-DDS_EXPORT void
-ddsrt_free(void *ptr);
+DDS_EXPORT void ddsrt_free(void * ptr);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

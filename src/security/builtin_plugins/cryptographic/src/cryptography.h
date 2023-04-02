@@ -16,11 +16,14 @@
 #include "dds/security/dds_security_api.h"
 #include "dds/security/export.h"
 
-SECURITY_EXPORT int init_crypto(const char *argument, void **context, struct ddsi_domaingv *gv);
-SECURITY_EXPORT int finalize_crypto(void *instance);
+SECURITY_EXPORT int init_crypto(const char * argument, void ** context, struct ddsi_domaingv * gv);
+SECURITY_EXPORT int finalize_crypto(void * instance);
 
-dds_security_crypto_key_factory *cryptography_get_crypto_key_factory(const dds_security_cryptography *crypto);
-dds_security_crypto_key_exchange * cryptography_get_crypto_key_exchange(const dds_security_cryptography *crypto);
-dds_security_crypto_transform *cryptography_get_crypto_transform(const dds_security_cryptography *crypto);
+dds_security_crypto_key_factory * cryptography_get_crypto_key_factory(
+  const dds_security_cryptography * crypto);
+dds_security_crypto_key_exchange * cryptography_get_crypto_key_exchange(
+  const dds_security_cryptography * crypto);
+dds_security_crypto_transform * cryptography_get_crypto_transform(
+  const dds_security_cryptography * crypto);
 
 #endif /* CRYPTOGRAPHY_H */

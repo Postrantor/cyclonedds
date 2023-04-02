@@ -20,39 +20,38 @@ extern "C" {
 #define DDSRT_BIG_ENDIAN 2
 
 #if _WIN32
-# if defined(__BIG_ENDIAN)
-#   define DDSRT_ENDIAN DDSRT_BIG_ENDIAN
-# else
-#   define DDSRT_ENDIAN DDSRT_LITTLE_ENDIAN
-# endif
+#if defined(__BIG_ENDIAN)
+#define DDSRT_ENDIAN DDSRT_BIG_ENDIAN
+#else
+#define DDSRT_ENDIAN DDSRT_LITTLE_ENDIAN
+#endif
 /* _WIN32 */
 #elif defined(__IAR_SYSTEMS_ICC__)
-# if __LITTLE_ENDIAN__ == 1
-#   define DDSRT_ENDIAN DDSRT_LITTLE_ENDIAN
-# else
-#   define DDSRT_ENDIAN DDSRT_BIG_ENDIAN
-# endif
+#if __LITTLE_ENDIAN__ == 1
+#define DDSRT_ENDIAN DDSRT_LITTLE_ENDIAN
+#else
+#define DDSRT_ENDIAN DDSRT_BIG_ENDIAN
+#endif
 /* __IAR_SYSTEMS_ICC__ */
 #else
-# if defined(__BYTE_ORDER__)
-#   if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#     define DDSRT_ENDIAN DDSRT_BIG_ENDIAN
-#   elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#     define DDSRT_ENDIAN DDSRT_LITTLE_ENDIAN
-#   endif
-# elif defined(__sun)
-#   include <sys/isa_defs.h>
-#   if defined(_BIG_ENDIAN)
-#     define DDSRT_ENDIAN DDSRT_BIG_ENDIAN
-#   elif defined(_LITTLE_ENDIAN)
-#     define DDSRT_ENDIAN DDSRT_LITTLE_ENDIAN
-#   endif
-# endif
+#if defined(__BYTE_ORDER__)
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define DDSRT_ENDIAN DDSRT_BIG_ENDIAN
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define DDSRT_ENDIAN DDSRT_LITTLE_ENDIAN
+#endif
+#elif defined(__sun)
+#include <sys/isa_defs.h>
+#if defined(_BIG_ENDIAN)
+#define DDSRT_ENDIAN DDSRT_BIG_ENDIAN
+#elif defined(_LITTLE_ENDIAN)
+#define DDSRT_ENDIAN DDSRT_LITTLE_ENDIAN
+#endif
+#endif
 #endif /* _WIN32 */
 
-#if (DDSRT_ENDIAN != DDSRT_LITTLE_ENDIAN) && \
-    (DDSRT_ENDIAN != DDSRT_BIG_ENDIAN)
-# error "Endianness cannot be determined"
+#if (DDSRT_ENDIAN != DDSRT_LITTLE_ENDIAN) && (DDSRT_ENDIAN != DDSRT_BIG_ENDIAN)
+#error "Endianness cannot be determined"
 #endif
 
 #if defined(__cplusplus)

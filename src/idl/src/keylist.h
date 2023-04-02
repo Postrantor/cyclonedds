@@ -13,15 +13,11 @@
 #define KEYLIST_H
 
 #include <stdbool.h>
+
 #include "idl/processor.h"
 
-idl_retcode_t
-idl_validate_keylists(
-  idl_pstate_t *pstate);
+idl_retcode_t idl_validate_keylists(idl_pstate_t * pstate);
 
-void
-idl_set_keylist_key_flags(
-  idl_pstate_t *pstate,
-  void *list);
+void idl_set_keylist_key_flags(idl_pstate_t * pstate, void * list);
 
 #endif /* KEYLIST_H */

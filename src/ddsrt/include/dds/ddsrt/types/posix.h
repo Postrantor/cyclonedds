@@ -12,8 +12,8 @@
 #ifndef DDSRT_TYPES_POSIX_H
 #define DDSRT_TYPES_POSIX_H
 
-#include <stdint.h>
 #include <inttypes.h>
+#include <stdint.h>
 #if defined(__IAR_SYSTEMS_ICC__)
 typedef long int ssize_t;
 #else

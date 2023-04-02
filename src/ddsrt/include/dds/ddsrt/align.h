@@ -12,13 +12,13 @@
 #ifndef DDSRT_ALIGN_H
 #define DDSRT_ALIGN_H
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 #define dds_alignof _Alignof
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

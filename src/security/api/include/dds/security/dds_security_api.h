@@ -18,16 +18,15 @@
 #include "dds_security_api_authentication.h"
 #include "dds_security_api_cryptography.h"
 
-
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 /* Integration functions for Security plugins */
-typedef int (*plugin_init)(const char *argument, void **context, struct ddsi_domaingv *gv);
-typedef int (*plugin_finalize)(void *context);
+typedef int (*plugin_init)(const char * argument, void ** context, struct ddsi_domaingv * gv);
+typedef int (*plugin_finalize)(void * context);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

@@ -12,16 +12,16 @@
 #ifndef DDSI__RAWETH_H
 #define DDSI__RAWETH_H
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 struct ddsi_domaingv;
 
 /** @component raw_ethernet_transport */
-int ddsi_raweth_init (struct ddsi_domaingv *gv);
+int ddsi_raweth_init(struct ddsi_domaingv * gv);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

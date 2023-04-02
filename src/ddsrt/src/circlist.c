@@ -9,33 +9,30 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#include <assert.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include "dds/ddsrt/circlist.h"
 
-void ddsrt_circlist_init (struct ddsrt_circlist *list)
-{
-  list->latest = NULL;
-}
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
-bool ddsrt_circlist_isempty (const struct ddsrt_circlist *list)
-{
-  return list->latest == NULL;
-}
+void ddsrt_circlist_init(struct ddsrt_circlist * list) { list->latest = NULL; }
 
-void ddsrt_circlist_append (struct ddsrt_circlist *list, struct ddsrt_circlist_elem *elem)
+bool ddsrt_circlist_isempty(const struct ddsrt_circlist * list) { return list->latest == NULL; }
+
+void ddsrt_circlist_append(struct ddsrt_circlist * list, struct ddsrt_circlist_elem * elem)
 {
   if (list->latest == NULL)
     elem->next = elem->prev = elem;
-  else
-  {
+  else {
     struct ddsrt_circlist_elem * const hd = list->latest;
 #ifndef NDEBUG
     {
-      const struct ddsrt_circlist_elem *x = hd;
-      do { assert (x != elem); x = x->next; } while (x != hd);
+      const struct ddsrt_circlist_elem * x = hd;
+      do {
+        assert(x != elem);
+        x = x->next;
+      } while (x != hd);
     }
 #endif
     elem->next = hd->next;
@@ -46,39 +43,38 @@ void ddsrt_circlist_append (struct ddsrt_circlist *list, struct ddsrt_circlist_e
   list->latest = elem;
 }
 
-void ddsrt_circlist_remove (struct ddsrt_circlist *list, struct ddsrt_circlist_elem *elem)
+void ddsrt_circlist_remove(struct ddsrt_circlist * list, struct ddsrt_circlist_elem * elem)
 {
 #ifndef NDEBUG
   {
-    const struct ddsrt_circlist_elem *x = list->latest;
-    assert (x);
-    do { if (x == elem) break; x = x->next; } while (x != list->latest);
-    assert (x == elem);
+    const struct ddsrt_circlist_elem * x = list->latest;
+    assert(x);
+    do {
+      if (x == elem) break;
+      x = x->next;
+    } while (x != list->latest);
+    assert(x == elem);
   }
 #endif
   if (elem->next == elem)
     list->latest = NULL;
-  else
-  {
+  else {
     struct ddsrt_circlist_elem * const elem_prev = elem->prev;
     struct ddsrt_circlist_elem * const elem_next = elem->next;
     elem_prev->next = elem_next;
     elem_next->prev = elem_prev;
-    if (list->latest == elem)
-      list->latest = elem_prev;
+    if (list->latest == elem) list->latest = elem_prev;
   }
 }
 
-struct ddsrt_circlist_elem *ddsrt_circlist_oldest (const struct ddsrt_circlist *list)
+struct ddsrt_circlist_elem * ddsrt_circlist_oldest(const struct ddsrt_circlist * list)
 {
-  assert (!ddsrt_circlist_isempty (list));
+  assert(!ddsrt_circlist_isempty(list));
   return list->latest->next;
 }
 
-struct ddsrt_circlist_elem *ddsrt_circlist_latest (const struct ddsrt_circlist *list)
+struct ddsrt_circlist_elem * ddsrt_circlist_latest(const struct ddsrt_circlist * list)
 {
-  assert (!ddsrt_circlist_isempty (list));
+  assert(!ddsrt_circlist_isempty(list));
   return list->latest;
 }
-
-

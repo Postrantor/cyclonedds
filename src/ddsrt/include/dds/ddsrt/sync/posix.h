@@ -12,25 +12,28 @@
 #ifndef DDSRT_POSIX_SYNC_H
 #define DDSRT_POSIX_SYNC_H
 
-#include <stdint.h>
 #include <pthread.h>
+#include <stdint.h>
 #if HAVE_LKST
 #include "lkst.h"
 #endif
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
   pthread_cond_t cond;
 } ddsrt_cond_t;
 
-typedef struct {
+typedef struct
+{
   pthread_mutex_t mutex;
 } ddsrt_mutex_t;
 
-typedef struct {
+typedef struct
+{
 #if __SunOS_5_6
   pthread_mutex_t rwlock;
 #else
@@ -41,7 +44,7 @@ typedef struct {
 typedef pthread_once_t ddsrt_once_t;
 #define DDSRT_ONCE_INIT PTHREAD_ONCE_INIT
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

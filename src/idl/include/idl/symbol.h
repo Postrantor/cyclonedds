@@ -19,33 +19,37 @@
 #include "idl/export.h"
 
 typedef struct idl_file idl_file_t;
-struct idl_file {
-  idl_file_t *next;
-  char *name;
+struct idl_file
+{
+  idl_file_t * next;
+  char * name;
 };
 
 typedef struct idl_source idl_source_t;
-struct idl_source {
-  const idl_source_t *parent;
+struct idl_source
+{
+  const idl_source_t * parent;
   idl_source_t *previous, *next;
-  idl_source_t *includes;
+  idl_source_t * includes;
   bool additional_directory; /**< file does not reside in working directory */
-  const idl_file_t *path; /**< normalized path of filename in #line directive */
-  const idl_file_t *file; /**< filename in #line directive */
+  const idl_file_t * path;   /**< normalized path of filename in #line directive */
+  const idl_file_t * file;   /**< filename in #line directive */
 };
 
-typedef struct idl_position {
-  const idl_source_t *source;
+typedef struct idl_position
+{
+  const idl_source_t * source;
   /* for error reporting purposes, the "filename" provided in the #line
      directive must be kept. on includes, idlpp provides a (relative) filename
      with the proper flags, which becomes the source. user provided #line
      directives in the file are used merely for error reporting */
-  const idl_file_t *file; /**< (alternate) filename in latest #line directive */
+  const idl_file_t * file; /**< (alternate) filename in latest #line directive */
   uint32_t line;
   uint32_t column;
 } idl_position_t;
 
-typedef struct idl_location {
+typedef struct idl_location
+{
   idl_position_t first;
   idl_position_t last;
 } idl_location_t;
@@ -54,10 +58,11 @@ typedef struct idl_location {
    all nodes are symbols, not all symbols are nodes */
 
 typedef struct idl_symbol idl_symbol_t;
-struct idl_symbol {
+struct idl_symbol
+{
   idl_location_t location;
 };
 
-IDL_EXPORT const idl_location_t *idl_location(const void *symbol);
+IDL_EXPORT const idl_location_t * idl_location(const void * symbol);
 
 #endif /* IDL_SYMBOL_H */

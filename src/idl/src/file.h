@@ -16,11 +16,11 @@
 #include <stddef.h>
 
 #include "idl/export.h"
-#include "idl/retcode.h"
 #include "idl/file.h"
+#include "idl/retcode.h"
 
 #if WIN32
-# include <basetsd.h>
+#include <basetsd.h>
 typedef SSIZE_T ssize_t;
 #endif
 
@@ -28,6 +28,6 @@ typedef SSIZE_T ssize_t;
  * @internal
  * @brief Resolve "." and ".." segments and remove consecutive slashes
  */
-IDL_EXPORT ssize_t idl_untaint_path(char *path);
+IDL_EXPORT ssize_t idl_untaint_path(char * path);
 
 #endif /* FILE_H */

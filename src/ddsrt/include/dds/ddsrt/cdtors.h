@@ -12,10 +12,10 @@
 #ifndef DDSRT_CDTORS_H
 #define DDSRT_CDTORS_H
 
-#include "dds/export.h"
 #include "dds/ddsrt/sync.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -23,11 +23,11 @@ void ddsrt_init(void);
 
 void ddsrt_fini(void);
 
-ddsrt_mutex_t *ddsrt_get_singleton_mutex(void);
+ddsrt_mutex_t * ddsrt_get_singleton_mutex(void);
 
-ddsrt_cond_t *ddsrt_get_singleton_cond(void);
+ddsrt_cond_t * ddsrt_get_singleton_cond(void);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

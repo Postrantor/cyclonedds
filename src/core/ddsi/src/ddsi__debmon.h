@@ -15,26 +15,27 @@
 #include "dds/ddsi/ddsi_locator.h"
 #include "dds/ddsi/ddsi_tran.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 struct ddsi_domaingv;
 struct ddsi_debug_monitor;
 
-typedef int (*ddsi_debug_monitor_cpf_t) (struct ddsi_tran_conn * conn, const char *fmt, ...);
-typedef int (*ddsi_debug_monitor_plugin_t) (struct ddsi_tran_conn * conn, ddsi_debug_monitor_cpf_t cpf, void *arg);
+typedef int (*ddsi_debug_monitor_cpf_t)(struct ddsi_tran_conn * conn, const char * fmt, ...);
+typedef int (*ddsi_debug_monitor_plugin_t)(
+  struct ddsi_tran_conn * conn, ddsi_debug_monitor_cpf_t cpf, void * arg);
 
 /** @component debug_support */
-struct ddsi_debug_monitor *ddsi_new_debug_monitor (struct ddsi_domaingv *gv, int32_t port);
+struct ddsi_debug_monitor * ddsi_new_debug_monitor(struct ddsi_domaingv * gv, int32_t port);
 
 /** @component debug_support */
-bool ddsi_get_debug_monitor_locator (struct ddsi_debug_monitor *dm, ddsi_locator_t *locator);
+bool ddsi_get_debug_monitor_locator(struct ddsi_debug_monitor * dm, ddsi_locator_t * locator);
 
 /** @component debug_support */
-void ddsi_free_debug_monitor (struct ddsi_debug_monitor *dm);
+void ddsi_free_debug_monitor(struct ddsi_debug_monitor * dm);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

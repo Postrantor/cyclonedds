@@ -9,23 +9,16 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/retcode.h"
+
 #include <string.h>
 
 #include "CUnit/Theory.h"
-#include "dds/ddsrt/retcode.h"
 
-CU_TheoryDataPoints(ddsrt_retcode, unknown) = {
-  CU_DataPoints(dds_return_t,
-                DDS_RETCODE_NOT_ALLOWED_BY_SECURITY-1,
-                -(DDS_RETCODE_NOT_ALLOWED_BY_SECURITY-1),
-                DDS_XRETCODE_BASE,
-                -DDS_XRETCODE_BASE,
-                DDS_RETCODE_NOT_FOUND-1,
-                -(DDS_RETCODE_NOT_FOUND-1),
-                INT32_MAX,
-                -INT32_MAX,
-                INT32_MIN)
-};
+CU_TheoryDataPoints(ddsrt_retcode, unknown) = {CU_DataPoints(
+  dds_return_t, DDS_RETCODE_NOT_ALLOWED_BY_SECURITY - 1, -(DDS_RETCODE_NOT_ALLOWED_BY_SECURITY - 1),
+  DDS_XRETCODE_BASE, -DDS_XRETCODE_BASE, DDS_RETCODE_NOT_FOUND - 1, -(DDS_RETCODE_NOT_FOUND - 1),
+  INT32_MAX, -INT32_MAX, INT32_MIN)};
 
 CU_Theory((dds_return_t ret), ddsrt_retcode, unknown)
 {
@@ -33,27 +26,15 @@ CU_Theory((dds_return_t ret), ddsrt_retcode, unknown)
 }
 
 CU_TheoryDataPoints(ddsrt_retcode, spotchecks) = {
-  CU_DataPoints(dds_return_t,
-                DDS_RETCODE_OK,
-                -DDS_RETCODE_OK,
-                DDS_RETCODE_NOT_ALLOWED_BY_SECURITY,
-                -DDS_RETCODE_NOT_ALLOWED_BY_SECURITY,
-                DDS_RETCODE_IN_PROGRESS,
-                -DDS_RETCODE_IN_PROGRESS,
-                DDS_RETCODE_NOT_FOUND,
-                -DDS_RETCODE_NOT_FOUND),
-  CU_DataPoints(const char *,
-                "Success",
-                "Success",
-                "Not Allowed By Security",
-                "Not Allowed By Security",
-                "Operation in progress",
-                "Operation in progress",
-                "Not found",
-                "Not found")
-};
+  CU_DataPoints(
+    dds_return_t, DDS_RETCODE_OK, -DDS_RETCODE_OK, DDS_RETCODE_NOT_ALLOWED_BY_SECURITY,
+    -DDS_RETCODE_NOT_ALLOWED_BY_SECURITY, DDS_RETCODE_IN_PROGRESS, -DDS_RETCODE_IN_PROGRESS,
+    DDS_RETCODE_NOT_FOUND, -DDS_RETCODE_NOT_FOUND),
+  CU_DataPoints(
+    const char *, "Success", "Success", "Not Allowed By Security", "Not Allowed By Security",
+    "Operation in progress", "Operation in progress", "Not found", "Not found")};
 
-CU_Theory((dds_return_t ret, const char *exp), ddsrt_retcode, spotchecks)
+CU_Theory((dds_return_t ret, const char * exp), ddsrt_retcode, spotchecks)
 {
   CU_ASSERT_STRING_EQUAL(dds_strretcode(ret), exp);
 }

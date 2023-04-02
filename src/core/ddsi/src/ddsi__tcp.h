@@ -14,16 +14,16 @@
 
 #include "dds/ddsi/ddsi_tran.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 struct ddsi_domaingv;
 
 /** @component tcp_transport */
-int ddsi_tcp_init (struct ddsi_domaingv *gv);
+int ddsi_tcp_init(struct ddsi_domaingv * gv);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

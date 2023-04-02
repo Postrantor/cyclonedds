@@ -9,19 +9,20 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/sync.h"
+
 #include <FreeRTOS.h>
-#include <task.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <task.h>
 
 #include "dds/ddsrt/heap.h"
 #include "dds/ddsrt/log.h"
-#include "dds/ddsrt/sync.h"
 #include "dds/ddsrt/time.h"
 
-void ddsrt_mutex_init(ddsrt_mutex_t *mutex)
+void ddsrt_mutex_init(ddsrt_mutex_t * mutex)
 {
   SemaphoreHandle_t sem;
 
@@ -35,7 +36,7 @@ void ddsrt_mutex_init(ddsrt_mutex_t *mutex)
   mutex->sem = sem;
 }
 
-void ddsrt_mutex_destroy(ddsrt_mutex_t *mutex)
+void ddsrt_mutex_destroy(ddsrt_mutex_t * mutex)
 {
   assert(mutex != NULL);
 
@@ -43,8 +44,7 @@ void ddsrt_mutex_destroy(ddsrt_mutex_t *mutex)
   (void)memset(mutex, 0, sizeof(*mutex));
 }
 
-static bool
-mutex_lock(ddsrt_mutex_t *mutex, int blk)
+static bool mutex_lock(ddsrt_mutex_t * mutex, int blk)
 {
   assert(mutex != NULL);
 
@@ -59,19 +59,16 @@ mutex_lock(ddsrt_mutex_t *mutex, int blk)
   return true;
 }
 
-void ddsrt_mutex_lock(ddsrt_mutex_t *mutex)
+void ddsrt_mutex_lock(ddsrt_mutex_t * mutex)
 {
   if (!mutex_lock(mutex, 1)) {
     DDS_FATAL("Failed to lock 0x%p", mutex);
   }
 }
 
-bool ddsrt_mutex_trylock(ddsrt_mutex_t *mutex)
-{
-  return mutex_lock(mutex, 0);
-}
+bool ddsrt_mutex_trylock(ddsrt_mutex_t * mutex) { return mutex_lock(mutex, 0); }
 
-void ddsrt_mutex_unlock(ddsrt_mutex_t *mutex)
+void ddsrt_mutex_unlock(ddsrt_mutex_t * mutex)
 {
   assert(mutex != NULL);
 
@@ -80,11 +77,8 @@ void ddsrt_mutex_unlock(ddsrt_mutex_t *mutex)
   }
 }
 
-static dds_return_t
-cond_timedwait(
-  ddsrt_cond_t *cond,
-  ddsrt_mutex_t *mutex,
-  dds_duration_t reltime)
+static dds_return_t cond_timedwait(
+  ddsrt_cond_t * cond, ddsrt_mutex_t * mutex, dds_duration_t reltime)
 {
   dds_return_t rc = DDS_RETCODE_OK;
   dds_time_t abstime;
@@ -129,7 +123,7 @@ cond_timedwait(
   return rc;
 }
 
-void ddsrt_cond_init(ddsrt_cond_t *cond)
+void ddsrt_cond_init(ddsrt_cond_t * cond)
 {
   SemaphoreHandle_t sem;
   ddsrt_tasklist_t tasks;
@@ -149,7 +143,7 @@ void ddsrt_cond_init(ddsrt_cond_t *cond)
   cond->tasks = tasks;
 }
 
-void ddsrt_cond_destroy(ddsrt_cond_t *cond)
+void ddsrt_cond_destroy(ddsrt_cond_t * cond)
 {
   assert(cond != NULL);
 
@@ -158,7 +152,7 @@ void ddsrt_cond_destroy(ddsrt_cond_t *cond)
   (void)memset(cond, 0, sizeof(*cond));
 }
 
-void ddsrt_cond_wait(ddsrt_cond_t *cond, ddsrt_mutex_t *mutex)
+void ddsrt_cond_wait(ddsrt_cond_t * cond, ddsrt_mutex_t * mutex)
 {
   assert(cond != NULL);
   assert(mutex != NULL);
@@ -166,11 +160,7 @@ void ddsrt_cond_wait(ddsrt_cond_t *cond, ddsrt_mutex_t *mutex)
   (void)cond_timedwait(cond, mutex, DDS_INFINITY);
 }
 
-bool
-ddsrt_cond_waitfor(
-  ddsrt_cond_t *cond,
-  ddsrt_mutex_t *mutex,
-  dds_duration_t reltime)
+bool ddsrt_cond_waitfor(ddsrt_cond_t * cond, ddsrt_mutex_t * mutex, dds_duration_t reltime)
 {
   dds_return_t rc;
 
@@ -190,11 +180,7 @@ ddsrt_cond_waitfor(
   return true;
 }
 
-bool
-ddsrt_cond_waituntil(
-  ddsrt_cond_t *cond,
-  ddsrt_mutex_t *mutex,
-  dds_time_t abstime)
+bool ddsrt_cond_waituntil(ddsrt_cond_t * cond, ddsrt_mutex_t * mutex, dds_time_t abstime)
 {
   dds_return_t rc;
   dds_time_t time;
@@ -219,7 +205,7 @@ ddsrt_cond_waituntil(
   return true;
 }
 
-void ddsrt_cond_signal(ddsrt_cond_t *cond)
+void ddsrt_cond_signal(ddsrt_cond_t * cond)
 {
   TaskHandle_t task;
 
@@ -232,7 +218,7 @@ void ddsrt_cond_signal(ddsrt_cond_t *cond)
   xSemaphoreGive(cond->sem);
 }
 
-void ddsrt_cond_broadcast(ddsrt_cond_t *cond)
+void ddsrt_cond_broadcast(ddsrt_cond_t * cond)
 {
   TaskHandle_t task;
 
@@ -249,7 +235,7 @@ void ddsrt_cond_broadcast(ddsrt_cond_t *cond)
 #define UNLOCKED (0)
 #define READ_LOCKED (1)
 
-void ddsrt_rwlock_init(ddsrt_rwlock_t *rwlock)
+void ddsrt_rwlock_init(ddsrt_rwlock_t * rwlock)
 {
   SemaphoreHandle_t sem;
   ddsrt_tasklist_t tasks;
@@ -270,7 +256,7 @@ void ddsrt_rwlock_init(ddsrt_rwlock_t *rwlock)
   rwlock->state = UNLOCKED;
 }
 
-void ddsrt_rwlock_destroy(ddsrt_rwlock_t *rwlock)
+void ddsrt_rwlock_destroy(ddsrt_rwlock_t * rwlock)
 {
   assert(rwlock != NULL);
 
@@ -279,7 +265,7 @@ void ddsrt_rwlock_destroy(ddsrt_rwlock_t *rwlock)
   memset(rwlock, 0, sizeof(*rwlock));
 }
 
-void ddsrt_rwlock_read(ddsrt_rwlock_t *rwlock)
+void ddsrt_rwlock_read(ddsrt_rwlock_t * rwlock)
 {
   TaskHandle_t task = xTaskGetCurrentTaskHandle();
 
@@ -297,8 +283,7 @@ void ddsrt_rwlock_read(ddsrt_rwlock_t *rwlock)
     xSemaphoreTake(rwlock->sem, portMAX_DELAY);
     ddsrt_tasklist_pop(&rwlock->tasks, task);
   }
-  assert(rwlock->state == UNLOCKED ||
-         rwlock->state == READ_LOCKED);
+  assert(rwlock->state == UNLOCKED || rwlock->state == READ_LOCKED);
   rwlock->cnt++;
   rwlock->state = READ_LOCKED;
   /* Notify next task, if any. */
@@ -308,7 +293,7 @@ void ddsrt_rwlock_read(ddsrt_rwlock_t *rwlock)
   xSemaphoreGive(rwlock->sem);
 }
 
-void ddsrt_rwlock_write(ddsrt_rwlock_t *rwlock)
+void ddsrt_rwlock_write(ddsrt_rwlock_t * rwlock)
 {
   TaskHandle_t task = xTaskGetCurrentTaskHandle();
 
@@ -335,7 +320,7 @@ void ddsrt_rwlock_write(ddsrt_rwlock_t *rwlock)
   xSemaphoreGive(rwlock->sem);
 }
 
-bool ddsrt_rwlock_tryread(ddsrt_rwlock_t *rwlock)
+bool ddsrt_rwlock_tryread(ddsrt_rwlock_t * rwlock)
 {
   bool locked = false;
   TaskHandle_t task;
@@ -358,7 +343,7 @@ bool ddsrt_rwlock_tryread(ddsrt_rwlock_t *rwlock)
   return locked;
 }
 
-bool ddsrt_rwlock_trywrite(ddsrt_rwlock_t *rwlock)
+bool ddsrt_rwlock_trywrite(ddsrt_rwlock_t * rwlock)
 {
   bool locked = false;
 
@@ -376,7 +361,7 @@ bool ddsrt_rwlock_trywrite(ddsrt_rwlock_t *rwlock)
   return locked;
 }
 
-void ddsrt_rwlock_unlock(ddsrt_rwlock_t *rwlock)
+void ddsrt_rwlock_unlock(ddsrt_rwlock_t * rwlock)
 {
   TaskHandle_t task;
 
@@ -399,27 +384,21 @@ void ddsrt_rwlock_unlock(ddsrt_rwlock_t *rwlock)
     rwlock->state = UNLOCKED;
   }
   /* Notify next task, if any. */
-  if ((rwlock->state == UNLOCKED) &&
-      (task = ddsrt_tasklist_peek(&rwlock->tasks, NULL)) != NULL)
-  {
-    assert(rwlock->rdcnt != 0 ||
-           rwlock->wrcnt != 0);
+  if ((rwlock->state == UNLOCKED) && (task = ddsrt_tasklist_peek(&rwlock->tasks, NULL)) != NULL) {
+    assert(rwlock->rdcnt != 0 || rwlock->wrcnt != 0);
     xTaskNotifyGive(task);
   }
   xSemaphoreGive(rwlock->sem);
 }
 
-#define ONCE_NOT_STARTED (1<<0)
-#define ONCE_IN_PROGRESS (1<<1)
-#define ONCE_FINISHED (1<<2)
+#define ONCE_NOT_STARTED (1 << 0)
+#define ONCE_IN_PROGRESS (1 << 1)
+#define ONCE_FINISHED (1 << 2)
 
 /* Wait one millisecond (tick) between polls. */
 static const TickType_t once_delay = (configTICK_RATE_HZ / 1000);
 
-void
-ddsrt_once(
-  ddsrt_once_t *control,
-  ddsrt_once_fn init_fn)
+void ddsrt_once(ddsrt_once_t * control, ddsrt_once_fn init_fn)
 {
   int ret, brk = 0;
   uint32_t stat;
@@ -427,9 +406,7 @@ ddsrt_once(
   while (brk == 0) {
     stat = ddsrt_atomic_ld32(control);
     /* Verify once control was initialized properly. */
-    assert(stat == ONCE_NOT_STARTED ||
-           stat == ONCE_IN_PROGRESS ||
-           stat == ONCE_FINISHED);
+    assert(stat == ONCE_NOT_STARTED || stat == ONCE_IN_PROGRESS || stat == ONCE_FINISHED);
 
     if ((stat & ONCE_FINISHED) != 0) {
       /* The initialization function has been executed. No reason to block
@@ -446,15 +423,13 @@ ddsrt_once(
          executing it now) at the time of the load. If the atomic compare and
          swap operation is successful, this thread will run the initialization
          function. */
-      if (ddsrt_atomic_cas32(
-            control, ONCE_NOT_STARTED, ONCE_IN_PROGRESS) != 0)
-      {
+      if (ddsrt_atomic_cas32(control, ONCE_NOT_STARTED, ONCE_IN_PROGRESS) != 0) {
         /* Function must never block or yield, see reference manual. */
         init_fn();
 
-        ret = (0 == ddsrt_atomic_cas32(
-                 control, ONCE_IN_PROGRESS, ONCE_FINISHED));
-        assert(ret == 0); (void)ret;
+        ret = (0 == ddsrt_atomic_cas32(control, ONCE_IN_PROGRESS, ONCE_FINISHED));
+        assert(ret == 0);
+        (void)ret;
 
         brk = 1;
       } else {

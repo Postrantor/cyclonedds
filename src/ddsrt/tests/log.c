@@ -15,8 +15,8 @@
 #include <string.h>
 
 #ifdef __APPLE__
-#include <pthread.h>
 #include <AvailabilityMacros.h>
+#include <pthread.h>
 #endif /* __APPLE__ */
 
 #include "CUnit/Test.h"
@@ -37,7 +37,8 @@
    because it runs on the source rather than on the output of the C preprocessor
    (a reasonable decision in itself).  Therefore, just skip the body of each test. */
 
-#if __APPLE__ && !(defined MAC_OS_X_VERSION_10_13 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_13)
+#if __APPLE__ && \
+  !(defined MAC_OS_X_VERSION_10_13 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_13)
 #define HAVE_FMEMOPEN 0
 #else
 #define HAVE_FMEMOPEN 1
@@ -54,12 +55,12 @@
  * https://blogs.msdn.microsoft.com/larryosterman/2004/04/19/its-only-temporary/
  */
 
-static FILE *fmemopen(void *buf, size_t size, const char *mode)
+static FILE * fmemopen(void * buf, size_t size, const char * mode)
 {
   DWORD err = 0;
   int fd = -1;
   DWORD ret;
-  FILE *fh = NULL;
+  FILE * fh = NULL;
   HANDLE hdl = INVALID_HANDLE_VALUE;
   /* GetTempFileName will fail if the directory is be longer than MAX_PATH-14
      characters */
@@ -81,17 +82,12 @@ static FILE *fmemopen(void *buf, size_t size, const char *mode)
     err = GetLastError();
     assert(err != ERROR_BUFFER_OVERFLOW);
   } else {
-     /* The combination of FILE_ATTRIBUTE_TEMPORARY and
+    /* The combination of FILE_ATTRIBUTE_TEMPORARY and
         FILE_FLAG_DELETE_ON_CLOSE hints to the filesystem that the file should
         never be flushed to disk. */
     hdl = CreateFile(
-      tmpfile,
-      GENERIC_READ | GENERIC_WRITE,
-      0,
-      NULL,
-      CREATE_ALWAYS,
-      FILE_FLAG_DELETE_ON_CLOSE | FILE_ATTRIBUTE_TEMPORARY,
-      NULL);
+      tmpfile, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+      FILE_FLAG_DELETE_ON_CLOSE | FILE_ATTRIBUTE_TEMPORARY, NULL);
     if (hdl == INVALID_HANDLE_VALUE) {
       err = GetLastError();
     }
@@ -118,15 +114,15 @@ static FILE *fmemopen(void *buf, size_t size, const char *mode)
 #endif /* _WIN32 */
 
 #if HAVE_FMEMOPEN
-static FILE *fh = NULL;
+static FILE * fh = NULL;
 
-static void count(void *ptr, const dds_log_data_t *data)
+static void count(void * ptr, const dds_log_data_t * data)
 {
   (void)data;
   *(int *)ptr += 1;
 }
 
-static void copy(void *ptr, const dds_log_data_t *data)
+static void copy(void * ptr, const dds_log_data_t * data)
 {
   *(char **)ptr = ddsrt_strdup(data->message);
 }
@@ -159,7 +155,7 @@ static void teardown(void)
 /* By default only DDS_LC_FATAL and DDS_LC_ERROR are set. This means setting a
    trace sink should not have any effect, because no trace categories are
    enabled. The message should end up in the log file. */
-CU_Test(dds_log, only_log_file, .init=setup, .fini=teardown)
+CU_Test(dds_log, only_log_file, .init = setup, .fini = teardown)
 {
 #if HAVE_FMEMOPEN
   char buf[1024], *ptr;
@@ -185,7 +181,7 @@ CU_Test(dds_log, only_log_file, .init=setup, .fini=teardown)
 /* Messages must be printed to the trace file if at least one trace category
    is enabled. Messages must not be written twice if the trace file is the
    same as the log file. */
-CU_Test(dds_log, same_file, .init=setup, .fini=teardown)
+CU_Test(dds_log, same_file, .init = setup, .fini = teardown)
 {
 #if HAVE_FMEMOPEN
   char buf[1024], *ptr;
@@ -213,7 +209,7 @@ CU_Test(dds_log, same_file, .init=setup, .fini=teardown)
 /* The sinks are considered to be the same only if the callback and userdata
    both are an exact match. If the userdata is different, the function should
    be called twice for log messages. */
-CU_Test(dds_log, same_sink_function, .fini=reset)
+CU_Test(dds_log, same_sink_function, .fini = reset)
 {
 #if HAVE_FMEMOPEN
   int log_cnt = 0, trace_cnt = 0;
@@ -227,7 +223,7 @@ CU_Test(dds_log, same_sink_function, .fini=reset)
 #endif
 }
 
-CU_Test(dds_log, exact_same_sink, .fini=reset)
+CU_Test(dds_log, exact_same_sink, .fini = reset)
 {
 #if HAVE_FMEMOPEN
   int cnt = 0;
@@ -243,7 +239,7 @@ CU_Test(dds_log, exact_same_sink, .fini=reset)
 /* The log file must be restored if the sink is unregistered, verify the log
    file is not used while the sink is registered. Verify use of the log file is
    restored again when the sink is unregistered. */
-CU_Test(dds_log, no_sink, .init=setup, .fini=teardown)
+CU_Test(dds_log, no_sink, .init = setup, .fini = teardown)
 {
 #if HAVE_FMEMOPEN
   int ret;
@@ -287,7 +283,7 @@ CU_Test(dds_log, no_sink, .init=setup, .fini=teardown)
   ret = fseek(fh, 0, SEEK_SET);
   CU_ASSERT_EQUAL_FATAL(ret, 0);
   CU_ASSERT_PTR_NULL(ptr);
-  buf[0]= '\0';
+  buf[0] = '\0';
   cnt[1] = fread(buf, 1, sizeof(buf) - 1, fh);
 #ifdef _WIN32
   /* Write on Windows appends. */
@@ -304,10 +300,10 @@ CU_Test(dds_log, no_sink, .init=setup, .fini=teardown)
 /* A newline terminates the message. Until that a newline is encountered, the
    messages must be concatenated in the buffer. The newline is replaced by a
    NULL byte if it is flushed to a sink. */
-CU_Test(dds_log, newline_terminates, .fini=reset)
+CU_Test(dds_log, newline_terminates, .fini = reset)
 {
 #if HAVE_FMEMOPEN
-  char *msg = NULL;
+  char * msg = NULL;
 
   dds_set_log_sink(&copy, &msg);
   DDS_ERROR("foo");
@@ -322,10 +318,10 @@ CU_Test(dds_log, newline_terminates, .fini=reset)
 }
 
 /* Nothing must be written unless a category is enabled. */
-CU_Test(dds_log, disabled_categories_discarded, .fini=reset)
+CU_Test(dds_log, disabled_categories_discarded, .fini = reset)
 {
 #if HAVE_FMEMOPEN
-  char *msg = NULL;
+  char * msg = NULL;
   dds_set_log_sink(&copy, &msg);
   DDS_INFO("foobar\n");
   CU_ASSERT_PTR_NULL_FATAL(msg);
@@ -341,23 +337,24 @@ CU_Test(dds_log, disabled_categories_discarded, .fini=reset)
 static ddsrt_cond_t cond;
 static ddsrt_mutex_t mutex;
 
-struct arg {
-  ddsrt_cond_t *cond;
-  ddsrt_mutex_t *mutex;
+struct arg
+{
+  ddsrt_cond_t * cond;
+  ddsrt_mutex_t * mutex;
   dds_time_t before;
   dds_time_t after;
 };
 
-static void dummy(void *ptr, const dds_log_data_t *data)
+static void dummy(void * ptr, const dds_log_data_t * data)
 {
   (void)ptr;
   (void)data;
 }
 
-static void block(void *ptr, const dds_log_data_t *data)
+static void block(void * ptr, const dds_log_data_t * data)
 {
   (void)data;
-  struct arg *arg = (struct arg *)ptr;
+  struct arg * arg = (struct arg *)ptr;
   ddsrt_mutex_lock(arg->mutex);
   arg->before = dds_time();
   ddsrt_cond_broadcast(arg->cond);
@@ -365,7 +362,7 @@ static void block(void *ptr, const dds_log_data_t *data)
   arg->after = dds_time();
 }
 
-static uint32_t run(void *ptr)
+static uint32_t run(void * ptr)
 {
   (void)ptr;
 
@@ -378,7 +375,7 @@ static uint32_t run(void *ptr)
 /* Log and trace sinks can be changed at runtime. However, the operation must
    be synchronous! Verify the dds_set_log_sink blocks while other threads
    reside in the log or trace sinks. */
-CU_Test(dds_log, synchronous_sink_changes, .fini=reset)
+CU_Test(dds_log, synchronous_sink_changes, .fini = reset)
 {
 #if HAVE_FMEMOPEN
   struct arg arg;
@@ -426,33 +423,33 @@ static char abort_message[100];
 static char abort_message_trace[100];
 static ddsrt_log_cfg_t abort_logconfig;
 
-static void abort_handler (int sig)
+static void abort_handler(int sig)
 {
-  (void) sig;
-  siglongjmp (abort_jmpbuf, 1);
+  (void)sig;
+  siglongjmp(abort_jmpbuf, 1);
 }
 
-static void abort_log (void *arg, const dds_log_data_t *info)
+static void abort_log(void * arg, const dds_log_data_t * info)
 {
-  (void) arg;
-  (void) ddsrt_strlcpy (abort_message, info->message, sizeof (abort_message));
+  (void)arg;
+  (void)ddsrt_strlcpy(abort_message, info->message, sizeof(abort_message));
 }
 
-static void abort_trace (void *arg, const dds_log_data_t *info)
+static void abort_trace(void * arg, const dds_log_data_t * info)
 {
-  (void) arg;
-  (void) ddsrt_strlcpy (abort_message_trace, info->message, sizeof (abort_message_trace));
+  (void)arg;
+  (void)ddsrt_strlcpy(abort_message_trace, info->message, sizeof(abort_message_trace));
 }
 
 CU_TheoryDataPoints(dds_log, fatal_aborts) = {
-  CU_DataPoints(bool, false, false, false,  true,  true,  true), /* global/config */
-  CU_DataPoints(int,      0,     1,     2,     0,     1,     2), /* mask init mode */
-  CU_DataPoints(bool, false, false,  true, false, false,  true)  /* expect in trace? */
+  CU_DataPoints(bool, false, false, false, true, true, true), /* global/config */
+  CU_DataPoints(int, 0, 1, 2, 0, 1, 2),                       /* mask init mode */
+  CU_DataPoints(bool, false, false, true, false, false, true) /* expect in trace? */
 };
 #else
 CU_TheoryDataPoints(dds_log, fatal_aborts) = {
   CU_DataPoints(bool, false), /* global/config */
-  CU_DataPoints(int,      0), /* mask init mode */
+  CU_DataPoints(int, 0),      /* mask init mode */
   CU_DataPoints(bool, false)  /* expect in trace? */
 };
 #endif
@@ -462,49 +459,50 @@ CU_Theory((bool local, int mode, bool expect_in_trace), dds_log, fatal_aborts)
 #if TEST_DDS_LC_FATAL
   struct sigaction action, oldaction;
   action.sa_flags = 0;
-  sigemptyset (&action.sa_mask);
+  sigemptyset(&action.sa_mask);
   action.sa_handler = abort_handler;
 
-  if (sigsetjmp (abort_jmpbuf, 0) != 0)
-  {
-    sigaction (SIGABRT, &oldaction, NULL);
-    CU_ASSERT_STRING_EQUAL (abort_message, "oops\n");
-    CU_ASSERT_STRING_EQUAL (abort_message_trace, expect_in_trace ? "oops\n" : "");
-  }
-  else
-  {
-    memset (abort_message, 0, sizeof (abort_message));
-    memset (abort_message_trace, 0, sizeof (abort_message_trace));
-    dds_set_log_sink (abort_log, NULL);
-    dds_set_trace_sink (abort_trace, NULL);
-    sigaction (SIGABRT, &action, &oldaction);
-    if (local)
-    {
-      switch (mode)
-      {
+  if (sigsetjmp(abort_jmpbuf, 0) != 0) {
+    sigaction(SIGABRT, &oldaction, NULL);
+    CU_ASSERT_STRING_EQUAL(abort_message, "oops\n");
+    CU_ASSERT_STRING_EQUAL(abort_message_trace, expect_in_trace ? "oops\n" : "");
+  } else {
+    memset(abort_message, 0, sizeof(abort_message));
+    memset(abort_message_trace, 0, sizeof(abort_message_trace));
+    dds_set_log_sink(abort_log, NULL);
+    dds_set_trace_sink(abort_trace, NULL);
+    sigaction(SIGABRT, &action, &oldaction);
+    if (local) {
+      switch (mode) {
         case 0:
           /* FALL THROUGH */
-        case 1: dds_log_cfg_init (&abort_logconfig, 0, 0, 0, 0); break;
-        case 2: dds_log_cfg_init (&abort_logconfig, 0, DDS_LC_TRACE, 0, 0); break;
+        case 1:
+          dds_log_cfg_init(&abort_logconfig, 0, 0, 0, 0);
+          break;
+        case 2:
+          dds_log_cfg_init(&abort_logconfig, 0, DDS_LC_TRACE, 0, 0);
+          break;
       }
-      DDS_CLOG (DDS_LC_FATAL, &abort_logconfig, "oops\n");
-    }
-    else
-    {
-      switch (mode)
-      {
-        case 0: break;
-        case 1: dds_set_log_mask (0); break;
-        case 2: dds_set_log_mask (DDS_LC_TRACE); break;
+      DDS_CLOG(DDS_LC_FATAL, &abort_logconfig, "oops\n");
+    } else {
+      switch (mode) {
+        case 0:
+          break;
+        case 1:
+          dds_set_log_mask(0);
+          break;
+        case 2:
+          dds_set_log_mask(DDS_LC_TRACE);
+          break;
       }
-      DDS_FATAL ("oops\n");
+      DDS_FATAL("oops\n");
     }
-    sigaction (SIGABRT, &oldaction, NULL);
-    CU_ASSERT (0);
+    sigaction(SIGABRT, &oldaction, NULL);
+    CU_ASSERT(0);
   }
 #else
-  (void) local;
-  (void) mode;
-  (void) expect_in_trace;
+  (void)local;
+  (void)mode;
+  (void)expect_in_trace;
 #endif
 }

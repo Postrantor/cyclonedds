@@ -12,15 +12,15 @@
 #ifndef DDSI_TYPEWRAP_H
 #define DDSI_TYPEWRAP_H
 
-#include "dds/features.h"
-
 #include <stdbool.h>
 #include <stdint.h>
-#include "dds/ddsrt/static_assert.h"
+
 #include "dds/ddsi/ddsi_xqos.h"
 #include "dds/ddsi/ddsi_xt_typeinfo.h"
+#include "dds/ddsrt/static_assert.h"
+#include "dds/features.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -50,43 +50,44 @@ typedef enum ddsi_type_include_deps {
 } ddsi_type_include_deps_t;
 
 /** @component xtypes_wrapper */
-DDS_EXPORT int ddsi_typeid_compare (const ddsi_typeid_t *a, const ddsi_typeid_t *b);
+DDS_EXPORT int ddsi_typeid_compare(const ddsi_typeid_t * a, const ddsi_typeid_t * b);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT void ddsi_typeid_copy (ddsi_typeid_t *dst, const ddsi_typeid_t *src);
+DDS_EXPORT void ddsi_typeid_copy(ddsi_typeid_t * dst, const ddsi_typeid_t * src);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT ddsi_typeid_t * ddsi_typeid_dup (const ddsi_typeid_t *src);
+DDS_EXPORT ddsi_typeid_t * ddsi_typeid_dup(const ddsi_typeid_t * src);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT void ddsi_typeid_ser (const ddsi_typeid_t *type_id, unsigned char **buf, uint32_t *sz);
+DDS_EXPORT void ddsi_typeid_ser(const ddsi_typeid_t * type_id, unsigned char ** buf, uint32_t * sz);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT bool ddsi_typeid_is_none (const ddsi_typeid_t *type_id);
+DDS_EXPORT bool ddsi_typeid_is_none(const ddsi_typeid_t * type_id);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT bool ddsi_typeid_is_hash (const ddsi_typeid_t *type_id);
+DDS_EXPORT bool ddsi_typeid_is_hash(const ddsi_typeid_t * type_id);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT bool ddsi_typeid_is_minimal (const ddsi_typeid_t *type_id);
+DDS_EXPORT bool ddsi_typeid_is_minimal(const ddsi_typeid_t * type_id);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT bool ddsi_typeid_is_complete (const ddsi_typeid_t *type_id);
+DDS_EXPORT bool ddsi_typeid_is_complete(const ddsi_typeid_t * type_id);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT bool ddsi_typeid_is_fully_descriptive (const ddsi_typeid_t *type_id);
+DDS_EXPORT bool ddsi_typeid_is_fully_descriptive(const ddsi_typeid_t * type_id);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT void ddsi_typeid_get_equivalence_hash (const ddsi_typeid_t *type_id, DDS_XTypes_EquivalenceHash *hash);
+DDS_EXPORT void ddsi_typeid_get_equivalence_hash(
+  const ddsi_typeid_t * type_id, DDS_XTypes_EquivalenceHash * hash);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT ddsi_typeid_kind_t ddsi_typeid_kind (const ddsi_typeid_t *type);
+DDS_EXPORT ddsi_typeid_kind_t ddsi_typeid_kind(const ddsi_typeid_t * type);
 
 /** @component xtypes_wrapper */
-DDS_EXPORT void ddsi_typeid_fini (ddsi_typeid_t *type_id);
+DDS_EXPORT void ddsi_typeid_fini(ddsi_typeid_t * type_id);
 
 /** @component xtypes_wrapper */
-void ddsi_typeobj_fini (ddsi_typeobj_t *typeobj);
+void ddsi_typeobj_fini(ddsi_typeobj_t * typeobj);
 
 #else /* DDS_HAS_TYPE_DISCOVERY */
 
@@ -97,7 +98,7 @@ typedef void ddsi_typeinfo_t;
 
 #endif /* DDS_HAS_TYPE_DISCOVERY */
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

@@ -10,14 +10,14 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 #include <FreeRTOS.h>
-#include <task.h>
 #include <string.h>
+#include <task.h>
 
-#include "threads_priv.h"
 #include "dds/ddsrt/heap.h"
 #include "dds/ddsrt/retcode.h"
 #include "dds/ddsrt/string.h"
 #include "dds/ddsrt/sync.h"
+#include "threads_priv.h"
 
 typedef enum {
   THREAD_STARTING = 0,
@@ -27,17 +27,18 @@ typedef enum {
                     yet. */
 } thread_state_t;
 
-typedef struct {
-    ddsrt_thread_routine_t func;
-    void *arg;
-    TaskHandle_t task; /* Thread identifier for looking up thread context from
+typedef struct
+{
+  ddsrt_thread_routine_t func;
+  void * arg;
+  TaskHandle_t task; /* Thread identifier for looking up thread context from
                           another thread. Read-only, read by other threads. */
-    thread_state_t stat;
-    thread_cleanup_t *dtors; /* Cleanup routines. Private. */
-    uint32_t ret; /* Return value. NULL if thread has not terminated, maybe
+  thread_state_t stat;
+  thread_cleanup_t * dtors; /* Cleanup routines. Private. */
+  uint32_t ret;             /* Return value. NULL if thread has not terminated, maybe
                      NULL if thread has terminated, read by other thread(s)
                      after termination. */
-    TaskHandle_t blkd; /* Thread blocked until thread terminates. may or may
+  TaskHandle_t blkd;        /* Thread blocked until thread terminates. may or may
                           not be empty when thread terminates. Written by other
                           thread, protected by registry mutex. */
 } thread_context_t;
@@ -51,30 +52,34 @@ typedef struct {
 
 /* FIXME: The same mechanism more-or-less exists in DDSI, perhaps more of the
           logic in DDSI can be moved down at some point? */
-typedef struct {
+typedef struct
+{
   ddsrt_mutex_t mutex;
   /* The number of available spaces in the thread context array does not have
      to equal the number of used spaces. e.g. when a memory allocation for a
      new thread context array fails when destroying a context it is better to
      leave one space unused. */
-  thread_context_t **ctxs;
+  thread_context_t ** ctxs;
   size_t cnt;
   size_t len;
 } thread_registry_t;
 
-static ddsrt_thread_local thread_context_t *thread_context = NULL;
+static ddsrt_thread_local thread_context_t * thread_context = NULL;
 
 static thread_registry_t thread_registry;
 
 static ddsrt_once_t thread_registry_once = DDSRT_ONCE_INIT;
 
-static uint32_t non_local_thread(void *arg) { (void)arg; return 0;}
+static uint32_t non_local_thread(void * arg)
+{
+  (void)arg;
+  return 0;
+}
 
 /* FreeRTOS documentation states vTaskGetInfo is intended for debugging because
    its use results in the scheduler remaining suspended for an extended period,
    but the scheduler is only suspended if eTaskState is not eInvalid. */
-ddsrt_tid_t
-ddsrt_gettid(void)
+ddsrt_tid_t ddsrt_gettid(void)
 {
   TaskStatus_t status;
 
@@ -83,30 +88,23 @@ ddsrt_gettid(void)
   return status.xTaskNumber;
 }
 
-DDS_EXPORT ddsrt_tid_t
-ddsrt_gettid_for_thread( ddsrt_thread_t thread)
+DDS_EXPORT ddsrt_tid_t ddsrt_gettid_for_thread(ddsrt_thread_t thread)
 {
   return (ddsrt_tid_t)thread.task;
 }
 
-
-ddsrt_thread_t
-ddsrt_thread_self(void)
+ddsrt_thread_t ddsrt_thread_self(void)
 {
-  ddsrt_thread_t thr = { .task = xTaskGetCurrentTaskHandle() };
+  ddsrt_thread_t thr = {.task = xTaskGetCurrentTaskHandle()};
 
   return thr;
 }
 
-bool ddsrt_thread_equal(ddsrt_thread_t a, ddsrt_thread_t b)
-{
-  return (a.task == b.task);
-}
+bool ddsrt_thread_equal(ddsrt_thread_t a, ddsrt_thread_t b) { return (a.task == b.task); }
 
-size_t
-ddsrt_thread_getname(char *__restrict name, size_t size)
+size_t ddsrt_thread_getname(char * __restrict name, size_t size)
 {
-  char *ptr;
+  char * ptr;
 
   assert(name != NULL);
   assert(size >= 1);
@@ -118,23 +116,19 @@ ddsrt_thread_getname(char *__restrict name, size_t size)
   return ddsrt_strlcpy(name, ptr, size);
 }
 
-static void
-thread_registry_init(void)
+static void thread_registry_init(void)
 {
   /* One time initialization guaranteed by ddsrt_once. */
   (void)memset(&thread_registry, 0, sizeof(thread_registry));
   ddsrt_mutex_init(&thread_registry.mutex);
 }
 
-static thread_context_t *
-thread_context_find(TaskHandle_t task)
+static thread_context_t * thread_context_find(TaskHandle_t task)
 {
-  thread_context_t *ctx = NULL;
+  thread_context_t * ctx = NULL;
 
   for (size_t i = 0; i < thread_registry.cnt && ctx == NULL; i++) {
-    if (thread_registry.ctxs[i] != NULL &&
-        thread_registry.ctxs[i]->task == task)
-    {
+    if (thread_registry.ctxs[i] != NULL && thread_registry.ctxs[i]->task == task) {
       ctx = thread_registry.ctxs[i];
     }
   }
@@ -142,8 +136,7 @@ thread_context_find(TaskHandle_t task)
   return ctx;
 }
 
-static dds_return_t
-thread_context_create(thread_context_t **ctxptr)
+static dds_return_t thread_context_create(thread_context_t ** ctxptr)
 {
   dds_return_t rc = DDS_RETCODE_OK;
   size_t len;
@@ -179,11 +172,10 @@ thread_context_create(thread_context_t **ctxptr)
 
 #define thread_context_require() thread_context_acquire(NULL)
 
-static dds_return_t
-thread_context_acquire(thread_context_t **ctxptr)
+static dds_return_t thread_context_acquire(thread_context_t ** ctxptr)
 {
   dds_return_t rc = DDS_RETCODE_OK;
-  thread_context_t *ctx = thread_context;
+  thread_context_t * ctx = thread_context;
 
   if (ctx == NULL) {
     /* Dynamically initialize global thread registry (exactly once). */
@@ -214,11 +206,10 @@ thread_context_acquire(thread_context_t **ctxptr)
   return rc;
 }
 
-static void
-thread_context_destroy(thread_context_t *ctx)
+static void thread_context_destroy(thread_context_t * ctx)
 {
   size_t i = 0;
-  thread_context_t **arr;
+  thread_context_t ** arr;
 
   if (ctx != NULL) {
     while (i < thread_registry.cnt && thread_registry.ctxs[i] != ctx) {
@@ -229,9 +220,8 @@ thread_context_destroy(thread_context_t *ctx)
       thread_registry.ctxs[i] = NULL;
       if (i < (thread_registry.cnt - 1)) {
         (void)memmove(
-            thread_registry.ctxs + (i),
-            thread_registry.ctxs + (i+1),
-            (thread_registry.cnt - (i+1)) * sizeof(*thread_registry.ctxs));
+          thread_registry.ctxs + (i), thread_registry.ctxs + (i + 1),
+          (thread_registry.cnt - (i + 1)) * sizeof(*thread_registry.ctxs));
       }
       thread_registry.cnt--;
 
@@ -241,9 +231,8 @@ thread_context_destroy(thread_context_t *ctx)
         thread_registry.ctxs = NULL;
         thread_registry.len = 0;
       } else {
-        arr = ddsrt_realloc(
-          thread_registry.ctxs,
-          thread_registry.cnt * sizeof(*thread_registry.ctxs));
+        arr =
+          ddsrt_realloc(thread_registry.ctxs, thread_registry.cnt * sizeof(*thread_registry.ctxs));
         /* Ignore allocation failure, save free spot. */
         if (arr != NULL) {
           thread_registry.ctxs = arr;
@@ -256,10 +245,9 @@ thread_context_destroy(thread_context_t *ctx)
   }
 }
 
-static void
-thread_fini(thread_context_t *ctx, uint32_t ret)
+static void thread_fini(thread_context_t * ctx, uint32_t ret)
 {
-  thread_cleanup_t *tail;
+  thread_cleanup_t * tail;
 
   assert(ctx != NULL);
 
@@ -309,10 +297,9 @@ thread_fini(thread_context_t *ctx, uint32_t ret)
   ddsrt_mutex_unlock(&thread_registry.mutex);
 }
 
-static void
-thread_start_routine(void *arg)
+static void thread_start_routine(void * arg)
 {
-  thread_context_t *ctx = (thread_context_t *)arg;
+  thread_context_t * ctx = (thread_context_t *)arg;
   uint32_t ret;
 
   ddsrt_mutex_lock(&thread_registry.mutex);
@@ -347,19 +334,15 @@ thread_start_routine(void *arg)
    the user to change it on a per-thread basis at runtime. */
 #define MIN_STACK_SIZE ((uint16_t)(configMINIMAL_STACK_SIZE * WORD_SIZE))
 
-dds_return_t
-ddsrt_thread_create(
-  ddsrt_thread_t *thread,
-  const char *name,
-  const ddsrt_threadattr_t *attr,
-  ddsrt_thread_routine_t start_routine,
-  void *arg)
+dds_return_t ddsrt_thread_create(
+  ddsrt_thread_t * thread, const char * name, const ddsrt_threadattr_t * attr,
+  ddsrt_thread_routine_t start_routine, void * arg)
 {
   dds_return_t rc;
   TaskHandle_t task;
   UBaseType_t prio;
   uint16_t size = MIN_STACK_SIZE;
-  thread_context_t *ctx = NULL;
+  thread_context_t * ctx = NULL;
 
   assert(thread != NULL);
   assert(name != NULL);
@@ -371,13 +354,9 @@ ddsrt_thread_create(
   }
 
   /* Non-realtime scheduling does not exist in FreeRTOS. */
-  if (attr->schedClass != DDSRT_SCHED_DEFAULT &&
-      attr->schedClass != DDSRT_SCHED_REALTIME)
-  {
+  if (attr->schedClass != DDSRT_SCHED_DEFAULT && attr->schedClass != DDSRT_SCHED_REALTIME) {
     return DDS_RETCODE_BAD_PARAMETER;
-  } else if (attr->schedPriority < 0 ||
-             attr->schedPriority > (configMAX_PRIORITIES - 1))
-  {
+  } else if (attr->schedPriority < 0 || attr->schedPriority > (configMAX_PRIORITIES - 1)) {
     return DDS_RETCODE_BAD_PARAMETER;
   }
 
@@ -408,9 +387,7 @@ ddsrt_thread_create(
     ctx->func = start_routine;
     ctx->arg = arg;
 
-    if (pdPASS != xTaskCreate(
-          &thread_start_routine, name, size, ctx, prio, &task))
-    {
+    if (pdPASS != xTaskCreate(&thread_start_routine, name, size, ctx, prio, &task)) {
       thread_context_destroy(ctx);
       rc = DDS_RETCODE_OUT_OF_RESOURCES;
     } else {
@@ -423,8 +400,7 @@ ddsrt_thread_create(
   return rc;
 }
 
-void
-ddsrt_thread_init(uint32_t reason)
+void ddsrt_thread_init(uint32_t reason)
 {
   (void)reason;
   if (thread_context_require() != DDS_RETCODE_OK) {
@@ -432,10 +408,9 @@ ddsrt_thread_init(uint32_t reason)
   }
 }
 
-void
-ddsrt_thread_fini(uint32_t reason)
+void ddsrt_thread_fini(uint32_t reason)
 {
-  thread_context_t *ctx;
+  thread_context_t * ctx;
 
   (void)reason;
   /* NO-OP if no context exists since thread-local storage and cleanup
@@ -446,11 +421,10 @@ ddsrt_thread_fini(uint32_t reason)
   }
 }
 
-dds_return_t
-ddsrt_thread_join(ddsrt_thread_t thread, uint32_t *thread_result)
+dds_return_t ddsrt_thread_join(ddsrt_thread_t thread, uint32_t * thread_result)
 {
   dds_return_t rc;
-  thread_context_t *ctx;
+  thread_context_t * ctx;
   eTaskState status;
 
   if ((rc = thread_context_require()) != DDS_RETCODE_OK) {
@@ -511,12 +485,11 @@ ddsrt_thread_join(ddsrt_thread_t thread, uint32_t *thread_result)
   return rc;
 }
 
-dds_return_t
-ddsrt_thread_cleanup_push(void (*routine)(void *), void *arg)
+dds_return_t ddsrt_thread_cleanup_push(void (*routine)(void *), void * arg)
 {
   dds_return_t rc = DDS_RETCODE_OK;
-  thread_cleanup_t *tail = NULL;
-  thread_context_t *ctx;
+  thread_cleanup_t * tail = NULL;
+  thread_context_t * ctx;
 
   assert(routine != NULL);
 
@@ -534,11 +507,10 @@ ddsrt_thread_cleanup_push(void (*routine)(void *), void *arg)
   return rc;
 }
 
-dds_return_t
-ddsrt_thread_cleanup_pop(int execute)
+dds_return_t ddsrt_thread_cleanup_pop(int execute)
 {
-  thread_cleanup_t *tail;
-  thread_context_t *ctx;
+  thread_cleanup_t * tail;
+  thread_context_t * ctx;
 
   if (thread_context_acquire(&ctx) == 0) {
     if ((tail = ctx->dtors) != NULL) {

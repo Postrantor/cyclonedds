@@ -20,14 +20,14 @@
 #ifndef DDS_TIME_H
 #define DDS_TIME_H
 
-#include <stdint.h>
 #include <assert.h>
+#include <stdint.h>
 
-#include "dds/export.h"
 #include "dds/config.h"
 #include "dds/ddsrt/types.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -56,40 +56,43 @@ typedef int64_t dds_duration_t;
 /** @}*/
 
 /** @name Infinite timeout for indicate absolute time */
-#define DDS_NEVER ((dds_time_t) INT64_MAX)
+#define DDS_NEVER ((dds_time_t)INT64_MAX)
 
 /** @name Infinite timeout for relative time */
-#define DDS_INFINITY ((dds_duration_t) INT64_MAX)
+#define DDS_INFINITY ((dds_duration_t)INT64_MAX)
 
 /** @name Invalid time value for assigning to time output when something goes wrong */
-#define DDS_TIME_INVALID ((dds_time_t) INT64_MIN)
+#define DDS_TIME_INVALID ((dds_time_t)INT64_MIN)
 
 /** @name Invalid duration value */
-#define DDS_DURATION_INVALID ((dds_duration_t) INT64_MIN)
+#define DDS_DURATION_INVALID ((dds_duration_t)INT64_MIN)
 
 /** @name Macro definition for time conversion to nanoseconds
   @{**/
-#define DDS_SECS(n) ((n) * DDS_NSECS_IN_SEC)
-#define DDS_MSECS(n) ((n) * DDS_NSECS_IN_MSEC)
-#define DDS_USECS(n) ((n) * DDS_NSECS_IN_USEC)
+#define DDS_SECS(n) ((n)*DDS_NSECS_IN_SEC)
+#define DDS_MSECS(n) ((n)*DDS_NSECS_IN_MSEC)
+#define DDS_USECS(n) ((n)*DDS_NSECS_IN_USEC)
 /** @}*/
 
-typedef struct {
+typedef struct
+{
   dds_time_t v;
 } ddsrt_mtime_t;
 
-typedef struct {
+typedef struct
+{
   dds_time_t v;
 } ddsrt_wctime_t;
 
-typedef struct {
+typedef struct
+{
   dds_time_t v;
 } ddsrt_etime_t;
 
-#define DDSRT_MTIME_NEVER ((ddsrt_mtime_t) { DDS_NEVER })
-#define DDSRT_WCTIME_NEVER ((ddsrt_wctime_t) { DDS_NEVER })
-#define DDSRT_ETIME_NEVER ((ddsrt_etime_t) { DDS_NEVER })
-#define DDSRT_WCTIME_INVALID ((ddsrt_wctime_t) { INT64_MIN })
+#define DDSRT_MTIME_NEVER ((ddsrt_mtime_t){DDS_NEVER})
+#define DDSRT_WCTIME_NEVER ((ddsrt_wctime_t){DDS_NEVER})
+#define DDSRT_ETIME_NEVER ((ddsrt_etime_t){DDS_NEVER})
+#define DDSRT_WCTIME_INVALID ((ddsrt_wctime_t){INT64_MIN})
 
 /**
  * @brief Get the current time in nanoseconds since the UNIX Epoch.
@@ -106,7 +109,7 @@ DDS_EXPORT dds_time_t dds_time(void);
  *
  * @param[in]  reltime  Relative time in nanoseconds.
  */
-DDS_EXPORT void dds_sleepfor (dds_duration_t reltime);
+DDS_EXPORT void dds_sleepfor(dds_duration_t reltime);
 
 /**
  * @brief Get the current time in nanoseconds since the UNIX Epoch.  Identical
@@ -163,7 +166,7 @@ DDS_EXPORT ddsrt_etime_t ddsrt_time_elapsed(void);
  */
 #define DDSRT_RFC3339STRLEN (25)
 
-DDS_EXPORT size_t ddsrt_ctime(dds_time_t abstime, char *str, size_t size);
+DDS_EXPORT size_t ddsrt_ctime(dds_time_t abstime, char * str, size_t size);
 
 /**
  * @brief Calculate a time given an offset time and a duration.
@@ -177,7 +180,8 @@ DDS_EXPORT size_t ddsrt_ctime(dds_time_t abstime, char *str, size_t size);
  *
  * @returns A timestamp in nanoseconds since UNIX Epoch.
  */
-DDS_INLINE_EXPORT inline dds_time_t ddsrt_time_add_duration(dds_time_t abstime, dds_duration_t reltime)
+DDS_INLINE_EXPORT inline dds_time_t ddsrt_time_add_duration(
+  dds_time_t abstime, dds_duration_t reltime)
 {
   assert(abstime >= 0);
   assert(reltime >= 0);
@@ -196,9 +200,11 @@ DDS_INLINE_EXPORT inline dds_time_t ddsrt_time_add_duration(dds_time_t abstime, 
  *
  * @returns A timestamp in nanoseconds since UNIX Epoch.
  */
-DDS_INLINE_EXPORT inline ddsrt_mtime_t ddsrt_mtime_add_duration(ddsrt_mtime_t abstime, dds_duration_t reltime) {
+DDS_INLINE_EXPORT inline ddsrt_mtime_t ddsrt_mtime_add_duration(
+  ddsrt_mtime_t abstime, dds_duration_t reltime)
+{
   ddsrt_mtime_t t;
-  t.v = ddsrt_time_add_duration (abstime.v, reltime);
+  t.v = ddsrt_time_add_duration(abstime.v, reltime);
   return t;
 }
 
@@ -214,9 +220,11 @@ DDS_INLINE_EXPORT inline ddsrt_mtime_t ddsrt_mtime_add_duration(ddsrt_mtime_t ab
  *
  * @returns A timestamp in nanoseconds since UNIX Epoch.
  */
-DDS_INLINE_EXPORT inline ddsrt_wctime_t ddsrt_wctime_add_duration(ddsrt_wctime_t abstime, dds_duration_t reltime) {
+DDS_INLINE_EXPORT inline ddsrt_wctime_t ddsrt_wctime_add_duration(
+  ddsrt_wctime_t abstime, dds_duration_t reltime)
+{
   ddsrt_wctime_t t;
-  t.v = ddsrt_time_add_duration (abstime.v, reltime);
+  t.v = ddsrt_time_add_duration(abstime.v, reltime);
   return t;
 }
 
@@ -232,9 +240,11 @@ DDS_INLINE_EXPORT inline ddsrt_wctime_t ddsrt_wctime_add_duration(ddsrt_wctime_t
  *
  * @returns A timestamp in nanoseconds since UNIX Epoch.
  */
-DDS_INLINE_EXPORT inline ddsrt_etime_t ddsrt_etime_add_duration(ddsrt_etime_t abstime, dds_duration_t reltime) {
+DDS_INLINE_EXPORT inline ddsrt_etime_t ddsrt_etime_add_duration(
+  ddsrt_etime_t abstime, dds_duration_t reltime)
+{
   ddsrt_etime_t t;
-  t.v = ddsrt_time_add_duration (abstime.v, reltime);
+  t.v = ddsrt_time_add_duration(abstime.v, reltime);
   return t;
 }
 
@@ -247,8 +257,7 @@ DDS_INLINE_EXPORT inline ddsrt_etime_t ddsrt_etime_add_duration(ddsrt_etime_t ab
  * @returns INFINITE if @reltime was @DDS_INIFINITY, relative time converted to
  *          microseconds otherwise.
  */
-inline DWORD
-ddsrt_duration_to_msecs_ceil(dds_duration_t reltime)
+inline DWORD ddsrt_duration_to_msecs_ceil(dds_duration_t reltime)
 {
   if (reltime == DDS_INFINITY) {
     return INFINITE;
@@ -276,7 +285,8 @@ ddsrt_duration_to_msecs_ceil(dds_duration_t reltime)
  * @param[out]  sec   Seconds part
  * @param[out]  usec  Microseconds part
  */
-DDS_EXPORT void ddsrt_mtime_to_sec_usec (int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_mtime_t t);
+DDS_EXPORT void ddsrt_mtime_to_sec_usec(
+  int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_mtime_t t);
 
 /**
  * @brief Convert wall-clock time seconds & microseconds
@@ -285,7 +295,8 @@ DDS_EXPORT void ddsrt_mtime_to_sec_usec (int32_t * __restrict sec, int32_t * __r
  * @param[out]  sec   Seconds part
  * @param[out]  usec  Microseconds part
  */
-DDS_EXPORT void ddsrt_wctime_to_sec_usec (int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_wctime_t t);
+DDS_EXPORT void ddsrt_wctime_to_sec_usec(
+  int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_wctime_t t);
 
 /**
  * @brief Convert elapsed time seconds & microseconds
@@ -294,7 +305,8 @@ DDS_EXPORT void ddsrt_wctime_to_sec_usec (int32_t * __restrict sec, int32_t * __
  * @param[out]  sec   Seconds part
  * @param[out]  usec  Microseconds part
  */
-DDS_EXPORT void ddsrt_etime_to_sec_usec (int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_etime_t t);
+DDS_EXPORT void ddsrt_etime_to_sec_usec(
+  int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_etime_t t);
 
 #if defined(__cplusplus)
 }

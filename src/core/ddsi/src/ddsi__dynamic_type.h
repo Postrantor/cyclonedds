@@ -15,7 +15,7 @@
 #include "dds/export.h"
 #include "dds/features.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -32,9 +32,9 @@ extern "C" {
  * @param[in] member_hash_name Name of the member (or name provided in the hashid annotation).
  *
  */
-uint32_t ddsi_dynamic_type_member_hashid (const char *member_hash_name);
+uint32_t ddsi_dynamic_type_member_hashid(const char * member_hash_name);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

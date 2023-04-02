@@ -12,15 +12,16 @@
 #ifndef DDSI_KEYHASH_H
 #define DDSI_KEYHASH_H
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-typedef struct ddsi_keyhash {
+typedef struct ddsi_keyhash
+{
   unsigned char value[16];
 } ddsi_keyhash_t;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

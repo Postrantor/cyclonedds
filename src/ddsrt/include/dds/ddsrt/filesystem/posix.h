@@ -12,12 +12,12 @@
 #ifndef DDSRT_FILESYSTEM_POSIX_H
 #define DDSRT_FILESYSTEM_POSIX_H
 
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <dirent.h>
 #include <limits.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-typedef DIR *ddsrt_dir_handle_t;
+typedef DIR * ddsrt_dir_handle_t;
 typedef mode_t ddsrt_mode_t;
 
 #ifdef PATH_MAX

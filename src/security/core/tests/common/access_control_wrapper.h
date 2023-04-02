@@ -13,8 +13,8 @@
 #define SECURITY_CORE_TEST_ACCESS_CONTROL_WRAPPER_H_
 
 #include "dds/ddsi/ddsi_domaingv.h"
-#include "dds/security/dds_security_api.h"
 #include "dds/security/access_control_wrapper_export.h"
+#include "dds/security/dds_security_api.h"
 
 /* Topic name prefix expected by this wrapper when running in not-allowed
    mode. This prefix is used to exclude built-in topics from being disallowed. */
@@ -23,19 +23,23 @@
 struct dds_security_access_control_impl;
 
 /* Init in all-ok mode: all functions return success without calling the actual plugin */
-SECURITY_EXPORT int init_test_access_control_all_ok(const char *argument, void **context, struct ddsi_domaingv *gv);
-SECURITY_EXPORT int finalize_test_access_control_all_ok(void *context);
+SECURITY_EXPORT int init_test_access_control_all_ok(
+  const char * argument, void ** context, struct ddsi_domaingv * gv);
+SECURITY_EXPORT int finalize_test_access_control_all_ok(void * context);
 
 /* Init in missing function mode: one of the function pointers is null */
-SECURITY_EXPORT int init_test_access_control_missing_func(const char *argument, void **context, struct ddsi_domaingv *gv);
-SECURITY_EXPORT int finalize_test_access_control_missing_func(void *context);
+SECURITY_EXPORT int init_test_access_control_missing_func(
+  const char * argument, void ** context, struct ddsi_domaingv * gv);
+SECURITY_EXPORT int finalize_test_access_control_missing_func(void * context);
 
-SECURITY_EXPORT int init_test_access_control_wrapped(const char *argument, void **context, struct ddsi_domaingv *gv);
-SECURITY_EXPORT int finalize_test_access_control_wrapped(void *context);
+SECURITY_EXPORT int init_test_access_control_wrapped(
+  const char * argument, void ** context, struct ddsi_domaingv * gv);
+SECURITY_EXPORT int finalize_test_access_control_wrapped(void * context);
 
 /* Init functions for not-allowed modes */
-#define INIT_NOT_ALLOWED_DECL(name_) \
-  SECURITY_EXPORT int init_test_access_control_##name_ (const char *argument, void **context, struct ddsi_domaingv *gv);
+#define INIT_NOT_ALLOWED_DECL(name_)                    \
+  SECURITY_EXPORT int init_test_access_control_##name_( \
+    const char * argument, void ** context, struct ddsi_domaingv * gv);
 
 INIT_NOT_ALLOWED_DECL(local_participant_not_allowed)
 INIT_NOT_ALLOWED_DECL(local_topic_not_allowed)
@@ -49,6 +53,6 @@ INIT_NOT_ALLOWED_DECL(remote_reader_not_allowed)
 INIT_NOT_ALLOWED_DECL(remote_reader_relay_only)
 INIT_NOT_ALLOWED_DECL(remote_permissions_not_allowed)
 
-SECURITY_EXPORT int finalize_test_access_control_not_allowed(void *context);
+SECURITY_EXPORT int finalize_test_access_control_not_allowed(void * context);
 
 #endif /* SECURITY_CORE_TEST_ACCESS_CONTROL_WRAPPER_H_ */

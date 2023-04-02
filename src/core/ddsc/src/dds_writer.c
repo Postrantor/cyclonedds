@@ -46,11 +46,9 @@
 DECL_ENTITY_LOCK_UNLOCK(dds_writer)
 
 /** @brief 定义 writer 状态掩码 */
-#define DDS_WRITER_STATUS_MASK           \
-  (DDS_LIVELINESS_LOST_STATUS |          \
-   DDS_OFFERED_DEADLINE_MISSED_STATUS |  \
-   DDS_OFFERED_INCOMPATIBLE_QOS_STATUS | \
-   DDS_PUBLICATION_MATCHED_STATUS)
+#define DDS_WRITER_STATUS_MASK                                       \
+  (DDS_LIVELINESS_LOST_STATUS | DDS_OFFERED_DEADLINE_MISSED_STATUS | \
+   DDS_OFFERED_INCOMPATIBLE_QOS_STATUS | DDS_PUBLICATION_MATCHED_STATUS)
 
 /**
  * @brief 验证 writer 状态掩码
@@ -69,7 +67,8 @@ static dds_return_t dds_writer_status_validate(uint32_t mask)
  * @param[out] st 提供的截止日期未满足状态结构体指针
  * @param[in] data 状态回调数据结构体指针
  */
-static void update_offered_deadline_missed(struct dds_offered_deadline_missed_status *__restrict st, const ddsi_status_cb_data_t *data)
+static void update_offered_deadline_missed(
+  struct dds_offered_deadline_missed_status * __restrict st, const ddsi_status_cb_data_t * data)
 {
   st->last_instance_handle = data->handle;
   uint64_t tmp = (uint64_t)data->extra + (uint64_t)st->total_count;
@@ -80,8 +79,9 @@ static void update_offered_deadline_missed(struct dds_offered_deadline_missed_st
   //
   // （所有这些都是相同的推理）
   int64_t tmp2 = (int64_t)data->extra + (int64_t)st->total_count_change;
-  st->total_count_change = tmp2 > INT32_MAX ? INT32_MAX : tmp2 < INT32_MIN ? INT32_MIN
-                                                                           : (int32_t)tmp2;
+  st->total_count_change = tmp2 > INT32_MAX   ? INT32_MAX
+                           : tmp2 < INT32_MIN ? INT32_MIN
+                                              : (int32_t)tmp2;
 }
 
 /**
@@ -90,7 +90,8 @@ static void update_offered_deadline_missed(struct dds_offered_deadline_missed_st
  * @param[out] st 提供的不兼容 QoS 状态结构体指针
  * @param[in] data 状态回调数据结构体指针
  */
-static void update_offered_incompatible_qos(struct dds_offered_incompatible_qos_status *__restrict st, const ddsi_status_cb_data_t *data)
+static void update_offered_incompatible_qos(
+  struct dds_offered_incompatible_qos_status * __restrict st, const ddsi_status_cb_data_t * data)
 {
   st->last_policy_id = data->extra;
   st->total_count++;
@@ -102,7 +103,8 @@ static void update_offered_incompatible_qos(struct dds_offered_incompatible_qos_
  * @param[out] st 活跃度丢失状态结构体指针
  * @param[in] data 状态回调数据结构体指针
  */
-static void update_liveliness_lost(struct dds_liveliness_lost_status *__restrict st, const ddsi_status_cb_data_t *data)
+static void update_liveliness_lost(
+  struct dds_liveliness_lost_status * __restrict st, const ddsi_status_cb_data_t * data)
 {
   (void)data;
   st->total_count++;
@@ -115,31 +117,31 @@ static void update_liveliness_lost(struct dds_liveliness_lost_status *__restrict
  * @param[out] st 出版物匹配状态结构体指针
  * @param[in] data 状态回调数据结构体指针
  */
-static void update_publication_matched(struct dds_publication_matched_status *__restrict st, const ddsi_status_cb_data_t *data)
+static void update_publication_matched(
+  struct dds_publication_matched_status * __restrict st, const ddsi_status_cb_data_t * data)
 {
   st->last_subscription_handle = data->handle;
-  if (data->add)
-  {
+  if (data->add) {
     st->total_count++;
     st->current_count++;
     st->total_count_change++;
     st->current_count_change++;
-  }
-  else
-  {
+  } else {
     st->current_count--;
     st->current_count_change--;
   }
 }
 
 /** 定义获取 writer 状态的宏 */
-DDS_GET_STATUS(writer, publication_matched, PUBLICATION_MATCHED, total_count_change, current_count_change)
+DDS_GET_STATUS(
+  writer, publication_matched, PUBLICATION_MATCHED, total_count_change, current_count_change)
 DDS_GET_STATUS(writer, liveliness_lost, LIVELINESS_LOST, total_count_change)
 DDS_GET_STATUS(writer, offered_deadline_missed, OFFERED_DEADLINE_MISSED, total_count_change)
 DDS_GET_STATUS(writer, offered_incompatible_qos, OFFERED_INCOMPATIBLE_QOS, total_count_change)
 
 /** 定义实现 writer 状态回调的宏 */
-STATUS_CB_IMPL(writer, publication_matched, PUBLICATION_MATCHED, total_count_change, current_count_change)
+STATUS_CB_IMPL(
+  writer, publication_matched, PUBLICATION_MATCHED, total_count_change, current_count_change)
 STATUS_CB_IMPL(writer, liveliness_lost, LIVELINESS_LOST, total_count_change)
 STATUS_CB_IMPL(writer, offered_deadline_missed, OFFERED_DEADLINE_MISSED, total_count_change)
 STATUS_CB_IMPL(writer, offered_incompatible_qos, OFFERED_INCOMPATIBLE_QOS, total_count_change)
@@ -149,14 +151,13 @@ STATUS_CB_IMPL(writer, offered_incompatible_qos, OFFERED_INCOMPATIBLE_QOS, total
  * @param[in] entity 指向dds_writer实体的指针
  * @param[in] data 包含状态回调数据的结构体指针
  */
-void dds_writer_status_cb(void *entity, const struct ddsi_status_cb_data *data)
+void dds_writer_status_cb(void * entity, const struct ddsi_status_cb_data * data)
 {
   // 将传入的实体指针转换为dds_writer类型的指针
-  dds_writer *const wr = entity;
+  dds_writer * const wr = entity;
 
   /* 当data为NULL时，表示DDSI读取器已被删除。 */
-  if (data == NULL)
-  {
+  if (data == NULL) {
     /* 在创建过程中释放初始声明。这将表明现在可以进行进一步的API删除操作。 */
     ddsrt_mutex_lock(&wr->m_entity.m_mutex);
     wr->m_wr = NULL;
@@ -174,30 +175,29 @@ void dds_writer_status_cb(void *entity, const struct ddsi_status_cb_data *data)
 
   // 获取状态ID
   const enum dds_status_id status_id = (enum dds_status_id)data->raw_status_id;
-  switch (status_id)
-  {
-  case DDS_OFFERED_DEADLINE_MISSED_STATUS_ID:
-    status_cb_offered_deadline_missed(wr, data);
-    break;
-  case DDS_LIVELINESS_LOST_STATUS_ID:
-    status_cb_liveliness_lost(wr, data);
-    break;
-  case DDS_OFFERED_INCOMPATIBLE_QOS_STATUS_ID:
-    status_cb_offered_incompatible_qos(wr, data);
-    break;
-  case DDS_PUBLICATION_MATCHED_STATUS_ID:
-    status_cb_publication_matched(wr, data);
-    break;
-  case DDS_DATA_AVAILABLE_STATUS_ID:
-  case DDS_INCONSISTENT_TOPIC_STATUS_ID:
-  case DDS_SAMPLE_LOST_STATUS_ID:
-  case DDS_DATA_ON_READERS_STATUS_ID:
-  case DDS_SAMPLE_REJECTED_STATUS_ID:
-  case DDS_LIVELINESS_CHANGED_STATUS_ID:
-  case DDS_SUBSCRIPTION_MATCHED_STATUS_ID:
-  case DDS_REQUESTED_DEADLINE_MISSED_STATUS_ID:
-  case DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS_ID:
-    assert(0);
+  switch (status_id) {
+    case DDS_OFFERED_DEADLINE_MISSED_STATUS_ID:
+      status_cb_offered_deadline_missed(wr, data);
+      break;
+    case DDS_LIVELINESS_LOST_STATUS_ID:
+      status_cb_liveliness_lost(wr, data);
+      break;
+    case DDS_OFFERED_INCOMPATIBLE_QOS_STATUS_ID:
+      status_cb_offered_incompatible_qos(wr, data);
+      break;
+    case DDS_PUBLICATION_MATCHED_STATUS_ID:
+      status_cb_publication_matched(wr, data);
+      break;
+    case DDS_DATA_AVAILABLE_STATUS_ID:
+    case DDS_INCONSISTENT_TOPIC_STATUS_ID:
+    case DDS_SAMPLE_LOST_STATUS_ID:
+    case DDS_DATA_ON_READERS_STATUS_ID:
+    case DDS_SAMPLE_REJECTED_STATUS_ID:
+    case DDS_LIVELINESS_CHANGED_STATUS_ID:
+    case DDS_SUBSCRIPTION_MATCHED_STATUS_ID:
+    case DDS_REQUESTED_DEADLINE_MISSED_STATUS_ID:
+    case DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS_ID:
+      assert(0);
   }
 
   wr->m_entity.m_cb_count--;
@@ -211,12 +211,12 @@ void dds_writer_status_cb(void *entity, const struct ddsi_status_cb_data *data)
  *
  * @param[in] e 指向dds_entity实体的指针
  */
-static void dds_writer_interrupt(dds_entity *e) ddsrt_nonnull_all;
+static void dds_writer_interrupt(dds_entity * e) ddsrt_nonnull_all;
 
-static void dds_writer_interrupt(dds_entity *e)
+static void dds_writer_interrupt(dds_entity * e)
 {
   // 获取实体所属域的domaingv结构体指针
-  struct ddsi_domaingv *const gv = &e->m_domain->gv;
+  struct ddsi_domaingv * const gv = &e->m_domain->gv;
   // 唤醒DDSI线程状态
   ddsi_thread_state_awake(ddsi_lookup_thread_state(), gv);
   // 解除对节流写入器的阻塞
@@ -229,16 +229,16 @@ static void dds_writer_interrupt(dds_entity *e)
  *
  * @param[in] e 指向dds_entity的指针
  */
-static void dds_writer_close(dds_entity *e) ddsrt_nonnull_all;
+static void dds_writer_close(dds_entity * e) ddsrt_nonnull_all;
 
-static void dds_writer_close(dds_entity *e)
+static void dds_writer_close(dds_entity * e)
 {
   // 将 e 转换为 dds_writer 结构体指针
-  struct dds_writer *const wr = (struct dds_writer *)e;
+  struct dds_writer * const wr = (struct dds_writer *)e;
   // 获取域全局变量指针
-  struct ddsi_domaingv *const gv = &e->m_domain->gv;
+  struct ddsi_domaingv * const gv = &e->m_domain->gv;
   // 查找当前线程状态
-  struct ddsi_thread_state *const thrst = ddsi_lookup_thread_state();
+  struct ddsi_thread_state * const thrst = ddsi_lookup_thread_state();
   // 唤醒线程状态
   ddsi_thread_state_awake(thrst, gv);
   // 发送数据包
@@ -251,8 +251,7 @@ static void dds_writer_close(dds_entity *e)
   // 锁定互斥锁
   ddsrt_mutex_lock(&e->m_mutex);
   // 等待条件变量，直到写入器为空
-  while (wr->m_wr != NULL)
-    ddsrt_cond_wait(&e->m_cond, &e->m_mutex);
+  while (wr->m_wr != NULL) ddsrt_cond_wait(&e->m_cond, &e->m_mutex);
   // 解锁互斥锁
   ddsrt_mutex_unlock(&e->m_mutex);
 }
@@ -263,15 +262,14 @@ static void dds_writer_close(dds_entity *e)
  * @param[in] e 指向dds_entity的指针
  * @return 成功返回DDS_RETCODE_OK，否则返回错误代码
  */
-static dds_return_t dds_writer_delete(dds_entity *e) ddsrt_nonnull_all;
+static dds_return_t dds_writer_delete(dds_entity * e) ddsrt_nonnull_all;
 
-static dds_return_t dds_writer_delete(dds_entity *e)
+static dds_return_t dds_writer_delete(dds_entity * e)
 {
   // 将 e 转换为 dds_writer 结构体指针
-  dds_writer *const wr = (dds_writer *)e;
+  dds_writer * const wr = (dds_writer *)e;
 #ifdef DDS_HAS_SHM
-  if (wr->m_iox_pub)
-  {
+  if (wr->m_iox_pub) {
     // 释放 iceoryx 的发布者
     DDS_CLOG(DDS_LC_SHM, &e->m_domain->gv.logconfig, "Release iceoryx's publisher\n");
     iox_pub_stop_offer(wr->m_iox_pub);
@@ -296,7 +294,7 @@ static dds_return_t dds_writer_delete(dds_entity *e)
  * @param[in] wqos 指向dds_qos_t的指针
  * @return 成功返回DDS_RETCODE_OK，否则返回错误代码
  */
-static dds_return_t validate_writer_qos(const dds_qos_t *wqos)
+static dds_return_t validate_writer_qos(const dds_qos_t * wqos)
 {
 #ifndef DDS_HAS_LIFESPAN
   if (wqos != NULL && (wqos->present & DDSI_QP_LIFESPAN) && wqos->lifespan.duration != DDS_INFINITY)
@@ -320,17 +318,15 @@ static dds_return_t validate_writer_qos(const dds_qos_t *wqos)
  * @param enabled [in] 是否启用QoS设置更新
  * @return dds_return_t 返回操作结果，成功返回DDS_RETCODE_OK
  */
-static dds_return_t dds_writer_qos_set(dds_entity *e, const dds_qos_t *qos, bool enabled)
+static dds_return_t dds_writer_qos_set(dds_entity * e, const dds_qos_t * qos, bool enabled)
 {
   // 注意：e->m_qos仍然是旧的QoS设置，以防止此处失败
   dds_return_t ret;
   // 验证写入器QoS设置是否有效
-  if ((ret = validate_writer_qos(qos)) != DDS_RETCODE_OK)
-    return ret;
+  if ((ret = validate_writer_qos(qos)) != DDS_RETCODE_OK) return ret;
   // 如果启用了QoS设置更新
-  if (enabled)
-  {
-    struct ddsi_writer *wr;
+  if (enabled) {
+    struct ddsi_writer * wr;
     // 唤醒线程状态
     ddsi_thread_state_awake(ddsi_lookup_thread_state(), &e->m_domain->gv);
     // 查找写入器实体
@@ -345,15 +341,15 @@ static dds_return_t dds_writer_qos_set(dds_entity *e, const dds_qos_t *qos, bool
 
 // 写入器统计信息键值描述符数组
 static const struct dds_stat_keyvalue_descriptor dds_writer_statistics_kv[] = {
-    {"rexmit_bytes", DDS_STAT_KIND_UINT64},   // 重传字节数
-    {"throttle_count", DDS_STAT_KIND_UINT32}, // 节流计数
-    {"time_throttle", DDS_STAT_KIND_UINT64},  // 节流时间
-    {"time_rexmit", DDS_STAT_KIND_UINT64}};   // 重传时间
+  {"rexmit_bytes", DDS_STAT_KIND_UINT64},    // 重传字节数
+  {"throttle_count", DDS_STAT_KIND_UINT32},  // 节流计数
+  {"time_throttle", DDS_STAT_KIND_UINT64},   // 节流时间
+  {"time_rexmit", DDS_STAT_KIND_UINT64}};    // 重传时间
 
 // 写入器统计信息描述符结构体
 static const struct dds_stat_descriptor dds_writer_statistics_desc = {
-    .count = sizeof(dds_writer_statistics_kv) / sizeof(dds_writer_statistics_kv[0]),
-    .kv = dds_writer_statistics_kv};
+  .count = sizeof(dds_writer_statistics_kv) / sizeof(dds_writer_statistics_kv[0]),
+  .kv = dds_writer_statistics_kv};
 
 /**
  * @brief 创建写入器的统计信息结构体
@@ -361,7 +357,7 @@ static const struct dds_stat_descriptor dds_writer_statistics_desc = {
  * @param entity [in] 指向dds_entity结构体的指针
  * @return struct dds_statistics* 返回创建的dds_statistics结构体指针
  */
-static struct dds_statistics *dds_writer_create_statistics(const struct dds_entity *entity)
+static struct dds_statistics * dds_writer_create_statistics(const struct dds_entity * entity)
 {
   return dds_alloc_statistics(entity, &dds_writer_statistics_desc);
 }
@@ -371,24 +367,26 @@ static struct dds_statistics *dds_writer_create_statistics(const struct dds_enti
  * @param entity [in] 指向dds_entity结构体的指针
  * @param stat   [in] 指向dds_statistics结构体的指针，用于存储刷新后的统计信息
  */
-static void dds_writer_refresh_statistics(const struct dds_entity *entity, struct dds_statistics *stat)
+static void dds_writer_refresh_statistics(
+  const struct dds_entity * entity, struct dds_statistics * stat)
 {
   // 将实体转换为dds_writer类型
-  const struct dds_writer *wr = (const struct dds_writer *)entity;
+  const struct dds_writer * wr = (const struct dds_writer *)entity;
   // 如果写入器存在，则获取写入器的统计信息
   if (wr->m_wr)
-    ddsi_get_writer_stats(wr->m_wr, &stat->kv[0].u.u64, &stat->kv[1].u.u32, &stat->kv[2].u.u64, &stat->kv[3].u.u64);
+    ddsi_get_writer_stats(
+      wr->m_wr, &stat->kv[0].u.u64, &stat->kv[1].u.u32, &stat->kv[2].u.u64, &stat->kv[3].u.u64);
 }
 
 // 写入器实体派生操作结构体
 const struct dds_entity_deriver dds_entity_deriver_writer = {
-    .interrupt = dds_writer_interrupt,                  // 中断写入器操作
-    .close = dds_writer_close,                          // 关闭写入器
-    .delete = dds_writer_delete,                        // 删除写入器
-    .set_qos = dds_writer_qos_set,                      // 设置写入器QoS参数
-    .validate_status = dds_writer_status_validate,      // 验证写入器状态
-    .create_statistics = dds_writer_create_statistics,  // 创建写入器统计信息
-    .refresh_statistics = dds_writer_refresh_statistics // 刷新写入器统计信息
+  .interrupt = dds_writer_interrupt,                   // 中断写入器操作
+  .close = dds_writer_close,                           // 关闭写入器
+  .delete = dds_writer_delete,                         // 删除写入器
+  .set_qos = dds_writer_qos_set,                       // 设置写入器QoS参数
+  .validate_status = dds_writer_status_validate,       // 验证写入器状态
+  .create_statistics = dds_writer_create_statistics,   // 创建写入器统计信息
+  .refresh_statistics = dds_writer_refresh_statistics  // 刷新写入器统计信息
 };
 #ifdef DDS_HAS_SHM
 /**
@@ -399,7 +397,7 @@ const struct dds_entity_deriver dds_entity_deriver_writer = {
  * @param qos 指向 dds_qos_t 结构体的指针，包含了 QoS（Quality of Service）相关信息
  * @return 返回一个初始化完成的 iox_pub_options_t 结构体实例
  */
-static iox_pub_options_t create_iox_pub_options(const dds_qos_t *qos)
+static iox_pub_options_t create_iox_pub_options(const dds_qos_t * qos)
 {
   // 定义一个 iox_pub_options_t 结构体变量
   iox_pub_options_t opts;
@@ -408,22 +406,16 @@ static iox_pub_options_t create_iox_pub_options(const dds_qos_t *qos)
   iox_pub_options_init(&opts);
 
   // 判断 qos 中的 durability 属性是否为 DDS_DURABILITY_VOLATILE
-  if (qos->durability.kind == DDS_DURABILITY_VOLATILE)
-  {
+  if (qos->durability.kind == DDS_DURABILITY_VOLATILE) {
     // 如果是 DDS_DURABILITY_VOLATILE，则将 historyCapacity 设置为 0
     opts.historyCapacity = 0;
-  }
-  else
-  {
+  } else {
     // 如果不是 DDS_DURABILITY_VOLATILE（即 Transient Local 或更强）
     // 判断 qos 中的 durability_service 的 history 属性是否为 DDS_HISTORY_KEEP_LAST
-    if (qos->durability_service.history.kind == DDS_HISTORY_KEEP_LAST)
-    {
+    if (qos->durability_service.history.kind == DDS_HISTORY_KEEP_LAST) {
       // 如果是 DDS_HISTORY_KEEP_LAST，则将 historyCapacity 设置为 qos 中的 durability_service 的 history 的 depth 值
       opts.historyCapacity = (uint64_t)qos->durability_service.history.depth;
-    }
-    else
-    {
+    } else {
       // 如果不是 DDS_HISTORY_KEEP_LAST，则将 historyCapacity 设置为 0
       opts.historyCapacity = 0;
     }
@@ -442,46 +434,46 @@ static iox_pub_options_t create_iox_pub_options(const dds_qos_t *qos)
  * @param listener 写入器的监听器。如果为NULL，则不使用监听器。
  * @return 成功时返回新创建的写入器实体，失败时返回错误代码。
  */
-dds_entity_t dds_create_writer(dds_entity_t participant_or_publisher, dds_entity_t topic, const dds_qos_t *qos, const dds_listener_t *listener)
+dds_entity_t dds_create_writer(
+  dds_entity_t participant_or_publisher, dds_entity_t topic, const dds_qos_t * qos,
+  const dds_listener_t * listener)
 {
   dds_return_t rc;
-  dds_qos_t *wqos;
-  dds_publisher *pub = NULL;
-  dds_topic *tp;
+  dds_qos_t * wqos;
+  dds_publisher * pub = NULL;
+  dds_topic * tp;
   dds_entity_t publisher;
-  struct whc_writer_info *wrinfo;
+  struct whc_writer_info * wrinfo;
   bool created_implicit_pub = false;
 
   // 锁定参与者或发布者实体
   {
-    dds_entity *p_or_p;
-    if ((rc = dds_entity_lock(participant_or_publisher, DDS_KIND_DONTCARE, &p_or_p)) != DDS_RETCODE_OK)
+    dds_entity * p_or_p;
+    if (
+      (rc = dds_entity_lock(participant_or_publisher, DDS_KIND_DONTCARE, &p_or_p)) !=
+      DDS_RETCODE_OK)
       return rc;
-    switch (dds_entity_kind(p_or_p))
-    {
-    case DDS_KIND_PUBLISHER:
-      publisher = participant_or_publisher;
-      pub = (dds_publisher *)p_or_p;
-      break;
-    case DDS_KIND_PARTICIPANT:
-      publisher = dds__create_publisher_l((dds_participant *)p_or_p, true, qos, NULL);
-      dds_entity_unlock(p_or_p);
-      if ((rc = dds_publisher_lock(publisher, &pub)) < 0)
-        return rc;
-      created_implicit_pub = true;
-      break;
-    default:
-      dds_entity_unlock(p_or_p);
-      return DDS_RETCODE_ILLEGAL_OPERATION;
+    switch (dds_entity_kind(p_or_p)) {
+      case DDS_KIND_PUBLISHER:
+        publisher = participant_or_publisher;
+        pub = (dds_publisher *)p_or_p;
+        break;
+      case DDS_KIND_PARTICIPANT:
+        publisher = dds__create_publisher_l((dds_participant *)p_or_p, true, qos, NULL);
+        dds_entity_unlock(p_or_p);
+        if ((rc = dds_publisher_lock(publisher, &pub)) < 0) return rc;
+        created_implicit_pub = true;
+        break;
+      default:
+        dds_entity_unlock(p_or_p);
+        return DDS_RETCODE_ILLEGAL_OPERATION;
     }
   }
 
   // 锁定话题实体
-  if ((rc = dds_topic_pin(topic, &tp)) != DDS_RETCODE_OK)
-    goto err_pin_topic;
+  if ((rc = dds_topic_pin(topic, &tp)) != DDS_RETCODE_OK) goto err_pin_topic;
   assert(tp->m_stype);
-  if (dds_entity_participant(&pub->m_entity) != dds_entity_participant(&tp->m_entity))
-  {
+  if (dds_entity_participant(&pub->m_entity) != dds_entity_participant(&tp->m_entity)) {
     rc = DDS_RETCODE_BAD_PARAMETER;
     goto err_pp_mismatch;
   }
@@ -490,23 +482,27 @@ dds_entity_t dds_create_writer(dds_entity_t participant_or_publisher, dds_entity
   dds_topic_defer_set_qos(tp);
 
   // 合并话题和发布者的QoS
-  struct ddsi_domaingv *gv = &pub->m_entity.m_domain->gv;
+  struct ddsi_domaingv * gv = &pub->m_entity.m_domain->gv;
   wqos = dds_create_qos();
-  if (qos)
-    ddsi_xqos_mergein_missing(wqos, qos, DDS_WRITER_QOS_MASK);
+  if (qos) ddsi_xqos_mergein_missing(wqos, qos, DDS_WRITER_QOS_MASK);
   if (pub->m_entity.m_qos)
     ddsi_xqos_mergein_missing(wqos, pub->m_entity.m_qos, ~DDSI_QP_ENTITY_NAME);
   if (tp->m_ktopic->qos)
-    ddsi_xqos_mergein_missing(wqos, tp->m_ktopic->qos, (DDS_WRITER_QOS_MASK | DDSI_QP_TOPIC_DATA) & ~DDSI_QP_ENTITY_NAME);
+    ddsi_xqos_mergein_missing(
+      wqos, tp->m_ktopic->qos, (DDS_WRITER_QOS_MASK | DDSI_QP_TOPIC_DATA) & ~DDSI_QP_ENTITY_NAME);
   ddsi_xqos_mergein_missing(wqos, &ddsi_default_qos_writer, ~DDSI_QP_DATA_REPRESENTATION);
   dds_apply_entity_naming(wqos, pub->m_entity.m_qos, gv);
 
   // 确保数据表示有效
-  if ((rc = dds_ensure_valid_data_representation(wqos, tp->m_stype->allowed_data_representation, false)) != 0)
+  if (
+    (rc = dds_ensure_valid_data_representation(
+       wqos, tp->m_stype->allowed_data_representation, false)) != 0)
     goto err_data_repr;
 
   // 验证QoS设置是否有效
-  if ((rc = ddsi_xqos_valid(&gv->logconfig, wqos)) < 0 || (rc = validate_writer_qos(wqos)) != DDS_RETCODE_OK)
+  if (
+    (rc = ddsi_xqos_valid(&gv->logconfig, wqos)) < 0 ||
+    (rc = validate_writer_qos(wqos)) != DDS_RETCODE_OK)
     goto err_bad_qos;
 
   assert(wqos->present & DDSI_QP_DATA_REPRESENTATION && wqos->data_representation.value.n > 0);
@@ -514,17 +510,15 @@ dds_entity_t dds_create_writer(dds_entity_t participant_or_publisher, dds_entity
 
   // 唤醒线程状态
   ddsi_thread_state_awake(ddsi_lookup_thread_state(), gv);
-  const struct ddsi_guid *ppguid = dds_entity_participant_guid(&pub->m_entity);
-  struct ddsi_participant *pp = ddsi_entidx_lookup_participant_guid(gv->entity_index, ppguid);
+  const struct ddsi_guid * ppguid = dds_entity_participant_guid(&pub->m_entity);
+  struct ddsi_participant * pp = ddsi_entidx_lookup_participant_guid(gv->entity_index, ppguid);
   assert(pp != NULL);
 
 #ifdef DDS_HAS_SECURITY
   // 检查DDS安全性是否启用
-  if (ddsi_omg_participant_is_secure(pp))
-  {
+  if (ddsi_omg_participant_is_secure(pp)) {
     // 请求访问控制安全插件以获取创建写入器权限
-    if (!ddsi_omg_security_check_create_writer(pp, gv->config.domainId, tp->m_name, wqos))
-    {
+    if (!ddsi_omg_security_check_create_writer(pp, gv->config.domainId, tp->m_name, wqos)) {
       rc = DDS_RETCODE_NOT_ALLOWED_BY_SECURITY;
       goto err_not_allowed;
     }
@@ -535,8 +529,10 @@ dds_entity_t dds_create_writer(dds_entity_t participant_or_publisher, dds_entity
   bool async_mode = (wqos->latency_budget.duration > 0);
 
   // 创建写入器
-  struct dds_writer *const wr = dds_alloc(sizeof(*wr));
-  const dds_entity_t writer = dds_entity_init(&wr->m_entity, &pub->m_entity, DDS_KIND_WRITER, false, true, wqos, listener, DDS_WRITER_STATUS_MASK);
+  struct dds_writer * const wr = dds_alloc(sizeof(*wr));
+  const dds_entity_t writer = dds_entity_init(
+    &wr->m_entity, &pub->m_entity, DDS_KIND_WRITER, false, true, wqos, listener,
+    DDS_WRITER_STATUS_MASK);
   wr->m_topic = tp;
   dds_entity_add_ref_locked(&tp->m_entity);
   wr->m_xp = ddsi_xpack_new(gv, async_mode);
@@ -551,24 +547,30 @@ dds_entity_t dds_create_writer(dds_entity_t participant_or_publisher, dds_entity
     wqos->ignore_locator_type |= DDSI_LOCATOR_KIND_SHEM;
 #endif
 
-  struct ddsi_sertype *sertype = ddsi_sertype_derive_sertype(tp->m_stype, data_representation,
-                                                             wqos->present & DDSI_QP_TYPE_CONSISTENCY_ENFORCEMENT ? wqos->type_consistency : ddsi_default_qos_topic.type_consistency);
-  if (!sertype)
-    sertype = tp->m_stype;
+  struct ddsi_sertype * sertype = ddsi_sertype_derive_sertype(
+    tp->m_stype, data_representation,
+    wqos->present & DDSI_QP_TYPE_CONSISTENCY_ENFORCEMENT ? wqos->type_consistency
+                                                         : ddsi_default_qos_topic.type_consistency);
+  if (!sertype) sertype = tp->m_stype;
 
-  rc = ddsi_new_writer(&wr->m_wr, &wr->m_entity.m_guid, NULL, pp, tp->m_name, sertype, wqos, wr->m_whc, dds_writer_status_cb, wr);
+  rc = ddsi_new_writer(
+    &wr->m_wr, &wr->m_entity.m_guid, NULL, pp, tp->m_name, sertype, wqos, wr->m_whc,
+    dds_writer_status_cb, wr);
   assert(rc == DDS_RETCODE_OK);
   ddsi_thread_state_asleep(ddsi_lookup_thread_state());
 
 #ifdef DDS_HAS_SHM
-  if (wr->m_wr->has_iceoryx)
-  {
-    DDS_CLOG(DDS_LC_SHM, &wr->m_entity.m_domain->gv.logconfig, "Writer's topic name will be DDS:Cyclone:%s\n", wr->m_topic->m_name);
+  if (wr->m_wr->has_iceoryx) {
+    DDS_CLOG(
+      DDS_LC_SHM, &wr->m_entity.m_domain->gv.logconfig,
+      "Writer's topic name will be DDS:Cyclone:%s\n", wr->m_topic->m_name);
     iox_pub_options_t opts = create_iox_pub_options(wqos);
 
-    char *part_topic = dds_shm_partition_topic(wqos, wr->m_topic);
+    char * part_topic = dds_shm_partition_topic(wqos, wr->m_topic);
     assert(part_topic != NULL);
-    wr->m_iox_pub = iox_pub_init(&(iox_pub_storage_t){0}, gv->config.iceoryx_service, wr->m_topic->m_stype->type_name, part_topic, &opts);
+    wr->m_iox_pub = iox_pub_init(
+      &(iox_pub_storage_t){0}, gv->config.iceoryx_service, wr->m_topic->m_stype->type_name,
+      part_topic, &opts);
     ddsrt_free(part_topic);
     memset(wr->m_iox_pub_loans, 0, sizeof(wr->m_iox_pub_loans));
   }
@@ -585,8 +587,7 @@ dds_entity_t dds_create_writer(dds_entity_t participant_or_publisher, dds_entity
 
   // 如果异步模式启用且线程尚未启动，则启动异步线程
   ddsrt_mutex_lock(&gv->sendq_running_lock);
-  if (async_mode && !gv->sendq_running)
-  {
+  if (async_mode && !gv->sendq_running) {
     ddsi_xpack_sendq_init(gv);
     ddsi_xpack_sendq_start(gv);
   }
@@ -605,8 +606,7 @@ err_pp_mismatch:
   dds_topic_unpin(tp);
 err_pin_topic:
   dds_publisher_unlock(pub);
-  if (created_implicit_pub)
-    (void)dds_delete(publisher);
+  if (created_implicit_pub) (void)dds_delete(publisher);
   return rc;
 }
 /**
@@ -617,19 +617,17 @@ err_pin_topic:
  */
 dds_entity_t dds_get_publisher(dds_entity_t writer)
 {
-  dds_entity *e;   // 定义一个指向实体的指针
-  dds_return_t rc; // 定义一个返回值变量
+  dds_entity * e;   // 定义一个指向实体的指针
+  dds_return_t rc;  // 定义一个返回值变量
   // 尝试获取实体并检查返回值
   if ((rc = dds_entity_pin(writer, &e)) != DDS_RETCODE_OK)
     return rc;
-  else
-  {
-    dds_entity_t pubh; // 定义一个发布者实体变量
+  else {
+    dds_entity_t pubh;  // 定义一个发布者实体变量
     // 检查实体类型是否为写入者
     if (dds_entity_kind(e) != DDS_KIND_WRITER)
       pubh = DDS_RETCODE_ILLEGAL_OPERATION;
-    else
-    {
+    else {
       // 断言实体的父实体类型为发布者
       assert(dds_entity_kind(e->m_parent) == DDS_KIND_PUBLISHER);
       // 获取父实体的句柄
@@ -648,18 +646,16 @@ dds_entity_t dds_get_publisher(dds_entity_t writer)
  * @param data_allocator 指向dds_data_allocator_t的指针
  * @return 返回操作结果
  */
-dds_return_t dds__writer_data_allocator_init(const dds_writer *wr, dds_data_allocator_t *data_allocator)
+dds_return_t dds__writer_data_allocator_init(
+  const dds_writer * wr, dds_data_allocator_t * data_allocator)
 {
 #ifdef DDS_HAS_SHM
-  dds_iox_allocator_t *d = (dds_iox_allocator_t *)data_allocator->opaque.bytes;
+  dds_iox_allocator_t * d = (dds_iox_allocator_t *)data_allocator->opaque.bytes;
   ddsrt_mutex_init(&d->mutex);
-  if (NULL != wr->m_iox_pub)
-  {
+  if (NULL != wr->m_iox_pub) {
     d->kind = DDS_IOX_ALLOCATOR_KIND_PUBLISHER;
     d->ref.pub = wr->m_iox_pub;
-  }
-  else
-  {
+  } else {
     d->kind = DDS_IOX_ALLOCATOR_KIND_NONE;
   }
   return DDS_RETCODE_OK;
@@ -677,10 +673,11 @@ dds_return_t dds__writer_data_allocator_init(const dds_writer *wr, dds_data_allo
  * @param data_allocator 指向dds_data_allocator_t的指针
  * @return 返回操作结果
  */
-dds_return_t dds__writer_data_allocator_fini(const dds_writer *wr, dds_data_allocator_t *data_allocator)
+dds_return_t dds__writer_data_allocator_fini(
+  const dds_writer * wr, dds_data_allocator_t * data_allocator)
 {
 #ifdef DDS_HAS_SHM
-  dds_iox_allocator_t *d = (dds_iox_allocator_t *)data_allocator->opaque.bytes;
+  dds_iox_allocator_t * d = (dds_iox_allocator_t *)data_allocator->opaque.bytes;
   ddsrt_mutex_destroy(&d->mutex);
   d->kind = DDS_IOX_ALLOCATOR_KIND_FINI;
 #else
@@ -698,7 +695,8 @@ dds_return_t dds__writer_data_allocator_fini(const dds_writer *wr, dds_data_allo
  * @param abstimeout 绝对超时时间
  * @return 返回操作结果
  */
-dds_return_t dds__ddsi_writer_wait_for_acks(struct dds_writer *wr, ddsi_guid_t *rdguid, dds_time_t abstimeout)
+dds_return_t dds__ddsi_writer_wait_for_acks(
+  struct dds_writer * wr, ddsi_guid_t * rdguid, dds_time_t abstimeout)
 {
   // 在写入者的生命周期内，m_wr保持不变，只有在删除时才会被清除
   if (wr->m_wr == NULL)

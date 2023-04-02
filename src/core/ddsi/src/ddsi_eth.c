@@ -9,23 +9,23 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#include "dds/ddsi/ddsi_config.h" // for transport_selector
+#include "dds/ddsi/ddsi_config.h"  // for transport_selector
 #include "ddsi__eth.h"
 
-int ddsi_eth_enumerate_interfaces (struct ddsi_tran_factory * fact, enum ddsi_transport_selector transport_selector, ddsrt_ifaddrs_t **ifs)
+int ddsi_eth_enumerate_interfaces(
+  struct ddsi_tran_factory * fact, enum ddsi_transport_selector transport_selector,
+  ddsrt_ifaddrs_t ** ifs)
 {
-    int afs[] = { AF_INET, DDSRT_AF_TERM };
+  int afs[] = {AF_INET, DDSRT_AF_TERM};
 
-    (void)fact;
-    (void)transport_selector;
+  (void)fact;
+  (void)transport_selector;
 
 #if DDSRT_HAVE_IPV6
-    if (transport_selector == DDSI_TRANS_TCP6 ||
-        transport_selector == DDSI_TRANS_UDP6)
-    {
-      afs[0] = AF_INET6;
-    }
+  if (transport_selector == DDSI_TRANS_TCP6 || transport_selector == DDSI_TRANS_UDP6) {
+    afs[0] = AF_INET6;
+  }
 #endif /* DDSRT_HAVE_IPV6 */
 
-    return ddsrt_getifaddrs(ifs, afs);
+  return ddsrt_getifaddrs(ifs, afs);
 }

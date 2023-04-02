@@ -9,13 +9,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#include <assert.h>
-
 #include "dds/ddsrt/threads.h"
 
-void
-ddsrt_threadattr_init (
-  ddsrt_threadattr_t *tattr)
+#include <assert.h>
+
+void ddsrt_threadattr_init(ddsrt_threadattr_t * tattr)
 {
   assert(tattr != NULL);
   tattr->schedClass = DDSRT_SCHED_DEFAULT;

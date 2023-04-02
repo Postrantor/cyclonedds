@@ -9,11 +9,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#include <assert.h>
-#include "dds/ddsrt/cdtors.h"
 #include "dds/ddsrt/ifaddrs.h"
-#include "dds/ddsrt/retcode.h"
+
+#include <assert.h>
+
 #include "CUnit/Test.h"
+#include "dds/ddsrt/cdtors.h"
+#include "dds/ddsrt/retcode.h"
 
 /* FIXME: It's not possible to predict what network interfaces are available
           on a given host. To properly test all combinations the abstracted
@@ -33,13 +35,11 @@ CU_Init(ddsrt_getifaddrs)
 
 #ifdef DDSRT_HAVE_IPV6
 #ifdef __linux
-  FILE *fh;
-  const char *const *path;
-  static const char *const paths[] = {
-    "/proc/sys/net/ipv6/conf/all/disable_ipv6",
-    "/proc/sys/net/ipv6/conf/default/disable_ipv6",
-    NULL
-  };
+  FILE * fh;
+  const char * const * path;
+  static const char * const paths[] = {
+    "/proc/sys/net/ipv6/conf/all/disable_ipv6", "/proc/sys/net/ipv6/conf/default/disable_ipv6",
+    NULL};
 
   for (path = paths; ipv6_enabled == 1 && *path != NULL; path++) {
     if ((fh = fopen(*path, "r")) != NULL) {
@@ -51,7 +51,7 @@ CU_Init(ddsrt_getifaddrs)
 #endif /* __linux */
 #endif /* DDSRT_HAVE_IPV6 */
 
-    return 0;
+  return 0;
 }
 
 CU_Clean(ddsrt_getifaddrs)
@@ -68,13 +68,13 @@ CU_Test(ddsrt_getifaddrs, ipv4)
   dds_return_t ret;
   int seen = 0;
   ddsrt_ifaddrs_t *ifa_root, *ifa;
-  const int afs[] = { AF_INET, DDSRT_AF_TERM };
+  const int afs[] = {AF_INET, DDSRT_AF_TERM};
 
   ret = ddsrt_getifaddrs(&ifa_root, afs);
   CU_ASSERT_EQUAL_FATAL(ret, DDS_RETCODE_OK);
   for (ifa = ifa_root; ifa; ifa = ifa->next) {
     CU_ASSERT_PTR_NOT_EQUAL_FATAL(ifa->addr, NULL);
-    assert (ifa->addr != NULL); /* for the benefit of clang's static analyzer */
+    assert(ifa->addr != NULL); /* for the benefit of clang's static analyzer */
     CU_ASSERT_EQUAL(ifa->addr->sa_family, AF_INET);
     if (ifa->addr->sa_family == AF_INET) {
       if (ifa->flags & IFF_LOOPBACK) {
@@ -110,8 +110,8 @@ CU_Test(ddsrt_getifaddrs, null_filter)
 CU_Test(ddsrt_getifaddrs, empty_filter)
 {
   dds_return_t ret;
-  ddsrt_ifaddrs_t *ifa_root;
-  const int afs[] = { DDSRT_AF_TERM };
+  ddsrt_ifaddrs_t * ifa_root;
+  const int afs[] = {DDSRT_AF_TERM};
 
   ret = ddsrt_getifaddrs(&ifa_root, afs);
   CU_ASSERT_EQUAL_FATAL(ret, DDS_RETCODE_OK);
@@ -126,13 +126,13 @@ CU_Test(ddsrt_getifaddrs, ipv6)
     dds_return_t ret;
     int have_ipv6 = 0;
     ddsrt_ifaddrs_t *ifa_root, *ifa;
-    const int afs[] = { AF_INET6, DDSRT_AF_TERM };
+    const int afs[] = {AF_INET6, DDSRT_AF_TERM};
 
     ret = ddsrt_getifaddrs(&ifa_root, afs);
     CU_ASSERT_EQUAL_FATAL(ret, DDS_RETCODE_OK);
     for (ifa = ifa_root; ifa; ifa = ifa->next) {
       CU_ASSERT_PTR_NOT_EQUAL_FATAL(ifa->addr, NULL);
-      assert (ifa->addr != NULL); /* for the benefit of clang's static analyzer */
+      assert(ifa->addr != NULL); /* for the benefit of clang's static analyzer */
       CU_ASSERT_EQUAL(ifa->addr->sa_family, AF_INET6);
       if (ifa->addr->sa_family == AF_INET6) {
         have_ipv6 = 1;
@@ -167,15 +167,14 @@ CU_Test(ddsrt_getifaddrs, ipv4_n_ipv6)
     int have_ipv4 = 0;
     int have_ipv6 = 0;
     ddsrt_ifaddrs_t *ifa_root, *ifa;
-    const int afs[] = { AF_INET, AF_INET6, DDSRT_AF_TERM };
+    const int afs[] = {AF_INET, AF_INET6, DDSRT_AF_TERM};
 
     ret = ddsrt_getifaddrs(&ifa_root, afs);
     CU_ASSERT_EQUAL_FATAL(ret, DDS_RETCODE_OK);
     for (ifa = ifa_root; ifa; ifa = ifa->next) {
       CU_ASSERT_PTR_NOT_EQUAL_FATAL(ifa->addr, NULL);
-      assert (ifa->addr != NULL); /* for the benefit of clang's static analyzer */
-      CU_ASSERT(ifa->addr->sa_family == AF_INET ||
-                ifa->addr->sa_family == AF_INET6);
+      assert(ifa->addr != NULL); /* for the benefit of clang's static analyzer */
+      CU_ASSERT(ifa->addr->sa_family == AF_INET || ifa->addr->sa_family == AF_INET6);
       if (ifa->addr->sa_family == AF_INET) {
         have_ipv4 = 1;
       } else if (ifa->addr->sa_family == AF_INET6) {
@@ -194,4 +193,3 @@ CU_Test(ddsrt_getifaddrs, ipv4_n_ipv6)
   CU_PASS("IPv6 is not supported");
 #endif /* DDSRT_HAVE_IPV6 */
 }
-

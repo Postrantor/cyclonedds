@@ -12,34 +12,31 @@
 #ifndef DDSRT_RUSAGE_H
 #define DDSRT_RUSAGE_H
 
-
 #include <stddef.h>
 
 #include "dds/config.h"
-#include "dds/ddsrt/time.h"
 #include "dds/ddsrt/retcode.h"
 #include "dds/ddsrt/threads.h"
+#include "dds/ddsrt/time.h"
 
 #if DDSRT_HAVE_RUSAGE
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
   dds_time_t utime; /* User CPU time used. */
   dds_time_t stime; /* System CPU time used. */
-  size_t maxrss; /* Maximum resident set size in bytes. */
-  size_t idrss; /* Integral unshared data size. Not maintained on (at least)
+  size_t maxrss;    /* Maximum resident set size in bytes. */
+  size_t idrss;     /* Integral unshared data size. Not maintained on (at least)
                    Linux and Windows. */
-  size_t nvcsw; /* Voluntary context switches. Not maintained on Windows. */
-  size_t nivcsw; /* Involuntary context switches. Not maintained on Windows. */
+  size_t nvcsw;     /* Voluntary context switches. Not maintained on Windows. */
+  size_t nivcsw;    /* Involuntary context switches. Not maintained on Windows. */
 } ddsrt_rusage_t;
 
-enum ddsrt_getrusage_who {
-  DDSRT_RUSAGE_SELF,
-  DDSRT_RUSAGE_THREAD
-};
+enum ddsrt_getrusage_who { DDSRT_RUSAGE_SELF, DDSRT_RUSAGE_THREAD };
 
 /**
  * @brief Get resource usage for the current thread or process.
@@ -56,7 +53,7 @@ enum ddsrt_getrusage_who {
  * @retval DDS_RETCODE_ERROR
  *             An unidentified error occurred.
  */
-DDS_EXPORT dds_return_t ddsrt_getrusage(enum ddsrt_getrusage_who who, ddsrt_rusage_t *usage);
+DDS_EXPORT dds_return_t ddsrt_getrusage(enum ddsrt_getrusage_who who, ddsrt_rusage_t * usage);
 
 #if DDSRT_HAVE_THREAD_LIST
 /**
@@ -74,13 +71,14 @@ DDS_EXPORT dds_return_t ddsrt_getrusage(enum ddsrt_getrusage_who who, ddsrt_rusa
  * @retval DDS_RETCODE_ERROR
  *             An unidentified error occurred.
  */
-DDS_EXPORT dds_return_t ddsrt_getrusage_anythread (ddsrt_thread_list_id_t tid, ddsrt_rusage_t * __restrict usage);
+DDS_EXPORT dds_return_t
+ddsrt_getrusage_anythread(ddsrt_thread_list_id_t tid, ddsrt_rusage_t * __restrict usage);
 #endif
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 
-#endif // DDSRT_HAVE_RUSAGE
+#endif  // DDSRT_HAVE_RUSAGE
 
-#endif // DDSRT_RUSAGE_H
+#endif  // DDSRT_RUSAGE_H

@@ -14,12 +14,12 @@
 
 CU_Test(ddsc_basic, test)
 {
-    dds_entity_t participant;
-    dds_return_t status;
+  dds_entity_t participant;
+  dds_return_t status;
 
-    participant = dds_create_participant (DDS_DOMAIN_DEFAULT, NULL, NULL);
-    CU_ASSERT_FATAL(participant > 0);
+  participant = dds_create_participant(DDS_DOMAIN_DEFAULT, NULL, NULL);
+  CU_ASSERT_FATAL(participant > 0);
 
-    status = dds_delete(participant);
-    CU_ASSERT_EQUAL_FATAL(status, DDS_RETCODE_OK);
+  status = dds_delete(participant);
+  CU_ASSERT_EQUAL_FATAL(status, DDS_RETCODE_OK);
 }

@@ -12,11 +12,11 @@
 #ifndef DDSI__DISCOVERY_ENDPOINT_H
 #define DDSI__DISCOVERY_ENDPOINT_H
 
-#include "dds/ddsi/ddsi_unused.h"
 #include "dds/ddsi/ddsi_domaingv.h"
+#include "dds/ddsi/ddsi_unused.h"
 #include "ddsi__discovery.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -33,30 +33,36 @@ struct ddsi_domaingv;
 struct ddsi_receiver_state;
 
 /** @component discovery */
-struct ddsi_addrset *ddsi_get_endpoint_addrset (const struct ddsi_domaingv *gv, const ddsi_plist_t *datap, struct ddsi_addrset *proxypp_as_default, const ddsi_locator_t *rst_srcloc)
-  ddsrt_attribute_warn_unused_result ddsrt_nonnull((1,2,3));
+struct ddsi_addrset * ddsi_get_endpoint_addrset(
+  const struct ddsi_domaingv * gv, const ddsi_plist_t * datap,
+  struct ddsi_addrset * proxypp_as_default,
+  const ddsi_locator_t * rst_srcloc) ddsrt_attribute_warn_unused_result ddsrt_nonnull((1, 2, 3));
 
 /** @component discovery */
-int ddsi_sedp_write_writer (struct ddsi_writer *wr) ddsrt_nonnull_all;
+int ddsi_sedp_write_writer(struct ddsi_writer * wr) ddsrt_nonnull_all;
 
 /** @component discovery */
-int ddsi_sedp_write_reader (struct ddsi_reader *rd) ddsrt_nonnull_all;
+int ddsi_sedp_write_reader(struct ddsi_reader * rd) ddsrt_nonnull_all;
 
 /** @component discovery */
-int ddsi_sedp_dispose_unregister_writer (struct ddsi_writer *wr) ddsrt_nonnull_all;
+int ddsi_sedp_dispose_unregister_writer(struct ddsi_writer * wr) ddsrt_nonnull_all;
 
 /** @component discovery */
-int ddsi_sedp_dispose_unregister_reader (struct ddsi_reader *rd) ddsrt_nonnull_all;
+int ddsi_sedp_dispose_unregister_reader(struct ddsi_reader * rd) ddsrt_nonnull_all;
 
 /** @component discovery */
-void ddsi_handle_sedp_alive_endpoint (const struct ddsi_receiver_state *rst, ddsi_seqno_t seq, ddsi_plist_t *datap /* note: potentially modifies datap */, ddsi_sedp_kind_t sedp_kind, const ddsi_guid_prefix_t *src_guid_prefix, ddsi_vendorid_t vendorid, ddsrt_wctime_t timestamp)
-  ddsrt_nonnull_all;
+void ddsi_handle_sedp_alive_endpoint(
+  const struct ddsi_receiver_state * rst, ddsi_seqno_t seq,
+  ddsi_plist_t * datap /* note: potentially modifies datap */, ddsi_sedp_kind_t sedp_kind,
+  const ddsi_guid_prefix_t * src_guid_prefix, ddsi_vendorid_t vendorid,
+  ddsrt_wctime_t timestamp) ddsrt_nonnull_all;
 
 /** @component discovery */
-void ddsi_handle_sedp_dead_endpoint (const struct ddsi_receiver_state *rst, ddsi_plist_t *datap, ddsi_sedp_kind_t sedp_kind, ddsrt_wctime_t timestamp)
-  ddsrt_nonnull_all;
+void ddsi_handle_sedp_dead_endpoint(
+  const struct ddsi_receiver_state * rst, ddsi_plist_t * datap, ddsi_sedp_kind_t sedp_kind,
+  ddsrt_wctime_t timestamp) ddsrt_nonnull_all;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

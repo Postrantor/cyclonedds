@@ -11,77 +11,63 @@
  */
 #include <string.h>
 
-#include "dds/ddsrt/md5.h"
 #include "dds/ddsrt/heap.h"
-
+#include "dds/ddsrt/md5.h"
 #include "ddsi__misc.h"
 
-extern inline ddsi_seqno_t ddsi_from_seqno (const ddsi_sequence_number_t sn);
-extern inline bool ddsi_validating_from_seqno (const ddsi_sequence_number_t sn, ddsi_seqno_t *res);
-extern inline ddsi_sequence_number_t ddsi_to_seqno (ddsi_seqno_t n);
+extern inline ddsi_seqno_t ddsi_from_seqno(const ddsi_sequence_number_t sn);
+extern inline bool ddsi_validating_from_seqno(const ddsi_sequence_number_t sn, ddsi_seqno_t * res);
+extern inline ddsi_sequence_number_t ddsi_to_seqno(ddsi_seqno_t n);
 
-const ddsi_guid_t ddsi_nullguid = { .prefix = { .u = { 0,0,0 } }, .entityid = { .u = 0 } };
+const ddsi_guid_t ddsi_nullguid = {.prefix = {.u = {0, 0, 0}}, .entityid = {.u = 0}};
 
-bool ddsi_guid_prefix_zero (const ddsi_guid_prefix_t *a)
+bool ddsi_guid_prefix_zero(const ddsi_guid_prefix_t * a)
 {
   return a->u[0] == 0 && a->u[1] == 0 && a->u[2] == 0;
 }
 
-int ddsi_guid_prefix_eq (const ddsi_guid_prefix_t *a, const ddsi_guid_prefix_t *b)
+int ddsi_guid_prefix_eq(const ddsi_guid_prefix_t * a, const ddsi_guid_prefix_t * b)
 {
   return a->u[0] == b->u[0] && a->u[1] == b->u[1] && a->u[2] == b->u[2];
 }
 
-int ddsi_guid_eq (const struct ddsi_guid *a, const struct ddsi_guid *b)
+int ddsi_guid_eq(const struct ddsi_guid * a, const struct ddsi_guid * b)
 {
   return ddsi_guid_prefix_eq(&a->prefix, &b->prefix) && (a->entityid.u == b->entityid.u);
 }
 
-int ddsi_patmatch (const char *pat, const char *str)
+int ddsi_patmatch(const char * pat, const char * str)
 {
-  while (*pat)
-  {
-    if (*pat == '?')
-    {
+  while (*pat) {
+    if (*pat == '?') {
       /* any character will do */
-      if (*str++ == 0)
-      {
+      if (*str++ == 0) {
         return 0;
       }
       pat++;
-    }
-    else if (*pat == '*')
-    {
+    } else if (*pat == '*') {
       /* collapse a sequence of wildcards, requiring as many
        characters in str as there are ?s in the sequence */
-      while (*pat == '*' || *pat == '?')
-      {
-        if (*pat == '?' && *str++ == 0)
-        {
+      while (*pat == '*' || *pat == '?') {
+        if (*pat == '?' && *str++ == 0) {
           return 0;
         }
         pat++;
       }
       /* try matching on all positions where str matches pat */
-      while (*str)
-      {
-        if (*str == *pat && ddsi_patmatch (pat+1, str+1))
-        {
+      while (*str) {
+        if (*str == *pat && ddsi_patmatch(pat + 1, str + 1)) {
           return 1;
         }
         str++;
       }
       return *pat == 0;
-    }
-    else
-    {
+    } else {
       /* only an exact match */
-      if (*str++ != *pat++)
-      {
+      if (*str++ != *pat++) {
         return 0;
       }
     }
   }
   return *str == 0;
 }
-

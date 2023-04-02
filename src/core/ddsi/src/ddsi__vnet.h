@@ -12,16 +12,16 @@
 #ifndef DDSI__VNET_H
 #define DDSI__VNET_H
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 struct ddsi_domaingv;
 
 /** @component vnet_if */
-int ddsi_vnet_init (struct ddsi_domaingv *gv, const char *name, int32_t locator_kind);
+int ddsi_vnet_init(struct ddsi_domaingv * gv, const char * name, int32_t locator_kind);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

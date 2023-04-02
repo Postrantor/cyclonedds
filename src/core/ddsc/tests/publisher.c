@@ -9,41 +9,40 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#include "dds/dds.h"
 #include "CUnit/Test.h"
+#include "dds/dds.h"
 
 /* We are deliberately testing some bad arguments that SAL will complain about.
  * So, silence SAL regarding these issues. */
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 28020)
+#pragma warning(disable : 28020)
 #endif
 
 /* Dummy callback */
-static void data_available_cb(dds_entity_t reader, void* arg)
+static void data_available_cb(dds_entity_t reader, void * arg)
 {
   (void)reader;
   (void)arg;
 }
 
-
 CU_Test(ddsc_publisher, create)
 {
-  const char *singlePartitions[] = { "partition" };
-  const char *multiplePartitions[] = { "partition1", "partition2" };
-  const char *duplicatePartitions[] = { "partition", "partition" };
+  const char * singlePartitions[] = {"partition"};
+  const char * multiplePartitions[] = {"partition1", "partition2"};
+  const char * duplicatePartitions[] = {"partition", "partition"};
 
   dds_entity_t participant;
   dds_entity_t publisher, publisher1;
-  dds_listener_t *listener;
-  dds_qos_t *qos;
+  dds_listener_t * listener;
+  dds_qos_t * qos;
 
   /* Use NULL participant */
   publisher = dds_create_publisher(0, NULL, NULL);
   CU_ASSERT_EQUAL_FATAL(publisher, DDS_RETCODE_PRECONDITION_NOT_MET);
 
-  participant = dds_create_participant (DDS_DOMAIN_DEFAULT, NULL, NULL);
-  CU_ASSERT_FATAL(participant >  0);
+  participant = dds_create_participant(DDS_DOMAIN_DEFAULT, NULL, NULL);
+  CU_ASSERT_FATAL(participant > 0);
 
   /* Use non-null participant */
   publisher = dds_create_publisher(participant, NULL, NULL);
@@ -66,23 +65,23 @@ CU_Test(ddsc_publisher, create)
 /* Somehow, the compiler thinks the char arrays might not be zero-terminated... */
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 6054)
+#pragma warning(disable : 6054)
 #endif
 
   /* Use qos with single partition */
-  dds_qset_partition (qos, 1, singlePartitions);
+  dds_qset_partition(qos, 1, singlePartitions);
   publisher = dds_create_publisher(participant, qos, NULL);
   CU_ASSERT_FATAL(publisher > 0);
   dds_delete(publisher);
 
   /* Use qos with multiple partitions */
-  dds_qset_partition (qos, 2, multiplePartitions);
+  dds_qset_partition(qos, 2, multiplePartitions);
   publisher = dds_create_publisher(participant, qos, NULL);
   CU_ASSERT_FATAL(publisher > 0);
   dds_delete(publisher);
 
   /* Use qos with multiple partitions */
-  dds_qset_partition (qos, 2, duplicatePartitions);
+  dds_qset_partition(qos, 2, duplicatePartitions);
   publisher = dds_create_publisher(participant, qos, NULL);
   CU_ASSERT_FATAL(publisher > 0);
   dds_delete(publisher);
@@ -130,19 +129,19 @@ CU_Test(ddsc_publisher, create)
 
   dds_delete_listener(listener);
   dds_delete_qos(qos);
-  dds_delete (participant);
+  dds_delete(participant);
 }
 
 CU_Test(ddsc_publisher, invalid_qos)
 {
   dds_entity_t participant, publisher;
-  dds_qos_t *qos;
+  dds_qos_t * qos;
   dds_return_t rc;
 
-  participant = dds_create_participant (DDS_DOMAIN_DEFAULT, NULL, NULL);
-  CU_ASSERT_FATAL(participant >  0);
+  participant = dds_create_participant(DDS_DOMAIN_DEFAULT, NULL, NULL);
+  CU_ASSERT_FATAL(participant > 0);
 
-  qos = dds_create_qos ();
+  qos = dds_create_qos();
   CU_ASSERT_NOT_EQUAL_FATAL(qos, NULL);
 
   // deliberately set an invalid value for the access scope kind, this should
@@ -152,14 +151,13 @@ CU_Test(ddsc_publisher, invalid_qos)
   publisher = dds_create_publisher(participant, qos, NULL);
   CU_ASSERT_FATAL(publisher == DDS_RETCODE_BAD_PARAMETER);
 
-  dds_delete_qos (qos);
+  dds_delete_qos(qos);
   rc = dds_delete(participant);
-  CU_ASSERT_FATAL (rc == 0);
+  CU_ASSERT_FATAL(rc == 0);
 }
 
 CU_Test(ddsc_publisher, suspend_resume)
 {
-
   dds_entity_t participant, publisher;
   dds_return_t status;
 
@@ -172,7 +170,7 @@ CU_Test(ddsc_publisher, suspend_resume)
   CU_ASSERT_EQUAL_FATAL(status, DDS_RETCODE_PRECONDITION_NOT_MET);
 
   /* Uae dds_suspend on something else than a publisher */
-  participant = dds_create_participant (DDS_DOMAIN_DEFAULT, NULL, NULL);
+  participant = dds_create_participant(DDS_DOMAIN_DEFAULT, NULL, NULL);
   CU_ASSERT_FATAL(participant > 0);
   status = dds_suspend(participant);
   CU_ASSERT_EQUAL_FATAL(status, DDS_RETCODE_ILLEGAL_OPERATION);
@@ -225,7 +223,7 @@ CU_Test(ddsc_publisher, wait_for_acks)
   status = dds_wait_for_acks(0, DDS_INFINITY);
   CU_ASSERT_EQUAL_FATAL(status, DDS_RETCODE_PRECONDITION_NOT_MET);
 
-  participant = dds_create_participant (DDS_DOMAIN_DEFAULT, NULL, NULL);
+  participant = dds_create_participant(DDS_DOMAIN_DEFAULT, NULL, NULL);
   CU_ASSERT_FATAL(participant > 0);
 
   /* Wait_for_acks on participant and minusOneSec timeout */
@@ -291,10 +289,7 @@ CU_Test(ddsc_publisher, wait_for_acks)
   return;
 }
 
-CU_Test(ddsc_publisher, coherency)
-{
-  return;
-}
+CU_Test(ddsc_publisher, coherency) { return; }
 
 #ifdef _MSC_VER
 #pragma warning(pop)

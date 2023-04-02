@@ -13,17 +13,17 @@
 #define DDSRT_ARCH_H
 
 #if _WIN32
-# if _WIN64
-#   define DDSRT_64BIT 1
-# else
-#   define DDSRT_64BIT 0
-# endif
+#if _WIN64
+#define DDSRT_64BIT 1
 #else
-# if defined(_LP64)
-#   define DDSRT_64BIT 1
-# else
-#   define DDSRT_64BIT 0
-# endif
+#define DDSRT_64BIT 0
+#endif
+#else
+#if defined(_LP64)
+#define DDSRT_64BIT 1
+#else
+#define DDSRT_64BIT 0
+#endif
 #endif
 
 #endif /* DDSRT_ARCH_H */

@@ -12,8 +12,8 @@
 #ifndef DDSRT_MH3_H
 #define DDSRT_MH3_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "dds/export.h"
 
@@ -21,11 +21,7 @@
 extern "C" {
 #endif
 
-DDS_EXPORT uint32_t
-ddsrt_mh3(
-  const void *key,
-  size_t len,
-  uint32_t seed);
+DDS_EXPORT uint32_t ddsrt_mh3(const void * key, size_t len, uint32_t seed);
 
 #if defined(__cplusplus)
 }

@@ -16,14 +16,14 @@
 
 #ifdef DDS_HAS_SECURITY
 
-#include "dds/ddsrt/retcode.h"
-#include "dds/ddsrt/misc.h"
-#include "dds/ddsi/ddsi_plist.h"
 #include "dds/ddsi/ddsi_guid.h"
+#include "dds/ddsi/ddsi_plist.h"
 #include "dds/ddsi/ddsi_security_msg.h"
+#include "dds/ddsrt/misc.h"
+#include "dds/ddsrt/retcode.h"
 #include "ddsi__plist_generic.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -32,37 +32,38 @@ struct ddsi_writer;
 struct ddsi_proxy_reader;
 struct ddsi_serdata;
 
-#define DDS_SECURITY_AUTH_REQUEST                     "dds.sec.auth_request"
-#define DDS_SECURITY_AUTH_HANDSHAKE                   "dds.sec.auth"
+#define DDS_SECURITY_AUTH_REQUEST "dds.sec.auth_request"
+#define DDS_SECURITY_AUTH_HANDSHAKE "dds.sec.auth"
 
 #define DDS_SECURITY_AUTH_VERSION_MAJOR 1
 #define DDS_SECURITY_AUTH_VERSION_MINOR 0
 
-#define DDS_SECURITY_AUTH_TOKEN_CLASS_ID_BASE         "DDS:Auth:PKI-DH:"
-#define DDS_SECURITY_AUTH_TOKEN_CLASS_ID              DDS_SECURITY_AUTH_TOKEN_CLASS_ID_BASE DDSRT_STRINGIFY(DDS_SECURITY_AUTH_VERSION_MAJOR) "." DDSRT_STRINGIFY(DDS_SECURITY_AUTH_VERSION_MINOR)
+#define DDS_SECURITY_AUTH_TOKEN_CLASS_ID_BASE "DDS:Auth:PKI-DH:"
+#define DDS_SECURITY_AUTH_TOKEN_CLASS_ID                 \
+  DDS_SECURITY_AUTH_TOKEN_CLASS_ID_BASE DDSRT_STRINGIFY( \
+    DDS_SECURITY_AUTH_VERSION_MAJOR) "." DDSRT_STRINGIFY(DDS_SECURITY_AUTH_VERSION_MINOR)
 
-#define DDS_SECURITY_AUTH_REQUEST_TOKEN_CLASS_ID      DDS_SECURITY_AUTH_TOKEN_CLASS_ID "+AuthReq"
-#define DDS_SECURITY_AUTH_HANDSHAKE_REQUEST_TOKEN_ID  DDS_SECURITY_AUTH_TOKEN_CLASS_ID "+Req"
-#define DDS_SECURITY_AUTH_HANDSHAKE_REPLY_TOKEN_ID    DDS_SECURITY_AUTH_TOKEN_CLASS_ID "+Reply"
-#define DDS_SECURITY_AUTH_HANDSHAKE_FINAL_TOKEN_ID    DDS_SECURITY_AUTH_TOKEN_CLASS_ID "+Final"
+#define DDS_SECURITY_AUTH_REQUEST_TOKEN_CLASS_ID DDS_SECURITY_AUTH_TOKEN_CLASS_ID "+AuthReq"
+#define DDS_SECURITY_AUTH_HANDSHAKE_REQUEST_TOKEN_ID DDS_SECURITY_AUTH_TOKEN_CLASS_ID "+Req"
+#define DDS_SECURITY_AUTH_HANDSHAKE_REPLY_TOKEN_ID DDS_SECURITY_AUTH_TOKEN_CLASS_ID "+Reply"
+#define DDS_SECURITY_AUTH_HANDSHAKE_FINAL_TOKEN_ID DDS_SECURITY_AUTH_TOKEN_CLASS_ID "+Final"
 
-
-typedef struct ddsi_message_identity {
+typedef struct ddsi_message_identity
+{
   ddsi_guid_t source_guid;
   ddsi_seqno_t sequence_number;
 } ddsi_message_identity_t;
 
-typedef struct ddsi_participant_generic_message {
+typedef struct ddsi_participant_generic_message
+{
   ddsi_message_identity_t message_identity;
   ddsi_message_identity_t related_message_identity;
   ddsi_guid_t destination_participant_guid;
   ddsi_guid_t destination_endpoint_guid;
   ddsi_guid_t source_endpoint_guid;
-  const char *message_class_id;
+  const char * message_class_id;
   ddsi_dataholderseq_t message_data;
 } ddsi_participant_generic_message_t;
-
-
 
 /**
  * @component security_msg_exchange
@@ -82,15 +83,9 @@ typedef struct ddsi_participant_generic_message {
  * @param rmid      resulting message identity
  */
 void ddsi_participant_generic_message_init(
-   ddsi_participant_generic_message_t *msg,
-   const ddsi_guid_t *wrguid,
-   ddsi_seqno_t wrseq,
-   const ddsi_guid_t *dstpguid,
-   const ddsi_guid_t *dsteguid,
-   const ddsi_guid_t *srceguid,
-   const char *classid,
-   const ddsi_dataholderseq_t *mdata,
-   const ddsi_message_identity_t *rmid);
+  ddsi_participant_generic_message_t * msg, const ddsi_guid_t * wrguid, ddsi_seqno_t wrseq,
+  const ddsi_guid_t * dstpguid, const ddsi_guid_t * dsteguid, const ddsi_guid_t * srceguid,
+  const char * classid, const ddsi_dataholderseq_t * mdata, const ddsi_message_identity_t * rmid);
 
 /**
  * @brief Aliased struct variables will not be freed.
@@ -98,7 +93,7 @@ void ddsi_participant_generic_message_init(
  *
  * @param msg participant generic message
  */
-void ddsi_participant_generic_message_deinit(ddsi_participant_generic_message_t *msg);
+void ddsi_participant_generic_message_deinit(ddsi_participant_generic_message_t * msg);
 
 /**
  * @component security_msg_exchange
@@ -112,19 +107,21 @@ void ddsi_participant_generic_message_deinit(ddsi_participant_generic_message_t 
  * @param bswap byte-swapping required
  * @return dds_return_t
  */
-dds_return_t ddsi_participant_generic_message_deseralize(ddsi_participant_generic_message_t *msg, const unsigned char *data, size_t len,
-   bool bswap);
+dds_return_t ddsi_participant_generic_message_deseralize(
+  ddsi_participant_generic_message_t * msg, const unsigned char * data, size_t len, bool bswap);
 
 /** @component security_msg_exchange */
-dds_return_t ddsi_participant_generic_message_serialize(const ddsi_participant_generic_message_t *msg, unsigned char **data, size_t *len);
+dds_return_t ddsi_participant_generic_message_serialize(
+  const ddsi_participant_generic_message_t * msg, unsigned char ** data, size_t * len);
 
 DDS_EXPORT extern const enum ddsi_pserop ddsi_pserop_participant_generic_message[];
 DDS_EXPORT extern const size_t ddsi_pserop_participant_generic_message_nops;
 
 /** @component security_msg_exchange */
-int ddsi_volatile_secure_data_filter(struct ddsi_writer *wr, struct ddsi_proxy_reader *prd, struct ddsi_serdata *serdata);
+int ddsi_volatile_secure_data_filter(
+  struct ddsi_writer * wr, struct ddsi_proxy_reader * prd, struct ddsi_serdata * serdata);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

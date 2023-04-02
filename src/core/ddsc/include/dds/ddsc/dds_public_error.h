@@ -20,37 +20,57 @@
 #ifndef DDS_ERROR_H
 #define DDS_ERROR_H
 
-#include "dds/export.h"
 #include "dds/ddsrt/log.h"
 #include "dds/ddsrt/retcode.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
+
+/**
+ * @file rmw_error_handling.h
+ * @brief RMW层错误处理相关的宏和函数 (RMW layer error handling related macros and functions)
+ */
 
 /* ** DEPRECATED ** */
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 /* Error masks for returned status values */
 
-#define DDS_ERR_NR_MASK       0x000000ff
-#define DDS_ERR_LINE_MASK     0x003fff00
-#define DDS_ERR_FILE_ID_MASK  0x7fc00000
+/** 错误号掩码 (Error number mask) */
+#define DDS_ERR_NR_MASK 0x000000ff
+/** 行号掩码 (Line number mask) */
+#define DDS_ERR_LINE_MASK 0x003fff00
+/** 文件ID掩码 (File ID mask) */
+#define DDS_ERR_FILE_ID_MASK 0x7fc00000
 
 /* Error code handling functions */
 
-/** Macro to extract error number */
+/**
+ * @brief 提取错误号的宏 (Macro to extract error number)
+ * @param e 错误代码 (Error code)
+ * @return 错误号 (Error number)
+ */
 #define dds_err_nr(e) (e)
 
-/** Macro to extract line number */
+/**
+ * @brief 提取行号的宏 (Macro to extract line number)
+ * @param e 错误代码 (Error code)
+ * @return 行号 (Line number)
+ */
 #define dds_err_line(e) (0)
 
-/** Macro to extract file identifier */
+/**
+ * @brief 提取文件ID的宏 (Macro to extract file identifier)
+ * @param e 错误代码 (Error code)
+ * @return 文件ID (File identifier)
+ */
 #define dds_err_file_id(e) (0)
 
-#endif // DOXYGEN_SHOULD_SKIP_THIS
+#endif  // DOXYGEN_SHOULD_SKIP_THIS
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif

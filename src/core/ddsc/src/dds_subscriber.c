@@ -9,6 +9,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include <string.h>
+
 #include "dds/ddsi/ddsi_domaingv.h"
 #include "dds/ddsi/ddsi_entity.h"
 #include "dds/ddsi/ddsi_iid.h"
@@ -18,12 +20,10 @@
 #include "dds__participant.h"
 #include "dds__qos.h"
 #include "dds__subscriber.h"
-#include <string.h>
 
 DECL_ENTITY_LOCK_UNLOCK(dds_subscriber)
 
-#define DDS_SUBSCRIBER_STATUS_MASK \
-  (DDS_DATA_ON_READERS_STATUS)
+#define DDS_SUBSCRIBER_STATUS_MASK (DDS_DATA_ON_READERS_STATUS)
 
 /**
  * @brief 设置订阅者的QoS参数
@@ -33,8 +33,7 @@ DECL_ENTITY_LOCK_UNLOCK(dds_subscriber)
  * @param[in] enabled 是否启用
  * @return 返回DDS_RETCODE_OK
  */
-static dds_return_t dds_subscriber_qos_set(dds_entity *e, const dds_qos_t *qos, bool enabled)
-{
+static dds_return_t dds_subscriber_qos_set(dds_entity* e, const dds_qos_t* qos, bool enabled) {
   /* 注意: e->m_qos仍然是旧的，以允许在此处失败 */
   (void)e;
   (void)qos;
@@ -48,8 +47,7 @@ static dds_return_t dds_subscriber_qos_set(dds_entity *e, const dds_qos_t *qos, 
  * @param[in] mask 状态掩码
  * @return 返回DDS_RETCODE_BAD_PARAMETER或DDS_RETCODE_OK
  */
-static dds_return_t dds_subscriber_status_validate(uint32_t mask)
-{
+static dds_return_t dds_subscriber_status_validate(uint32_t mask) {
   return (mask & ~DDS_SUBSCRIBER_STATUS_MASK) ? DDS_RETCODE_BAD_PARAMETER : DDS_RETCODE_OK;
 }
 
@@ -72,28 +70,31 @@ const struct dds_entity_deriver dds_entity_deriver_subscriber = {
  * @param[in] listener 监听器指针
  * @return 返回订阅者实体
  */
-dds_entity_t dds__create_subscriber_l(dds_participant *participant, bool implicit, const dds_qos_t *qos, const dds_listener_t *listener)
-{
+dds_entity_t dds__create_subscriber_l(dds_participant* participant,
+                                      bool implicit,
+                                      const dds_qos_t* qos,
+                                      const dds_listener_t* listener) {
   /* 必须持有参与者实体锁 */
-  dds_subscriber *sub;
+  dds_subscriber* sub;
   dds_entity_t subscriber;
   dds_return_t ret;
-  dds_qos_t *new_qos;
+  dds_qos_t* new_qos;
 
   new_qos = dds_create_qos();
-  if (qos)
-    ddsi_xqos_mergein_missing(new_qos, qos, DDS_SUBSCRIBER_QOS_MASK);
+  if (qos) ddsi_xqos_mergein_missing(new_qos, qos, DDS_SUBSCRIBER_QOS_MASK);
   ddsi_xqos_mergein_missing(new_qos, &ddsi_default_qos_publisher_subscriber, ~(uint64_t)0);
-  dds_apply_entity_naming(new_qos, participant->m_entity.m_qos, &participant->m_entity.m_domain->gv);
+  dds_apply_entity_naming(new_qos, participant->m_entity.m_qos,
+                          &participant->m_entity.m_domain->gv);
 
-  if ((ret = ddsi_xqos_valid(&participant->m_entity.m_domain->gv.logconfig, new_qos)) != DDS_RETCODE_OK)
-  {
+  if ((ret = ddsi_xqos_valid(&participant->m_entity.m_domain->gv.logconfig, new_qos)) !=
+      DDS_RETCODE_OK) {
     dds_delete_qos(new_qos);
     return ret;
   }
 
   sub = dds_alloc(sizeof(*sub));
-  subscriber = dds_entity_init(&sub->m_entity, &participant->m_entity, DDS_KIND_SUBSCRIBER, implicit, true, new_qos, listener, DDS_SUBSCRIBER_STATUS_MASK);
+  subscriber = dds_entity_init(&sub->m_entity, &participant->m_entity, DDS_KIND_SUBSCRIBER,
+                               implicit, true, new_qos, listener, DDS_SUBSCRIBER_STATUS_MASK);
   sub->m_entity.m_iid = ddsi_iid_gen();
   sub->materialize_data_on_readers = 0;
   dds_entity_register_child(&participant->m_entity, &sub->m_entity);
@@ -109,18 +110,18 @@ dds_entity_t dds__create_subscriber_l(dds_participant *participant, bool implici
  * @param listener 监听器
  * @return 返回创建的订阅者实体
  */
-dds_entity_t dds_create_subscriber(dds_entity_t participant, const dds_qos_t *qos, const dds_listener_t *listener)
-{
+dds_entity_t dds_create_subscriber(dds_entity_t participant,
+                                   const dds_qos_t* qos,
+                                   const dds_listener_t* listener) {
   // 定义参与者指针
-  dds_participant *par;
+  dds_participant* par;
   // 定义实体句柄
   dds_entity_t hdl;
   // 定义返回值
   dds_return_t ret;
 
   // 尝试锁定参与者
-  if ((ret = dds_participant_lock(participant, &par)) != DDS_RETCODE_OK)
-    return ret;
+  if ((ret = dds_participant_lock(participant, &par)) != DDS_RETCODE_OK) return ret;
 
   // 创建订阅者实体
   hdl = dds__create_subscriber_l(par, false, qos, listener);
@@ -136,16 +137,14 @@ dds_entity_t dds_create_subscriber(dds_entity_t participant, const dds_qos_t *qo
  * @param subscriber 订阅者实体
  * @return 返回操作结果
  */
-dds_return_t dds_notify_readers(dds_entity_t subscriber)
-{
+dds_return_t dds_notify_readers(dds_entity_t subscriber) {
   // 定义订阅者指针
-  dds_subscriber *sub;
+  dds_subscriber* sub;
   // 定义返回值
   dds_return_t ret;
 
   // 尝试锁定订阅者
-  if ((ret = dds_subscriber_lock(subscriber, &sub)) != DDS_RETCODE_OK)
-    return ret;
+  if ((ret = dds_subscriber_lock(subscriber, &sub)) != DDS_RETCODE_OK) return ret;
 
   // 解锁订阅者
   dds_subscriber_unlock(sub);
@@ -159,8 +158,7 @@ dds_return_t dds_notify_readers(dds_entity_t subscriber)
  * @param e 订阅者实体
  * @return 返回操作结果
  */
-dds_return_t dds_subscriber_begin_coherent(dds_entity_t e)
-{
+dds_return_t dds_subscriber_begin_coherent(dds_entity_t e) {
   return dds_generic_unimplemented_operation(e, DDS_KIND_SUBSCRIBER);
 }
 
@@ -170,8 +168,7 @@ dds_return_t dds_subscriber_begin_coherent(dds_entity_t e)
  * @param e 订阅者实体
  * @return 返回操作结果
  */
-dds_return_t dds_subscriber_end_coherent(dds_entity_t e)
-{
+dds_return_t dds_subscriber_end_coherent(dds_entity_t e) {
   return dds_generic_unimplemented_operation(e, DDS_KIND_SUBSCRIBER);
 }
 
@@ -181,8 +178,7 @@ dds_return_t dds_subscriber_end_coherent(dds_entity_t e)
  * @param sub 订阅者指针
  * @return 返回是否有可用数据
  */
-bool dds_subscriber_compute_data_on_readers_locked(dds_subscriber *sub)
-{
+bool dds_subscriber_compute_data_on_readers_locked(dds_subscriber* sub) {
   // sub->m_entity.m_mutex 必须被锁定
   ddsrt_avl_iter_t it;
 
@@ -200,13 +196,13 @@ bool dds_subscriber_compute_data_on_readers_locked(dds_subscriber *sub)
   // 在所有相关操作上原子更新），并在每个读取器中记录最后一次更新 DATA_AVAILABLE 的虚拟“时间戳”。
 
   // 遍历订阅者的子实体
-  for (dds_entity *rd = ddsrt_avl_iter_first(&dds_entity_children_td, &sub->m_entity.m_children, &it); rd; rd = ddsrt_avl_iter_next(&it))
-  {
+  for (dds_entity* rd =
+           ddsrt_avl_iter_first(&dds_entity_children_td, &sub->m_entity.m_children, &it);
+       rd; rd = ddsrt_avl_iter_next(&it)) {
     // 获取状态和掩码
     const uint32_t sm = ddsrt_atomic_ld32(&rd->m_status.m_status_and_mask);
     // 如果设置了 DATA_AVAILABLE 状态，则返回 true
-    if (sm & DDS_DATA_AVAILABLE_STATUS)
-      return true;
+    if (sm & DDS_DATA_AVAILABLE_STATUS) return true;
   }
 
   return false;
@@ -218,58 +214,55 @@ bool dds_subscriber_compute_data_on_readers_locked(dds_subscriber *sub)
  * @param sub 指向dds_subscriber结构的指针。
  * @param materialization_needed 布尔值，表示是否需要数据实例化。
  */
-void dds_subscriber_adjust_materialize_data_on_readers(dds_subscriber *sub, bool materialization_needed)
-{
+void dds_subscriber_adjust_materialize_data_on_readers(dds_subscriber* sub,
+                                                       bool materialization_needed) {
   // 没有锁定，sub已固定
   bool propagate = false;
-  ddsrt_mutex_lock(&sub->m_entity.m_observers_lock); // 锁定观察者锁
+  ddsrt_mutex_lock(&sub->m_entity.m_observers_lock);  // 锁定观察者锁
 
-  if (materialization_needed) // 如果需要数据实例化
+  if (materialization_needed)                         // 如果需要数据实例化
   {
     // FIXME: 确实无需传播，如果标志已设置？
-    if (sub->materialize_data_on_readers++ == 0)
-      propagate = true; // 需要传播
-  }
-  else
-  {
+    if (sub->materialize_data_on_readers++ == 0) propagate = true;  // 需要传播
+  } else {
     assert((sub->materialize_data_on_readers & DDS_SUB_MATERIALIZE_DATA_ON_READERS_MASK) > 0);
-    if (--sub->materialize_data_on_readers == 0)
-    {
+    if (--sub->materialize_data_on_readers == 0) {
       sub->materialize_data_on_readers &= ~DDS_SUB_MATERIALIZE_DATA_ON_READERS_FLAG;
-      propagate = true; // 需要传播
+      propagate = true;  // 需要传播
     }
   }
-  ddsrt_mutex_unlock(&sub->m_entity.m_observers_lock); // 解锁观察者锁
+  ddsrt_mutex_unlock(&sub->m_entity.m_observers_lock);  // 解锁观察者锁
 
   // 锁定实体互斥锁，用于遍历读取器，顺序为m_mutex，然后是m_observers_lock
   ddsrt_mutex_lock(&sub->m_entity.m_mutex);
 
-  if (propagate) // 如果需要传播
+  if (propagate)  // 如果需要传播
   {
     // 将数据实例化状态传播到读取器，并在有任何具有DATA_AVAILABLE设置的读取器时设置DATA_ON_READERS
     // 无需触发等待集，因为这在附加之前完成
     dds_instance_handle_t last_iid = 0;
-    dds_entity *rd;
-    while ((rd = ddsrt_avl_lookup_succ(&dds_entity_children_td, &sub->m_entity.m_children, &last_iid)) != NULL)
-    {
+    dds_entity* rd;
+    while ((rd = ddsrt_avl_lookup_succ(&dds_entity_children_td, &sub->m_entity.m_children,
+                                       &last_iid)) != NULL) {
       last_iid = rd->m_iid;
-      dds_entity *x;
-      if (dds_entity_pin(rd->m_hdllink.hdl, &x) < 0)
-        continue;
-      if (x == rd) // FIXME: 这是否可能不是真的？
+      dds_entity* x;
+      if (dds_entity_pin(rd->m_hdllink.hdl, &x) < 0) continue;
+      if (x == rd)                                          // FIXME: 这是否可能不是真的？
       {
-        ddsrt_mutex_unlock(&sub->m_entity.m_mutex); // 解锁实体互斥锁
+        ddsrt_mutex_unlock(&sub->m_entity.m_mutex);         // 解锁实体互斥锁
 
-        ddsrt_mutex_lock(&x->m_observers_lock);            // 锁定读取器的观察者锁
-        ddsrt_mutex_lock(&sub->m_entity.m_observers_lock); // 再次锁定订阅者的观察者锁
+        ddsrt_mutex_lock(&x->m_observers_lock);             // 锁定读取器的观察者锁
+        ddsrt_mutex_lock(&sub->m_entity.m_observers_lock);  // 再次锁定订阅者的观察者锁
         if (sub->materialize_data_on_readers)
-          ddsrt_atomic_or32(&x->m_status.m_status_and_mask, DDS_DATA_ON_READERS_STATUS << SAM_ENABLED_SHIFT);
+          ddsrt_atomic_or32(&x->m_status.m_status_and_mask,
+                            DDS_DATA_ON_READERS_STATUS << SAM_ENABLED_SHIFT);
         else
-          ddsrt_atomic_and32(&x->m_status.m_status_and_mask, ~(uint32_t)(DDS_DATA_ON_READERS_STATUS << SAM_ENABLED_SHIFT));
-        ddsrt_mutex_unlock(&sub->m_entity.m_observers_lock); // 解锁订阅者的观察者锁
-        ddsrt_mutex_unlock(&x->m_observers_lock);            // 解锁读取器的观察者锁
+          ddsrt_atomic_and32(&x->m_status.m_status_and_mask,
+                             ~(uint32_t)(DDS_DATA_ON_READERS_STATUS << SAM_ENABLED_SHIFT));
+        ddsrt_mutex_unlock(&sub->m_entity.m_observers_lock);  // 解锁订阅者的观察者锁
+        ddsrt_mutex_unlock(&x->m_observers_lock);             // 解锁读取器的观察者锁
 
-        ddsrt_mutex_lock(&sub->m_entity.m_mutex); // 再次锁定实体互斥锁
+        ddsrt_mutex_lock(&sub->m_entity.m_mutex);             // 再次锁定实体互斥锁
       }
       dds_entity_unpin(x);
     }
@@ -283,6 +276,6 @@ void dds_subscriber_adjust_materialize_data_on_readers(dds_subscriber *sub, bool
     dds_entity_status_reset(&sub->m_entity, DDS_DATA_ON_READERS_STATUS);
   if ((sub->materialize_data_on_readers & DDS_SUB_MATERIALIZE_DATA_ON_READERS_MASK) != 0)
     sub->materialize_data_on_readers |= DDS_SUB_MATERIALIZE_DATA_ON_READERS_FLAG;
-  ddsrt_mutex_unlock(&sub->m_entity.m_observers_lock); // 解锁观察者锁
-  ddsrt_mutex_unlock(&sub->m_entity.m_mutex);          // 解锁实体互斥锁
+  ddsrt_mutex_unlock(&sub->m_entity.m_observers_lock);  // 解锁观察者锁
+  ddsrt_mutex_unlock(&sub->m_entity.m_mutex);           // 解锁实体互斥锁
 }

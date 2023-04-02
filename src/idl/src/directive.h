@@ -15,13 +15,11 @@
 #include <stdbool.h>
 
 #include "idl/processor.h"
-#include "tree.h"
 #include "scanner.h"
+#include "tree.h"
 
-IDL_EXPORT void
-idl_delete_directive(idl_pstate_t *pstate);
+IDL_EXPORT void idl_delete_directive(idl_pstate_t * pstate);
 
-IDL_EXPORT idl_retcode_t
-idl_parse_directive(idl_pstate_t *pstate, idl_token_t *tok);
+IDL_EXPORT idl_retcode_t idl_parse_directive(idl_pstate_t * pstate, idl_token_t * tok);
 
 #endif /* DIRECTIVE_H */

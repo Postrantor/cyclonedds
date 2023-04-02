@@ -9,6 +9,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+
+#include <assert.h>
+#include <string.h>
+
+#include "dds/ddsc/dds_loan_api.h"
 #include "dds/ddsc/dds_rhc.h"
 #include "dds/ddsi/ddsi_domaingv.h"
 #include "dds/ddsi/ddsi_entity.h"
@@ -18,10 +23,6 @@
 #include "dds/ddsi/ddsi_tkmap.h"
 #include "dds__entity.h"
 #include "dds__reader.h"
-#include <assert.h>
-#include <string.h>
-
-#include "dds/ddsc/dds_loan_api.h"
 
 /**
  * @brief dds_read_impl: 核心读取/拿取函数。通常情况下，maxs 是 buf 和 si 的大小，
@@ -40,8 +41,16 @@
  * @param only_reader 是否仅为读取器
  * @return dds_return_t 返回操作结果
  */
-static dds_return_t dds_read_impl(bool take, dds_entity_t reader_or_condition, void **buf, size_t bufsz, uint32_t maxs, dds_sample_info_t *si, uint32_t mask, dds_instance_handle_t hand, bool lock, bool only_reader)
-{
+static dds_return_t dds_read_impl(bool take,
+                                  dds_entity_t reader_or_condition,
+                                  void **buf,
+                                  size_t bufsz,
+                                  uint32_t maxs,
+                                  dds_sample_info_t *si,
+                                  uint32_t mask,
+                                  dds_instance_handle_t hand,
+                                  bool lock,
+                                  bool only_reader) {
   dds_return_t ret = DDS_RETCODE_OK;
   struct dds_entity *entity;
   struct dds_reader *rd;
@@ -56,28 +65,21 @@ static dds_return_t dds_read_impl(bool take, dds_entity_t reader_or_condition, v
     return DDS_RETCODE_BAD_PARAMETER;
 
   // 尝试获取实体
-  if ((ret = dds_entity_pin(reader_or_condition, &entity)) < 0)
-  {
+  if ((ret = dds_entity_pin(reader_or_condition, &entity)) < 0) {
     goto fail;
   }
   // 判断实体类型
-  else if (dds_entity_kind(entity) == DDS_KIND_READER)
-  {
+  else if (dds_entity_kind(entity) == DDS_KIND_READER) {
     rd = (dds_reader *)entity;
     cond = NULL;
-  }
-  else if (only_reader)
-  {
+  } else if (only_reader) {
     ret = DDS_RETCODE_ILLEGAL_OPERATION;
     goto fail_pinned;
-  }
-  else if (dds_entity_kind(entity) != DDS_KIND_COND_READ && dds_entity_kind(entity) != DDS_KIND_COND_QUERY)
-  {
+  } else if (dds_entity_kind(entity) != DDS_KIND_COND_READ &&
+             dds_entity_kind(entity) != DDS_KIND_COND_QUERY) {
     ret = DDS_RETCODE_ILLEGAL_OPERATION;
     goto fail_pinned;
-  }
-  else
-  {
+  } else {
     rd = (dds_reader *)entity->m_parent;
     cond = (dds_readcond *)entity;
   }
@@ -86,32 +88,24 @@ static dds_return_t dds_read_impl(bool take, dds_entity_t reader_or_condition, v
   ddsi_thread_state_awake(thrst, &entity->m_domain->gv);
 
   // 如果没有提供样本，则分配样本（假设全部或没有提供）
-  if (buf[0] == NULL)
-  {
+  if (buf[0] == NULL) {
     // 分配、使用或重新分配读取器上的缓存贷款
     ddsrt_mutex_lock(&rd->m_entity.m_mutex);
-    if (rd->m_loan_out)
-    {
+    if (rd->m_loan_out) {
       ddsi_sertype_realloc_samples(buf, rd->m_topic->m_stype, NULL, 0, maxs);
       nodata_cleanups = NC_FREE_BUF | NC_RESET_BUF;
-    }
-    else
-    {
-      if (rd->m_loan)
-      {
-        if (rd->m_loan_size >= maxs)
-        {
+    } else {
+      if (rd->m_loan) {
+        if (rd->m_loan_size >= maxs) {
           // 确保 buf 正确初始化
-          ddsi_sertype_realloc_samples(buf, rd->m_topic->m_stype, rd->m_loan, rd->m_loan_size, rd->m_loan_size);
-        }
-        else
-        {
-          ddsi_sertype_realloc_samples(buf, rd->m_topic->m_stype, rd->m_loan, rd->m_loan_size, maxs);
+          ddsi_sertype_realloc_samples(buf, rd->m_topic->m_stype, rd->m_loan, rd->m_loan_size,
+                                       rd->m_loan_size);
+        } else {
+          ddsi_sertype_realloc_samples(buf, rd->m_topic->m_stype, rd->m_loan, rd->m_loan_size,
+                                       maxs);
           rd->m_loan_size = maxs;
         }
-      }
-      else
-      {
+      } else {
         ddsi_sertype_realloc_samples(buf, rd->m_topic->m_stype, NULL, 0, maxs);
         rd->m_loan_size = maxs;
       }
@@ -135,15 +129,12 @@ static dds_return_t dds_read_impl(bool take, dds_entity_t reader_or_condition, v
     ret = dds_rhc_read(rd->m_rhc, lock, buf, si, maxs, mask, hand, cond);
 
   // 如果没有读取到数据，将状态恢复为调用前的状态
-  if (ret <= 0 && nodata_cleanups)
-  {
+  if (ret <= 0 && nodata_cleanups) {
     ddsrt_mutex_lock(&rd->m_entity.m_mutex);
-    if (nodata_cleanups & NC_CLEAR_LOAN_OUT)
-      rd->m_loan_out = false;
+    if (nodata_cleanups & NC_CLEAR_LOAN_OUT) rd->m_loan_out = false;
     if (nodata_cleanups & NC_FREE_BUF)
       ddsi_sertype_free_samples(rd->m_topic->m_stype, buf, maxs, DDS_FREE_ALL);
-    if (nodata_cleanups & NC_RESET_BUF)
-      buf[0] = NULL;
+    if (nodata_cleanups & NC_RESET_BUF) buf[0] = NULL;
     ddsrt_mutex_unlock(&rd->m_entity.m_mutex);
   }
   dds_entity_unpin(entity);
@@ -172,8 +163,14 @@ fail:
  * @param[in] lock 是否锁定
  * @return 返回操作结果，成功返回DDS_RETCODE_OK，否则返回相应错误代码
  */
-static dds_return_t dds_readcdr_impl(bool take, dds_entity_t reader_or_condition, struct ddsi_serdata **buf, uint32_t maxs, dds_sample_info_t *si, uint32_t mask, dds_instance_handle_t hand, bool lock)
-{
+static dds_return_t dds_readcdr_impl(bool take,
+                                     dds_entity_t reader_or_condition,
+                                     struct ddsi_serdata **buf,
+                                     uint32_t maxs,
+                                     dds_sample_info_t *si,
+                                     uint32_t mask,
+                                     dds_instance_handle_t hand,
+                                     bool lock) {
   // 初始化返回值为成功
   dds_return_t ret = DDS_RETCODE_OK;
   // 定义读取器和实体指针
@@ -181,28 +178,24 @@ static dds_return_t dds_readcdr_impl(bool take, dds_entity_t reader_or_condition
   struct dds_entity *entity;
 
   // 检查输入参数是否有效
-  if (buf == NULL || si == NULL || maxs == 0 || maxs > INT32_MAX)
-    return DDS_RETCODE_BAD_PARAMETER;
+  if (buf == NULL || si == NULL || maxs == 0 || maxs > INT32_MAX) return DDS_RETCODE_BAD_PARAMETER;
 
   // 尝试获取实体并检查结果
-  if ((ret = dds_entity_pin(reader_or_condition, &entity)) < 0)
-  {
+  if ((ret = dds_entity_pin(reader_or_condition, &entity)) < 0) {
     return ret;
   }
   // 判断实体类型是否为读取器
-  else if (dds_entity_kind(entity) == DDS_KIND_READER)
-  {
+  else if (dds_entity_kind(entity) == DDS_KIND_READER) {
     rd = (dds_reader *)entity;
   }
   // 判断实体类型是否为非法操作
-  else if (dds_entity_kind(entity) != DDS_KIND_COND_READ && dds_entity_kind(entity) != DDS_KIND_COND_QUERY)
-  {
+  else if (dds_entity_kind(entity) != DDS_KIND_COND_READ &&
+           dds_entity_kind(entity) != DDS_KIND_COND_QUERY) {
     dds_entity_unpin(entity);
     return DDS_RETCODE_ILLEGAL_OPERATION;
   }
   // 其他情况，获取父实体作为读取器
-  else
-  {
+  else {
     rd = (dds_reader *)entity->m_parent;
   }
 
@@ -218,9 +211,11 @@ static dds_return_t dds_readcdr_impl(bool take, dds_entity_t reader_or_condition
 
   // 根据take参数选择执行读取或获取操作
   if (take)
-    ret = dds_rhc_takecdr(rd->m_rhc, lock, buf, si, maxs, mask & DDS_ANY_SAMPLE_STATE, mask & DDS_ANY_VIEW_STATE, mask & DDS_ANY_INSTANCE_STATE, hand);
+    ret = dds_rhc_takecdr(rd->m_rhc, lock, buf, si, maxs, mask & DDS_ANY_SAMPLE_STATE,
+                          mask & DDS_ANY_VIEW_STATE, mask & DDS_ANY_INSTANCE_STATE, hand);
   else
-    ret = dds_rhc_readcdr(rd->m_rhc, lock, buf, si, maxs, mask & DDS_ANY_SAMPLE_STATE, mask & DDS_ANY_VIEW_STATE, mask & DDS_ANY_INSTANCE_STATE, hand);
+    ret = dds_rhc_readcdr(rd->m_rhc, lock, buf, si, maxs, mask & DDS_ANY_SAMPLE_STATE,
+                          mask & DDS_ANY_VIEW_STATE, mask & DDS_ANY_INSTANCE_STATE, hand);
 
   // 解除实体锁定并使线程进入休眠状态
   dds_entity_unpin(entity);
@@ -237,16 +232,17 @@ static dds_return_t dds_readcdr_impl(bool take, dds_entity_t reader_or_condition
  * @param maxs 最大读取数量
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs)
-{
-  bool lock = true;                  // 默认使用锁
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果最大读取数量为无锁模式
+dds_return_t dds_read(
+    dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs) {
+  bool lock = true;                   // 默认使用锁
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果最大读取数量为无锁模式
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = (uint32_t)bufsz; // 设置最大读取数量为缓冲区大小
+    maxs = (uint32_t)bufsz;  // 设置最大读取数量为缓冲区大小
   }
-  return dds_read_impl(false, rd_or_cnd, buf, bufsz, maxs, si, NO_STATE_MASK_SET, DDS_HANDLE_NIL, lock, false);
+  return dds_read_impl(false, rd_or_cnd, buf, bufsz, maxs, si, NO_STATE_MASK_SET, DDS_HANDLE_NIL,
+                       lock, false);
 }
 
 /**
@@ -257,16 +253,16 @@ dds_return_t dds_read(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si,
  * @param maxs 最大读取数量
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs)
-{
-  bool lock = true;                  // 默认使用锁
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果最大读取数量为无锁模式
+dds_return_t dds_read_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs) {
+  bool lock = true;                   // 默认使用锁
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果最大读取数量为无锁模式
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取数量为100
+    maxs = 100;  // 设置最大读取数量为100
   }
-  return dds_read_impl(false, rd_or_cnd, buf, maxs, maxs, si, NO_STATE_MASK_SET, DDS_HANDLE_NIL, lock, false);
+  return dds_read_impl(false, rd_or_cnd, buf, maxs, maxs, si, NO_STATE_MASK_SET, DDS_HANDLE_NIL,
+                       lock, false);
 }
 
 /**
@@ -279,14 +275,18 @@ dds_return_t dds_read_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *
  * @param mask 状态掩码
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read_mask(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs, uint32_t mask)
-{
-  bool lock = true;                  // 默认使用锁
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果最大读取数量为无锁模式
+dds_return_t dds_read_mask(dds_entity_t rd_or_cnd,
+                           void **buf,
+                           dds_sample_info_t *si,
+                           size_t bufsz,
+                           uint32_t maxs,
+                           uint32_t mask) {
+  bool lock = true;                   // 默认使用锁
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果最大读取数量为无锁模式
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = (uint32_t)bufsz; // 设置最大读取数量为缓冲区大小
+    maxs = (uint32_t)bufsz;  // 设置最大读取数量为缓冲区大小
   }
   return dds_read_impl(false, rd_or_cnd, buf, bufsz, maxs, si, mask, DDS_HANDLE_NIL, lock, false);
 }
@@ -300,14 +300,14 @@ dds_return_t dds_read_mask(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t
  * @param mask 状态掩码
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read_mask_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs, uint32_t mask)
-{
-  bool lock = true;                  // 默认使用锁
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果最大读取数量为无锁模式
+dds_return_t dds_read_mask_wl(
+    dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs, uint32_t mask) {
+  bool lock = true;                   // 默认使用锁
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果最大读取数量为无锁模式
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取数量为100
+    maxs = 100;  // 设置最大读取数量为100
   }
   return dds_read_impl(false, rd_or_cnd, buf, maxs, maxs, si, mask, DDS_HANDLE_NIL, lock, false);
 }
@@ -321,14 +321,17 @@ dds_return_t dds_read_mask_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_inf
  * @param mask 状态掩码
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_readcdr(dds_entity_t rd_or_cnd, struct ddsi_serdata **buf, uint32_t maxs, dds_sample_info_t *si, uint32_t mask)
-{
-  bool lock = true;                  // 默认使用锁
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果最大读取数量为无锁模式
+dds_return_t dds_readcdr(dds_entity_t rd_or_cnd,
+                         struct ddsi_serdata **buf,
+                         uint32_t maxs,
+                         dds_sample_info_t *si,
+                         uint32_t mask) {
+  bool lock = true;                   // 默认使用锁
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果最大读取数量为无锁模式
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取数量为100
+    maxs = 100;  // 设置最大读取数量为100
   }
   return dds_readcdr_impl(false, rd_or_cnd, buf, maxs, si, mask, DDS_HANDLE_NIL, lock);
 }
@@ -343,20 +346,25 @@ dds_return_t dds_readcdr(dds_entity_t rd_or_cnd, struct ddsi_serdata **buf, uint
  * @param handle 实例句柄
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read_instance(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs, dds_instance_handle_t handle)
-{
-  bool lock = true; // 默认使用锁
+dds_return_t dds_read_instance(dds_entity_t rd_or_cnd,
+                               void **buf,
+                               dds_sample_info_t *si,
+                               size_t bufsz,
+                               uint32_t maxs,
+                               dds_instance_handle_t handle) {
+  bool lock = true;  // 默认使用锁
 
-  if (handle == DDS_HANDLE_NIL)              // 如果实例句柄为空
-    return DDS_RETCODE_PRECONDITION_NOT_MET; // 返回前提条件不满足的错误码
+  if (handle == DDS_HANDLE_NIL)               // 如果实例句柄为空
+    return DDS_RETCODE_PRECONDITION_NOT_MET;  // 返回前提条件不满足的错误码
 
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果最大读取数量为无锁模式
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果最大读取数量为无锁模式
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取数量为100
+    maxs = 100;  // 设置最大读取数量为100
   }
-  return dds_read_impl(false, rd_or_cnd, buf, bufsz, maxs, si, NO_STATE_MASK_SET, handle, lock, false);
+  return dds_read_impl(false, rd_or_cnd, buf, bufsz, maxs, si, NO_STATE_MASK_SET, handle, lock,
+                       false);
 }
 /**
  * @brief 读取指定实例的数据（带锁）
@@ -368,21 +376,25 @@ dds_return_t dds_read_instance(dds_entity_t rd_or_cnd, void **buf, dds_sample_in
  * @param handle 实例句柄
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read_instance_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs, dds_instance_handle_t handle)
-{
-  bool lock = true; // 默认使用锁
+dds_return_t dds_read_instance_wl(dds_entity_t rd_or_cnd,
+                                  void **buf,
+                                  dds_sample_info_t *si,
+                                  uint32_t maxs,
+                                  dds_instance_handle_t handle) {
+  bool lock = true;  // 默认使用锁
 
-  if (handle == DDS_HANDLE_NIL) // 如果实例句柄为空
+  if (handle == DDS_HANDLE_NIL)  // 如果实例句柄为空
     return DDS_RETCODE_PRECONDITION_NOT_MET;
 
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取样本数为100
+    maxs = 100;  // 设置最大读取样本数为100
   }
   // 调用实现函数进行读取操作
-  return dds_read_impl(false, rd_or_cnd, buf, maxs, maxs, si, NO_STATE_MASK_SET, handle, lock, false);
+  return dds_read_impl(false, rd_or_cnd, buf, maxs, maxs, si, NO_STATE_MASK_SET, handle, lock,
+                       false);
 }
 
 /**
@@ -397,18 +409,23 @@ dds_return_t dds_read_instance_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample
  * @param mask 状态掩码
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read_instance_mask(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs, dds_instance_handle_t handle, uint32_t mask)
-{
-  bool lock = true; // 默认使用锁
+dds_return_t dds_read_instance_mask(dds_entity_t rd_or_cnd,
+                                    void **buf,
+                                    dds_sample_info_t *si,
+                                    size_t bufsz,
+                                    uint32_t maxs,
+                                    dds_instance_handle_t handle,
+                                    uint32_t mask) {
+  bool lock = true;  // 默认使用锁
 
-  if (handle == DDS_HANDLE_NIL) // 如果实例句柄为空
+  if (handle == DDS_HANDLE_NIL)  // 如果实例句柄为空
     return DDS_RETCODE_PRECONDITION_NOT_MET;
 
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = (uint32_t)bufsz; // 设置最大读取样本数为缓冲区大小
+    maxs = (uint32_t)bufsz;  // 设置最大读取样本数为缓冲区大小
   }
   // 调用实现函数进行读取操作
   return dds_read_impl(false, rd_or_cnd, buf, bufsz, maxs, si, mask, handle, lock, false);
@@ -425,18 +442,22 @@ dds_return_t dds_read_instance_mask(dds_entity_t rd_or_cnd, void **buf, dds_samp
  * @param mask 状态掩码
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read_instance_mask_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs, dds_instance_handle_t handle, uint32_t mask)
-{
-  bool lock = true; // 默认使用锁
+dds_return_t dds_read_instance_mask_wl(dds_entity_t rd_or_cnd,
+                                       void **buf,
+                                       dds_sample_info_t *si,
+                                       uint32_t maxs,
+                                       dds_instance_handle_t handle,
+                                       uint32_t mask) {
+  bool lock = true;  // 默认使用锁
 
-  if (handle == DDS_HANDLE_NIL) // 如果实例句柄为空
+  if (handle == DDS_HANDLE_NIL)  // 如果实例句柄为空
     return DDS_RETCODE_PRECONDITION_NOT_MET;
 
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取样本数为100
+    maxs = 100;  // 设置最大读取样本数为100
   }
   // 调用实现函数进行读取操作
   return dds_read_impl(false, rd_or_cnd, buf, maxs, maxs, si, mask, handle, lock, false);
@@ -453,18 +474,22 @@ dds_return_t dds_read_instance_mask_wl(dds_entity_t rd_or_cnd, void **buf, dds_s
  * @param mask 状态掩码
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_readcdr_instance(dds_entity_t rd_or_cnd, struct ddsi_serdata **buf, uint32_t maxs, dds_sample_info_t *si, dds_instance_handle_t handle, uint32_t mask)
-{
-  bool lock = true; // 默认使用锁
+dds_return_t dds_readcdr_instance(dds_entity_t rd_or_cnd,
+                                  struct ddsi_serdata **buf,
+                                  uint32_t maxs,
+                                  dds_sample_info_t *si,
+                                  dds_instance_handle_t handle,
+                                  uint32_t mask) {
+  bool lock = true;  // 默认使用锁
 
-  if (handle == DDS_HANDLE_NIL) // 如果实例句柄为空
+  if (handle == DDS_HANDLE_NIL)  // 如果实例句柄为空
     return DDS_RETCODE_PRECONDITION_NOT_MET;
 
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁
   {
-    lock = false; // 不使用锁
+    lock = false;  // 不使用锁
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取样本数为100
+    maxs = 100;  // 设置最大读取样本数为100
   }
   // 调用实现函数进行读取操作
   return dds_readcdr_impl(false, rd_or_cnd, buf, maxs, si, mask, handle, lock);
@@ -478,9 +503,9 @@ dds_return_t dds_readcdr_instance(dds_entity_t rd_or_cnd, struct ddsi_serdata **
  * @param si 存储样本信息的结构体指针
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read_next(dds_entity_t reader, void **buf, dds_sample_info_t *si)
-{
-  uint32_t mask = DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE; // 设置状态掩码
+dds_return_t dds_read_next(dds_entity_t reader, void **buf, dds_sample_info_t *si) {
+  uint32_t mask =
+      DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE;  // 设置状态掩码
   // 调用实现函数进行读取操作
   return dds_read_impl(false, reader, buf, 1u, 1u, si, mask, DDS_HANDLE_NIL, true, true);
 }
@@ -493,12 +518,9 @@ dds_return_t dds_read_next(dds_entity_t reader, void **buf, dds_sample_info_t *s
  * @param si 存储样本信息的结构体指针
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_read_next_wl(
-    dds_entity_t reader,
-    void **buf,
-    dds_sample_info_t *si)
-{
-  uint32_t mask = DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE; // 设置状态掩码
+dds_return_t dds_read_next_wl(dds_entity_t reader, void **buf, dds_sample_info_t *si) {
+  uint32_t mask =
+      DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE;  // 设置状态掩码
   // 调用实现函数进行读取操作
   return dds_read_impl(false, reader, buf, 1u, 1u, si, mask, DDS_HANDLE_NIL, true, true);
 }
@@ -512,17 +534,18 @@ dds_return_t dds_read_next_wl(
  * @param maxs 最大读取样本数
  * @return dds_return_t 操作结果
  */
-dds_return_t dds_take(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs)
-{
-  bool lock = true;                  // 是否需要锁定
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁定
+dds_return_t dds_take(
+    dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs) {
+  bool lock = true;                   // 是否需要锁定
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁定
   {
     lock = false;
     /* FIXME: Fix the interface. */
-    maxs = (uint32_t)bufsz; // 设置最大读取样本数为缓冲区大小
+    maxs = (uint32_t)bufsz;  // 设置最大读取样本数为缓冲区大小
   }
   // 调用实现函数
-  return dds_read_impl(true, rd_or_cnd, buf, bufsz, maxs, si, NO_STATE_MASK_SET, DDS_HANDLE_NIL, lock, false);
+  return dds_read_impl(true, rd_or_cnd, buf, bufsz, maxs, si, NO_STATE_MASK_SET, DDS_HANDLE_NIL,
+                       lock, false);
 }
 
 /**
@@ -534,17 +557,17 @@ dds_return_t dds_take(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si,
  * @param maxs 最大读取样本数
  * @return dds_return_t 操作结果
  */
-dds_return_t dds_take_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs)
-{
-  bool lock = true;                  // 是否需要锁定
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁定
+dds_return_t dds_take_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs) {
+  bool lock = true;                   // 是否需要锁定
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁定
   {
     lock = false;
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取样本数为100
+    maxs = 100;  // 设置最大读取样本数为100
   }
   // 调用实现函数
-  return dds_read_impl(true, rd_or_cnd, buf, maxs, maxs, si, NO_STATE_MASK_SET, DDS_HANDLE_NIL, lock, false);
+  return dds_read_impl(true, rd_or_cnd, buf, maxs, maxs, si, NO_STATE_MASK_SET, DDS_HANDLE_NIL,
+                       lock, false);
 }
 
 /**
@@ -558,14 +581,18 @@ dds_return_t dds_take_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *
  * @param mask 状态掩码
  * @return dds_return_t 操作结果
  */
-dds_return_t dds_take_mask(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs, uint32_t mask)
-{
-  bool lock = true;                  // 是否需要锁定
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁定
+dds_return_t dds_take_mask(dds_entity_t rd_or_cnd,
+                           void **buf,
+                           dds_sample_info_t *si,
+                           size_t bufsz,
+                           uint32_t maxs,
+                           uint32_t mask) {
+  bool lock = true;                   // 是否需要锁定
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁定
   {
     lock = false;
     /* FIXME: Fix the interface. */
-    maxs = (uint32_t)bufsz; // 设置最大读取样本数为缓冲区大小
+    maxs = (uint32_t)bufsz;  // 设置最大读取样本数为缓冲区大小
   }
   // 调用实现函数
   return dds_read_impl(true, rd_or_cnd, buf, bufsz, maxs, si, mask, DDS_HANDLE_NIL, lock, false);
@@ -581,14 +608,14 @@ dds_return_t dds_take_mask(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t
  * @param mask 状态掩码
  * @return dds_return_t 操作结果
  */
-dds_return_t dds_take_mask_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs, uint32_t mask)
-{
-  bool lock = true;                  // 是否需要锁定
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁定
+dds_return_t dds_take_mask_wl(
+    dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs, uint32_t mask) {
+  bool lock = true;                   // 是否需要锁定
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁定
   {
     lock = false;
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取样本数为100
+    maxs = 100;  // 设置最大读取样本数为100
   }
   // 调用实现函数
   return dds_read_impl(true, rd_or_cnd, buf, maxs, maxs, si, mask, DDS_HANDLE_NIL, lock, false);
@@ -604,14 +631,17 @@ dds_return_t dds_take_mask_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_inf
  * @param mask 状态掩码
  * @return dds_return_t 操作结果
  */
-dds_return_t dds_takecdr(dds_entity_t rd_or_cnd, struct ddsi_serdata **buf, uint32_t maxs, dds_sample_info_t *si, uint32_t mask)
-{
-  bool lock = true;                  // 是否需要锁定
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁定
+dds_return_t dds_takecdr(dds_entity_t rd_or_cnd,
+                         struct ddsi_serdata **buf,
+                         uint32_t maxs,
+                         dds_sample_info_t *si,
+                         uint32_t mask) {
+  bool lock = true;                   // 是否需要锁定
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁定
   {
     lock = false;
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取样本数为100
+    maxs = 100;  // 设置最大读取样本数为100
   }
   // 调用实现函数
   return dds_readcdr_impl(true, rd_or_cnd, buf, maxs, si, mask, DDS_HANDLE_NIL, lock);
@@ -628,21 +658,26 @@ dds_return_t dds_takecdr(dds_entity_t rd_or_cnd, struct ddsi_serdata **buf, uint
  * @param handle 实例句柄
  * @return dds_return_t 操作结果
  */
-dds_return_t dds_take_instance(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs, dds_instance_handle_t handle)
-{
-  bool lock = true; // 是否需要锁定
+dds_return_t dds_take_instance(dds_entity_t rd_or_cnd,
+                               void **buf,
+                               dds_sample_info_t *si,
+                               size_t bufsz,
+                               uint32_t maxs,
+                               dds_instance_handle_t handle) {
+  bool lock = true;  // 是否需要锁定
 
-  if (handle == DDS_HANDLE_NIL) // 如果实例句柄无效
+  if (handle == DDS_HANDLE_NIL)  // 如果实例句柄无效
     return DDS_RETCODE_PRECONDITION_NOT_MET;
 
-  if (maxs == DDS_READ_WITHOUT_LOCK) // 如果不需要锁定
+  if (maxs == DDS_READ_WITHOUT_LOCK)  // 如果不需要锁定
   {
     lock = false;
     /* FIXME: Fix the interface. */
-    maxs = 100; // 设置最大读取样本数为100
+    maxs = 100;  // 设置最大读取样本数为100
   }
   // 调用实现函数
-  return dds_read_impl(true, rd_or_cnd, buf, bufsz, maxs, si, NO_STATE_MASK_SET, handle, lock, false);
+  return dds_read_impl(true, rd_or_cnd, buf, bufsz, maxs, si, NO_STATE_MASK_SET, handle, lock,
+                       false);
 }
 /**
  * @brief 从实例中获取数据（带锁）
@@ -654,23 +689,25 @@ dds_return_t dds_take_instance(dds_entity_t rd_or_cnd, void **buf, dds_sample_in
  * @param handle 实例句柄
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_take_instance_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs, dds_instance_handle_t handle)
-{
+dds_return_t dds_take_instance_wl(dds_entity_t rd_or_cnd,
+                                  void **buf,
+                                  dds_sample_info_t *si,
+                                  uint32_t maxs,
+                                  dds_instance_handle_t handle) {
   bool lock = true;
 
   // 如果实例句柄为空，返回前提条件未满足错误
-  if (handle == DDS_HANDLE_NIL)
-    return DDS_RETCODE_PRECONDITION_NOT_MET;
+  if (handle == DDS_HANDLE_NIL) return DDS_RETCODE_PRECONDITION_NOT_MET;
 
   // 如果最大样本数为无锁读取，设置锁为false并修复接口
-  if (maxs == DDS_READ_WITHOUT_LOCK)
-  {
+  if (maxs == DDS_READ_WITHOUT_LOCK) {
     lock = false;
     /* FIXME: Fix the interface. */
     maxs = 100;
   }
   // 调用dds_read_impl函数进行读取操作
-  return dds_read_impl(true, rd_or_cnd, buf, maxs, maxs, si, NO_STATE_MASK_SET, handle, lock, false);
+  return dds_read_impl(true, rd_or_cnd, buf, maxs, maxs, si, NO_STATE_MASK_SET, handle, lock,
+                       false);
 }
 
 /**
@@ -685,17 +722,20 @@ dds_return_t dds_take_instance_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample
  * @param mask 状态掩码
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_take_instance_mask(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, size_t bufsz, uint32_t maxs, dds_instance_handle_t handle, uint32_t mask)
-{
+dds_return_t dds_take_instance_mask(dds_entity_t rd_or_cnd,
+                                    void **buf,
+                                    dds_sample_info_t *si,
+                                    size_t bufsz,
+                                    uint32_t maxs,
+                                    dds_instance_handle_t handle,
+                                    uint32_t mask) {
   bool lock = true;
 
   // 如果实例句柄为空，返回前提条件未满足错误
-  if (handle == DDS_HANDLE_NIL)
-    return DDS_RETCODE_PRECONDITION_NOT_MET;
+  if (handle == DDS_HANDLE_NIL) return DDS_RETCODE_PRECONDITION_NOT_MET;
 
   // 如果最大样本数为无锁读取，设置锁为false并修复接口
-  if (maxs == DDS_READ_WITHOUT_LOCK)
-  {
+  if (maxs == DDS_READ_WITHOUT_LOCK) {
     lock = false;
     /* FIXME: Fix the interface. */
     maxs = (uint32_t)bufsz;
@@ -715,17 +755,19 @@ dds_return_t dds_take_instance_mask(dds_entity_t rd_or_cnd, void **buf, dds_samp
  * @param mask 状态掩码
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_take_instance_mask_wl(dds_entity_t rd_or_cnd, void **buf, dds_sample_info_t *si, uint32_t maxs, dds_instance_handle_t handle, uint32_t mask)
-{
+dds_return_t dds_take_instance_mask_wl(dds_entity_t rd_or_cnd,
+                                       void **buf,
+                                       dds_sample_info_t *si,
+                                       uint32_t maxs,
+                                       dds_instance_handle_t handle,
+                                       uint32_t mask) {
   bool lock = true;
 
   // 如果实例句柄为空，返回前提条件未满足错误
-  if (handle == DDS_HANDLE_NIL)
-    return DDS_RETCODE_PRECONDITION_NOT_MET;
+  if (handle == DDS_HANDLE_NIL) return DDS_RETCODE_PRECONDITION_NOT_MET;
 
   // 如果最大样本数为无锁读取，设置锁为false并修复接口
-  if (maxs == DDS_READ_WITHOUT_LOCK)
-  {
+  if (maxs == DDS_READ_WITHOUT_LOCK) {
     lock = false;
     /* FIXME: Fix the interface. */
     maxs = 100;
@@ -745,17 +787,19 @@ dds_return_t dds_take_instance_mask_wl(dds_entity_t rd_or_cnd, void **buf, dds_s
  * @param mask 状态掩码
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_takecdr_instance(dds_entity_t rd_or_cnd, struct ddsi_serdata **buf, uint32_t maxs, dds_sample_info_t *si, dds_instance_handle_t handle, uint32_t mask)
-{
+dds_return_t dds_takecdr_instance(dds_entity_t rd_or_cnd,
+                                  struct ddsi_serdata **buf,
+                                  uint32_t maxs,
+                                  dds_sample_info_t *si,
+                                  dds_instance_handle_t handle,
+                                  uint32_t mask) {
   bool lock = true;
 
   // 如果实例句柄为空，返回前提条件未满足错误
-  if (handle == DDS_HANDLE_NIL)
-    return DDS_RETCODE_PRECONDITION_NOT_MET;
+  if (handle == DDS_HANDLE_NIL) return DDS_RETCODE_PRECONDITION_NOT_MET;
 
   // 如果最大样本数为无锁读取，设置锁为false并修复接口
-  if (maxs == DDS_READ_WITHOUT_LOCK)
-  {
+  if (maxs == DDS_READ_WITHOUT_LOCK) {
     lock = false;
     /* FIXME: Fix the interface. */
     maxs = 100;
@@ -772,8 +816,7 @@ dds_return_t dds_takecdr_instance(dds_entity_t rd_or_cnd, struct ddsi_serdata **
  * @param si 存储样本信息的结构体指针
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_take_next(dds_entity_t reader, void **buf, dds_sample_info_t *si)
-{
+dds_return_t dds_take_next(dds_entity_t reader, void **buf, dds_sample_info_t *si) {
   uint32_t mask = DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE;
   // 调用dds_read_impl函数进行读取操作
   return dds_read_impl(true, reader, buf, 1u, 1u, si, mask, DDS_HANDLE_NIL, true, true);
@@ -787,8 +830,7 @@ dds_return_t dds_take_next(dds_entity_t reader, void **buf, dds_sample_info_t *s
  * @param si 存储样本信息的结构体指针
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_take_next_wl(dds_entity_t reader, void **buf, dds_sample_info_t *si)
-{
+dds_return_t dds_take_next_wl(dds_entity_t reader, void **buf, dds_sample_info_t *si) {
   uint32_t mask = DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE;
   // 调用dds_read_impl函数进行读取操作
   return dds_read_impl(true, reader, buf, 1u, 1u, si, mask, DDS_HANDLE_NIL, true, true);
@@ -802,11 +844,9 @@ dds_return_t dds_take_next_wl(dds_entity_t reader, void **buf, dds_sample_info_t
  * @param bufsz 缓冲区大小
  * @return dds_return_t 返回操作结果
  */
-dds_return_t dds_return_reader_loan(dds_reader *rd, void **buf, int32_t bufsz)
-{
+dds_return_t dds_return_reader_loan(dds_reader *rd, void **buf, int32_t bufsz) {
   // 如果缓冲区大小小于等于0，返回成功
-  if (bufsz <= 0)
-  {
+  if (bufsz <= 0) {
     /* No data whatsoever, or an invocation following a failed read/take call.  Read/take
        already take care of restoring the state prior to their invocation if they return
        no data.  Return late so invalid handles can be detected. */
@@ -821,21 +861,16 @@ dds_return_t dds_return_reader_loan(dds_reader *rd, void **buf, int32_t bufsz)
    但是在插入数据和触发waitsets期间并未使用该特定锁（那是observer_lock），
    因此在简化代码的同时保持更长时间是一个公平的权衡。 */
   ddsrt_mutex_lock(&rd->m_entity.m_mutex);
-  if (buf[0] != rd->m_loan)
-  {
+  if (buf[0] != rd->m_loan) {
     /* Not so much a loan as a buffer allocated by the middleware on behalf of the
        application.  So it really is no more than a sophisticated variant of "free". */
     ddsi_sertype_free_samples(st, buf, (size_t)bufsz, DDS_FREE_ALL);
     buf[0] = NULL;
-  }
-  else if (!rd->m_loan_out)
-  {
+  } else if (!rd->m_loan_out) {
     /* Trying to return a loan that has been returned already */
     ddsrt_mutex_unlock(&rd->m_entity.m_mutex);
     return DDS_RETCODE_PRECONDITION_NOT_MET;
-  }
-  else
-  {
+  } else {
     /* 仅释放样本中引用的内存，而不是样本本身。
        将它们清零以确保后续操作中不存在可能导致问题的悬空指针。FIXME: 应该有更好的方法 */
     ddsi_sertype_free_samples(st, buf, (size_t)bufsz, DDS_FREE_CONTENTS);

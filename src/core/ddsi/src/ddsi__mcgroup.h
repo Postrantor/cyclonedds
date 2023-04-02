@@ -14,25 +14,29 @@
 
 #include "dds/ddsi/ddsi_tran.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 struct ddsi_mcgroup_membership;
 
 /** @component multicast_group */
-struct ddsi_mcgroup_membership *ddsi_new_mcgroup_membership (void);
+struct ddsi_mcgroup_membership * ddsi_new_mcgroup_membership(void);
 
 /** @component multicast_group */
-void ddsi_free_mcgroup_membership (struct ddsi_mcgroup_membership *mship);
+void ddsi_free_mcgroup_membership(struct ddsi_mcgroup_membership * mship);
 
 /** @component multicast_group */
-int ddsi_join_mc (const struct ddsi_domaingv *gv, struct ddsi_mcgroup_membership *mship, struct ddsi_tran_conn * conn, const ddsi_locator_t *srcip, const ddsi_locator_t *mcip);
+int ddsi_join_mc(
+  const struct ddsi_domaingv * gv, struct ddsi_mcgroup_membership * mship,
+  struct ddsi_tran_conn * conn, const ddsi_locator_t * srcip, const ddsi_locator_t * mcip);
 
 /** @component multicast_group */
-int ddsi_leave_mc (const struct ddsi_domaingv *gv, struct ddsi_mcgroup_membership *mship, struct ddsi_tran_conn * conn, const ddsi_locator_t *srcip, const ddsi_locator_t *mcip);
+int ddsi_leave_mc(
+  const struct ddsi_domaingv * gv, struct ddsi_mcgroup_membership * mship,
+  struct ddsi_tran_conn * conn, const ddsi_locator_t * srcip, const ddsi_locator_t * mcip);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

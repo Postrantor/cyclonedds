@@ -12,7 +12,7 @@
 #ifndef DDSRT_SCHED_H
 #define DDSRT_SCHED_H
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -42,7 +42,7 @@ typedef enum {
 } ddsrt_sched_t;
 /** @} */
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

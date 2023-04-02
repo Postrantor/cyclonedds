@@ -12,15 +12,15 @@
 #ifndef DDSI_PLIST_H
 #define DDSI_PLIST_H
 
-#include "dds/ddsrt/bswap.h"
 #include "dds/ddsi/ddsi_feature_check.h"
-#include "dds/ddsi/ddsi_xqos.h"
-#include "dds/ddsi/ddsi_keyhash.h"
-#include "dds/ddsi/ddsi_tran.h" /* FIXME: eliminate */
-#include "dds/ddsi/ddsi_protocol.h"
 #include "dds/ddsi/ddsi_guid.h"
+#include "dds/ddsi/ddsi_keyhash.h"
+#include "dds/ddsi/ddsi_protocol.h"
+#include "dds/ddsi/ddsi_tran.h" /* FIXME: eliminate */
+#include "dds/ddsi/ddsi_xqos.h"
+#include "dds/ddsrt/bswap.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -29,43 +29,49 @@ extern "C" {
    list relative to current), allowing aliasing of the data. But that
    requires modifying the data. For string sequences the length does
    the same thing. */
-struct ddsi_locators_one {
-  struct ddsi_locators_one *next;
+struct ddsi_locators_one
+{
+  struct ddsi_locators_one * next;
   ddsi_locator_t loc;
 };
 
-typedef struct ddsi_locators {
+typedef struct ddsi_locators
+{
   uint32_t n;
-  struct ddsi_locators_one *first;
-  struct ddsi_locators_one *last;
+  struct ddsi_locators_one * first;
+  struct ddsi_locators_one * last;
 } ddsi_locators_t;
-
 
 #ifdef DDS_HAS_SECURITY
 
-typedef struct ddsi_tag {
-  char *name;
-  char *value;
+typedef struct ddsi_tag
+{
+  char * name;
+  char * value;
 } ddsi_tag_t;
 
-typedef struct ddsi_tagseq {
+typedef struct ddsi_tagseq
+{
   uint32_t n;
-  ddsi_tag_t *tags;
+  ddsi_tag_t * tags;
 } ddsi_tagseq_t;
 
-typedef struct ddsi_datatags {
+typedef struct ddsi_datatags
+{
   ddsi_tagseq_t tags;
 } ddsi_datatags_t;
 
-typedef struct ddsi_dataholder {
-  char *class_id;
+typedef struct ddsi_dataholder
+{
+  char * class_id;
   dds_propertyseq_t properties;
   dds_binarypropertyseq_t binary_properties;
 } ddsi_dataholder_t;
 
-typedef struct ddsi_dataholderseq {
+typedef struct ddsi_dataholderseq
+{
   uint32_t n;
-  ddsi_dataholder_t *tags;
+  ddsi_dataholder_t * tags;
 } ddsi_dataholderseq_t;
 
 typedef ddsi_dataholder_t ddsi_token_t;
@@ -84,25 +90,25 @@ typedef struct ddsi_security_info ddsi_security_info_t;
 
 #endif /* DDS_HAS_SECURITY */
 
-
 #ifdef DDS_HAS_SSM
 
-typedef struct ddsi_reader_favours_ssm {
+typedef struct ddsi_reader_favours_ssm
+{
   uint32_t state; /* default is false */
 } ddsi_reader_favours_ssm_t;
 
 #endif /* DDS_HAS_SSM */
-
 
 typedef struct ddsi_adlink_participant_version_info
 {
   uint32_t version;
   uint32_t flags;
   uint32_t unused[3];
-  char *internals;
+  char * internals;
 } ddsi_adlink_participant_version_info_t;
 
-typedef struct ddsi_plist {
+typedef struct ddsi_plist
+{
   uint64_t present;
   uint64_t aliased;
 
@@ -146,7 +152,7 @@ typedef struct ddsi_plist {
   ddsi_reader_favours_ssm_t reader_favours_ssm;
 #endif
   uint32_t domain_id;
-  char *domain_tag;
+  char * domain_tag;
   uint32_t cyclone_receive_buffer_size;
   unsigned char cyclone_requests_keyhash;
   unsigned char cyclone_redundant_networking;
@@ -161,7 +167,7 @@ typedef struct ddsi_plist {
  *
  * @param[out] dest  plist_t to be initialized.
  */
-void ddsi_plist_init_empty (ddsi_plist_t *dest);
+void ddsi_plist_init_empty(ddsi_plist_t * dest);
 
 /**
  * @brief Free memory owned by "ps"
@@ -175,9 +181,9 @@ void ddsi_plist_init_empty (ddsi_plist_t *dest);
  *
  * @param[in] ps   ddsi_plist_t for which to free memory
  */
-void ddsi_plist_fini (ddsi_plist_t *ps);
+void ddsi_plist_fini(ddsi_plist_t * ps);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

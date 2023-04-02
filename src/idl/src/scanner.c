@@ -9,99 +9,79 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "scanner.h"
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "idl/heap.h"
 #include "idl/processor.h"
 #include "idl/string.h"
-#include "scanner.h"
 #include "parser.h"
 
 /* treat every cr+lf, lf+cr, cr, lf sequence as a single newline */
-static int32_t
-have_newline(idl_pstate_t *pstate, const char *cur)
+static int32_t have_newline(idl_pstate_t * pstate, const char * cur)
 {
-  if (cur == pstate->scanner.limit)
-    return pstate->config.flags & IDL_WRITE ? -2 : 0;
+  if (cur == pstate->scanner.limit) return pstate->config.flags & IDL_WRITE ? -2 : 0;
   assert(cur < pstate->scanner.limit);
   if (cur[0] == '\n') {
-    if (cur < pstate->scanner.limit - 1)
-      return cur[1] == '\r' ? 2 : 1;
+    if (cur < pstate->scanner.limit - 1) return cur[1] == '\r' ? 2 : 1;
     return pstate->config.flags & IDL_WRITE ? -1 : 1;
   } else if (cur[0] == '\r') {
-    if (cur < pstate->scanner.limit - 1)
-      return cur[1] == '\n' ? 2 : 1;
+    if (cur < pstate->scanner.limit - 1) return cur[1] == '\n' ? 2 : 1;
     return pstate->config.flags & IDL_WRITE ? -1 : 1;
   }
   return 0;
 }
 
-static int32_t
-have_skip(idl_pstate_t *pstate, const char *cur)
+static int32_t have_skip(idl_pstate_t * pstate, const char * cur)
 {
   int cnt = 0;
-  if (cur == pstate->scanner.limit)
-    return pstate->config.flags & IDL_WRITE ? -3 : 0;
+  if (cur == pstate->scanner.limit) return pstate->config.flags & IDL_WRITE ? -3 : 0;
   assert(cur < pstate->scanner.limit);
-  if (*cur == '\\' && (cnt = have_newline(pstate, cur + 1)) > 0)
-    cnt++;
+  if (*cur == '\\' && (cnt = have_newline(pstate, cur + 1)) > 0) cnt++;
   return cnt;
 }
 
-static int32_t
-have_space(idl_pstate_t *pstate, const char *cur)
+static int32_t have_space(idl_pstate_t * pstate, const char * cur)
 {
-  if (cur == pstate->scanner.limit)
-    return pstate->config.flags & IDL_WRITE ? -2 : 0;
+  if (cur == pstate->scanner.limit) return pstate->config.flags & IDL_WRITE ? -2 : 0;
   assert(cur < pstate->scanner.limit);
-  if (*cur == ' ' || *cur == '\t' || *cur == '\f' || *cur == '\v')
-    return 1;
+  if (*cur == ' ' || *cur == '\t' || *cur == '\f' || *cur == '\v') return 1;
   return have_newline(pstate, cur);
 }
 
-static int32_t
-have_digit(idl_pstate_t *pstate, const char *cur)
+static int32_t have_digit(idl_pstate_t * pstate, const char * cur)
 {
-  if (cur == pstate->scanner.limit)
-    return pstate->config.flags & IDL_WRITE ? -1 : 0;
+  if (cur == pstate->scanner.limit) return pstate->config.flags & IDL_WRITE ? -1 : 0;
   assert(cur < pstate->scanner.limit);
   return (*cur >= '0' && *cur <= '9');
 }
 
-static int32_t
-have_alpha(idl_pstate_t *pstate, const char *cur)
+static int32_t have_alpha(idl_pstate_t * pstate, const char * cur)
 {
-  if (cur == pstate->scanner.limit)
-    return pstate->config.flags & IDL_WRITE ? -1 : 0;
+  if (cur == pstate->scanner.limit) return pstate->config.flags & IDL_WRITE ? -1 : 0;
   assert(cur < pstate->scanner.limit);
-  return (*cur >= 'a' && *cur <= 'z') ||
-         (*cur >= 'A' && *cur <= 'Z') ||
-         (*cur == '_');
+  return (*cur >= 'a' && *cur <= 'z') || (*cur >= 'A' && *cur <= 'Z') || (*cur == '_');
 }
 
-static int32_t
-have_alnum(idl_pstate_t *pstate, const char *cur)
+static int32_t have_alnum(idl_pstate_t * pstate, const char * cur)
 {
-  if (cur == pstate->scanner.limit)
-    return pstate->config.flags & IDL_WRITE ? -1 : 0;
+  if (cur == pstate->scanner.limit) return pstate->config.flags & IDL_WRITE ? -1 : 0;
   assert(cur < pstate->scanner.limit);
-  return (*cur >= 'a' && *cur <= 'z') ||
-         (*cur >= 'A' && *cur <= 'Z') ||
-         (*cur >= '0' && *cur <= '9') ||
-         (*cur == '_');
+  return (*cur >= 'a' && *cur <= 'z') || (*cur >= 'A' && *cur <= 'Z') ||
+         (*cur >= '0' && *cur <= '9') || (*cur == '_');
 }
 
-static void
-error(idl_pstate_t *pstate, const char *cur, const char *fmt, ...)
+static void error(idl_pstate_t * pstate, const char * cur, const char * fmt, ...)
 {
   int cnt;
-  const char *ptr = pstate->scanner.cursor;
+  const char * ptr = pstate->scanner.cursor;
   idl_location_t loc;
   va_list ap;
 
@@ -124,30 +104,28 @@ error(idl_pstate_t *pstate, const char *cur, const char *fmt, ...)
   va_end(ap);
 }
 
-static const char *
-next(idl_pstate_t *pstate, const char *cur)
+static const char * next(idl_pstate_t * pstate, const char * cur)
 {
   int cnt;
 
   /* might be positioned at newline */
   if ((cnt = have_newline(pstate, cur))) {
-    if (cnt < 0)
-      return pstate->scanner.limit;
+    if (cnt < 0) return pstate->scanner.limit;
     cur += (size_t)cnt;
   } else {
     cur++; /* skip to next character */
   }
   /* skip if positioned at line continuation sequence */
-  for (; (cnt = have_skip(pstate, cur)) > 0; cur += (size_t)cnt) ;
+  for (; (cnt = have_skip(pstate, cur)) > 0; cur += (size_t)cnt)
+    ;
 
   return cnt < 0 ? pstate->scanner.limit : cur;
 }
 
-static const char *
-move(idl_pstate_t *pstate, const char *cur)
+static const char * move(idl_pstate_t * pstate, const char * cur)
 {
   int cnt;
-  const char *ptr;
+  const char * ptr;
 
   assert(cur >= pstate->scanner.cursor && cur <= pstate->scanner.limit);
   for (ptr = pstate->scanner.cursor; ptr < cur; ptr += cnt) {
@@ -163,62 +141,52 @@ move(idl_pstate_t *pstate, const char *cur)
   return cur;
 }
 
-static int32_t
-peek(idl_pstate_t *pstate, const char *cur)
+static int32_t peek(idl_pstate_t * pstate, const char * cur)
 {
   int cnt;
 
   /* skip if positioned at line continuation sequences */
-  for (; (cnt = have_skip(pstate, cur)) > 0; cur += cnt) ;
+  for (; (cnt = have_skip(pstate, cur)) > 0; cur += cnt)
+    ;
 
-  if (cnt < 0 || cur == pstate->scanner.limit)
-    return '\0';
+  if (cnt < 0 || cur == pstate->scanner.limit) return '\0';
   return *cur;
 }
 
-static int32_t
-have(idl_pstate_t *pstate, const char *cur, const char *str)
+static int32_t have(idl_pstate_t * pstate, const char * cur, const char * str)
 {
   int cnt;
   size_t len, pos;
-  const char *lim = cur;
+  const char * lim = cur;
 
   for (pos = 0, len = strlen(str); pos < len; pos++, lim++) {
     /* skip any line continuation sequences */
-    while ((cnt = have_skip(pstate, lim)) > 0)
-      lim += cnt;
-    if (cnt < 0)
-      return cnt - (int)(len - pos);
-    if (str[pos] != *lim)
-      return 0;
+    while ((cnt = have_skip(pstate, lim)) > 0) lim += cnt;
+    if (cnt < 0) return cnt - (int)(len - pos);
+    if (str[pos] != *lim) return 0;
   }
 
   return (int)(lim - cur);
 }
 
-static int32_t
-need_refill(idl_pstate_t *pstate, const char *cur)
+static int32_t need_refill(idl_pstate_t * pstate, const char * cur)
 {
   return have_skip(pstate, cur) < 0;
 }
 
-static int32_t
-scan_line_comment(idl_pstate_t *pstate, const char *cur, const char **lim)
+static int32_t scan_line_comment(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   cur = next(pstate, cur);
   while ((cur = next(pstate, cur)) < pstate->scanner.limit) {
-    if (have_newline(pstate, cur))
-      break;
+    if (have_newline(pstate, cur)) break;
   }
 
-  if (need_refill(pstate, cur))
-    return IDL_RETCODE_NEED_REFILL;
+  if (need_refill(pstate, cur)) return IDL_RETCODE_NEED_REFILL;
   *lim = cur;
   return IDL_TOKEN_LINE_COMMENT;
 }
 
-static int32_t
-scan_comment(idl_pstate_t *pstate, const char *cur, const char **lim)
+static int32_t scan_comment(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   enum { initial, escape, asterisk, slash } state = initial;
 
@@ -260,8 +228,7 @@ scan_comment(idl_pstate_t *pstate, const char *cur, const char **lim)
   return IDL_RETCODE_SYNTAX_ERROR;
 }
 
-static int32_t
-scan_char_literal(idl_pstate_t *pstate, const char *cur, const char **lim)
+static int32_t scan_char_literal(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   int cnt = 0, esc = 0;
   size_t pos = 0;
@@ -293,8 +260,7 @@ scan_char_literal(idl_pstate_t *pstate, const char *cur, const char **lim)
   return IDL_TOKEN_CHAR_LITERAL;
 }
 
-static int32_t
-scan_string_literal(idl_pstate_t *pstate, const char *cur, const char **lim)
+static int32_t scan_string_literal(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   int cnt = 0, esc = 0;
 
@@ -321,9 +287,7 @@ scan_string_literal(idl_pstate_t *pstate, const char *cur, const char **lim)
   return IDL_TOKEN_STRING_LITERAL;
 }
 
-static int
-scan_floating_pt_literal(
-  idl_pstate_t *pstate, const char *cur, const char **lim)
+static int scan_floating_pt_literal(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   int32_t chr = peek(pstate, cur);
   enum { integer, fraction, exponent } state = integer;
@@ -342,20 +306,16 @@ scan_floating_pt_literal(
     chr = peek(pstate, cur);
     assert(chr != '\0');
     if (chr == '.') {
-      if (state != integer)
-        break;
+      if (state != integer) break;
       state = fraction;
     } else if (chr == 'e' || chr == 'E') {
-      const char *exp;
-      if (state != integer && state != fraction)
-        break;
+      const char * exp;
+      if (state != integer && state != fraction) break;
       state = exponent;
       exp = next(pstate, cur);
       chr = peek(pstate, exp);
-      if (chr == '+' || chr == '-')
-        exp = next(pstate, exp);
-      if (!have_digit(pstate, exp))
-        break;
+      if (chr == '+' || chr == '-') exp = next(pstate, exp);
+      if (!have_digit(pstate, exp)) break;
       cur = exp;
     } else if (chr < '0' || chr > '9') {
       assert(state != integer);
@@ -363,8 +323,7 @@ scan_floating_pt_literal(
     }
   }
 
-  if (need_refill(pstate, cur))
-    return IDL_RETCODE_NEED_REFILL;
+  if (need_refill(pstate, cur)) return IDL_RETCODE_NEED_REFILL;
   *lim = cur;
   return IDL_TOKEN_FLOATING_PT_LITERAL;
 }
@@ -373,8 +332,7 @@ static const char oct[] = "01234567";
 static const char dec[] = "0123456789";
 static const char hex[] = "0123456789abcdefABCDEF";
 
-static int
-scan_integer_literal(idl_pstate_t *pstate, const char *cur, const char **lim)
+static int scan_integer_literal(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   int32_t chr = peek(pstate, cur);
   const char *base, *off = cur;
@@ -397,56 +355,47 @@ scan_integer_literal(idl_pstate_t *pstate, const char *cur, const char **lim)
       if (chr == '.') {
         return scan_floating_pt_literal(pstate, off, lim);
       } else if (chr == 'e' || chr == 'E') {
-        const char *exp;
+        const char * exp;
         exp = next(pstate, cur);
         chr = peek(pstate, exp);
-        if (chr == '+' || chr == '-')
-          exp = next(pstate, exp);
-        if (!have_digit(pstate, exp))
-          break;
+        if (chr == '+' || chr == '-') exp = next(pstate, exp);
+        if (!have_digit(pstate, exp)) break;
         return scan_floating_pt_literal(pstate, off, lim);
       }
     }
-    if (!strchr(base, chr))
-      break;
+    if (!strchr(base, chr)) break;
   }
 
-  if (need_refill(pstate, cur))
-    return IDL_RETCODE_NEED_REFILL;
+  if (need_refill(pstate, cur)) return IDL_RETCODE_NEED_REFILL;
   *lim = cur;
   return IDL_TOKEN_INTEGER_LITERAL;
 }
 
-static int32_t
-scan_pp_number(idl_pstate_t *pstate, const char *cur, const char **lim)
+static int32_t scan_pp_number(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   int32_t chr;
 
-  if (*cur == '.')
-    cur = next(pstate, cur);
+  if (*cur == '.') cur = next(pstate, cur);
   while ((cur = next(pstate, cur)) < pstate->scanner.limit) {
     chr = peek(pstate, cur);
-    if (chr < '0' || chr > '9')
-      break;
+    if (chr < '0' || chr > '9') break;
   }
 
-  if (need_refill(pstate, cur))
-    return IDL_RETCODE_NEED_REFILL;
+  if (need_refill(pstate, cur)) return IDL_RETCODE_NEED_REFILL;
   *lim = cur;
   return IDL_TOKEN_PP_NUMBER;
 }
 
-static int32_t
-scan_identifier(idl_pstate_t *pstate, const char *cur, const char **lim)
+static int32_t scan_identifier(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   int32_t cnt = 0;
 
   do {
     *lim = cur;
     /* skip over any line continuation sequences */
-    for (; (cnt = have_skip(pstate, cur)) > 0; cur += cnt) ;
-    if ((cnt = have_alnum(pstate, cur)) == 0 &&
-        (cnt = have(pstate, cur, "_")) == 0)
+    for (; (cnt = have_skip(pstate, cur)) > 0; cur += cnt)
+      ;
+    if ((cnt = have_alnum(pstate, cur)) == 0 && (cnt = have(pstate, cur, "_")) == 0)
       break;
     else if (cnt < 0)
       return IDL_RETCODE_NEED_REFILL;
@@ -490,8 +439,7 @@ scan_identifier(idl_pstate_t *pstate, const char *cur, const char **lim)
    work around this problem, the lexer communicates different types of scope
    operators used by the parser to implement a specialized "scoped_name"
    version just for annotations. */
-static int32_t
-scan_scope(idl_pstate_t *pstate, const char *cur, const char **lim)
+static int32_t scan_scope(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   int32_t cnt;
 
@@ -499,12 +447,10 @@ scan_scope(idl_pstate_t *pstate, const char *cur, const char **lim)
   assert(cnt > 0);
   *lim = (cur += cnt);
 
-  switch(pstate->scanner.state) {
+  switch (pstate->scanner.state) {
     case IDL_SCAN_ANNOTATION_APPL:
     case IDL_SCAN_ANNOTATION_APPL_SCOPE:
-      if ((cnt = have_alpha(pstate, cur)) == 0 &&
-          (cnt = have(pstate, cur, "_")) == 0)
-      {
+      if ((cnt = have_alpha(pstate, cur)) == 0 && (cnt = have(pstate, cur, "_")) == 0) {
         pstate->scanner.state = IDL_SCAN_ANNOTATION_APPL_SCOPED_NAME;
         return IDL_TOKEN_SCOPE_NO_SPACE;
       } else if (cnt < 0) {
@@ -518,8 +464,7 @@ scan_scope(idl_pstate_t *pstate, const char *cur, const char **lim)
   }
 }
 
-static int32_t
-scan_at(idl_pstate_t *pstate, const char *cur, const char **lim)
+static int32_t scan_at(idl_pstate_t * pstate, const char * cur, const char ** lim)
 {
   int32_t cnt, code = '@';
 
@@ -534,10 +479,9 @@ scan_at(idl_pstate_t *pstate, const char *cur, const char **lim)
     code = IDL_TOKEN_ANNOTATION_SYMBOL;
   }
   /* detect @foo and @::foo, catch @annotation:: */
-  if ((cnt = have(pstate, cur, "::")) == 0 &&
-      (cnt = have_alpha(pstate, cur)) == 0 &&
-      (cnt = have(pstate, cur, "_")) == 0)
-  {
+  if (
+    (cnt = have(pstate, cur, "::")) == 0 && (cnt = have_alpha(pstate, cur)) == 0 &&
+    (cnt = have(pstate, cur, "_")) == 0) {
     if (code == '@')
       pstate->scanner.state = IDL_SCAN_GRAMMAR;
     else
@@ -551,22 +495,21 @@ scan_at(idl_pstate_t *pstate, const char *cur, const char **lim)
   }
 }
 
-static idl_retcode_t
-scan(idl_pstate_t *pstate, idl_lexeme_t *lex)
+static idl_retcode_t scan(idl_pstate_t * pstate, idl_lexeme_t * lex)
 {
   int chr, cnt, code = '\0';
   const char *cur, *lim = pstate->scanner.cursor;
 
   do {
     /* skip over any line continuation sequences */
-    for (; (cnt = have_skip(pstate, lim)) > 0; lim += cnt) ;
+    for (; (cnt = have_skip(pstate, lim)) > 0; lim += cnt)
+      ;
 
     move(pstate, lim);
     lex->location.first = pstate->scanner.position;
     lex->marker = cur = lim;
 
-    if (need_refill(pstate, lim))
-      return IDL_RETCODE_NEED_REFILL;
+    if (need_refill(pstate, lim)) return IDL_RETCODE_NEED_REFILL;
 
     chr = peek(pstate, cur);
     if (chr == '\0') {
@@ -638,64 +581,61 @@ scan(idl_pstate_t *pstate, idl_lexeme_t *lex)
     }
   } while (code == '\0');
 
-  if (code > 0)
-    move(pstate, lim);
+  if (code > 0) move(pstate, lim);
   lex->limit = lim;
   lex->location.last = pstate->scanner.position;
 
   return code;
 }
 
-static idl_retcode_t
-unescape(
-  idl_pstate_t *pstate, idl_lexeme_t *lex, char *str, size_t *len)
+static idl_retcode_t unescape(idl_pstate_t * pstate, idl_lexeme_t * lex, char * str, size_t * len)
 {
-  size_t pos=0;
+  size_t pos = 0;
   static const char seq[][2] = {
-    {'n','\n'}, /* newline */
-    {'t','\t'}, /* horizontal tab */
-    {'v','\v'}, /* vertical tab */
-    {'b','\b'}, /* backspace */
-    {'r','\r'}, /* carriage return */
-    {'f','\f'}, /* form feed */
-    {'a','\a'}, /* alert */
+    {'n', '\n'},  /* newline */
+    {'t', '\t'},  /* horizontal tab */
+    {'v', '\v'},  /* vertical tab */
+    {'b', '\b'},  /* backspace */
+    {'r', '\r'},  /* carriage return */
+    {'f', '\f'},  /* form feed */
+    {'a', '\a'},  /* alert */
     {'\\', '\\'}, /* backslash */
-    {'?', '\?'}, /* question mark */
+    {'?', '\?'},  /* question mark */
     {'\'', '\''}, /* single quote */
     {'\"', '\"'}, /* double quote */
-    {'\0', '\0'} /* terminator */
+    {'\0', '\0'}  /* terminator */
   };
 
-  for (size_t i=0; i < *len;) {
+  for (size_t i = 0; i < *len;) {
     if (str[i] == '\\') {
       i++;
       if (idl_isdigit(str[i], 8) != -1) {
         int c = 0;
-        for (size_t j=0; j < 3 && idl_isdigit(str[i], 8) != -1; j++)
-          c = (c*8) + idl_isdigit(str[i++], 8);
+        for (size_t j = 0; j < 3 && idl_isdigit(str[i], 8) != -1; j++)
+          c = (c * 8) + idl_isdigit(str[i++], 8);
         str[pos++] = (char)c;
       } else if (str[i] == 'x' || str[i] == 'X') {
         int c = 0;
         i++;
         if (idl_isdigit(str[i], 16) != -1) {
-          c = (c*16) + idl_isdigit(str[i++], 16);
-          if (idl_isdigit(str[i], 16) != -1)
-            c = (c*16) + idl_isdigit(str[i++], 16);
+          c = (c * 16) + idl_isdigit(str[i++], 16);
+          if (idl_isdigit(str[i], 16) != -1) c = (c * 16) + idl_isdigit(str[i++], 16);
           str[pos++] = (char)c;
         } else {
-          idl_error(pstate, &lex->location,
-            "\\x used with no following hex digits");
+          idl_error(pstate, &lex->location, "\\x used with no following hex digits");
           return IDL_RETCODE_SYNTAX_ERROR;
         }
       } else {
         size_t j;
-        for (j=0; seq[j][0] && seq[j][0] != str[i]; j++) ;
+        for (j = 0; seq[j][0] && seq[j][0] != str[i]; j++)
+          ;
         if (seq[j][0]) {
           str[pos++] = seq[j][1];
         } else {
           str[pos++] = str[i];
-          idl_warning(pstate, IDL_WARN_UNKNOWN_ESCAPE_SEQ, &lex->location,
-            "unknown escape sequence '\\%c'", str[i]);
+          idl_warning(
+            pstate, IDL_WARN_UNKNOWN_ESCAPE_SEQ, &lex->location, "unknown escape sequence '\\%c'",
+            str[i]);
         }
         i++;
       }
@@ -711,9 +651,8 @@ unescape(
   return IDL_RETCODE_OK;
 }
 
-static idl_retcode_t
-tokenize(
-  idl_pstate_t *pstate, idl_lexeme_t *lex, int32_t code, idl_token_t *tok)
+static idl_retcode_t tokenize(
+  idl_pstate_t * pstate, idl_lexeme_t * lex, int32_t code, idl_token_t * tok)
 {
   int cnt;
   char buf[32], *str = buf;
@@ -728,11 +667,10 @@ tokenize(
   }
 
   len = (size_t)((uintptr_t)lex->limit - (uintptr_t)lex->marker);
-  if (len >= sizeof(buf) && !(str = idl_malloc(len + 1)))
-    return IDL_RETCODE_NO_MEMORY;
+  if (len >= sizeof(buf) && !(str = idl_malloc(len + 1))) return IDL_RETCODE_NO_MEMORY;
 
   /* strip line continuation sequences */
-  for (const char *ptr = lex->marker; ptr < lex->limit; ) {
+  for (const char * ptr = lex->marker; ptr < lex->limit;) {
     if ((cnt = have_skip(pstate, ptr)) > 0) {
       ptr += cnt;
     } else {
@@ -751,18 +689,14 @@ tokenize(
       break;
     case IDL_TOKEN_IDENTIFIER:
       /* preprocessor identifiers are not IDL identifiers */
-      if ((unsigned)pstate->scanner.state & (unsigned)IDL_SCAN_DIRECTIVE)
-        break;
+      if ((unsigned)pstate->scanner.state & (unsigned)IDL_SCAN_DIRECTIVE) break;
       /* annotation names cannot be keywords, i.e. "@default" */
-      if (pstate->scanner.state == IDL_SCAN_ANNOTATION_APPL_NAME)
-        goto identifier;
-      if (pstate->scanner.state == IDL_SCAN_ANNOTATION_APPL_SCOPED_NAME)
-        goto identifier;
-      if (pstate->scanner.state == IDL_SCAN_ANNOTATION_NAME)
-        goto identifier;
+      if (pstate->scanner.state == IDL_SCAN_ANNOTATION_APPL_NAME) goto identifier;
+      if (pstate->scanner.state == IDL_SCAN_ANNOTATION_APPL_SCOPED_NAME) goto identifier;
+      if (pstate->scanner.state == IDL_SCAN_ANNOTATION_NAME) goto identifier;
       if ((code = idl_iskeyword(pstate, str, !(pstate->config.flags & IDL_FLAG_CASE_SENSITIVE))))
         break;
-identifier:
+    identifier:
       pstate->scanner.state = IDL_SCAN_GRAMMAR;
       code = IDL_TOKEN_IDENTIFIER;
       break;
@@ -773,18 +707,17 @@ identifier:
       memmove(str, str + 1, len);
       str[len] = '\0';
       if ((ret = unescape(pstate, lex, str, &len)) != IDL_RETCODE_OK) {
-        if (str != buf)
-          idl_free(str);
+        if (str != buf) idl_free(str);
         return ret;
       }
       break;
     case IDL_TOKEN_INTEGER_LITERAL: {
-      char *end = NULL;
+      char * end = NULL;
       tok->value.ullng = idl_strtoull(str, &end, 0);
       assert(end && *end == '\0');
     } break;
     case IDL_TOKEN_FLOATING_PT_LITERAL: {
-      char *end = NULL;
+      char * end = NULL;
       tok->value.ldbl = idl_strtold(str, &end);
       assert(end && *end == '\0');
     } break;
@@ -798,22 +731,19 @@ identifier:
     case IDL_TOKEN_STRING_LITERAL:
     case IDL_TOKEN_COMMENT:
     case IDL_TOKEN_LINE_COMMENT:
-      if (str == buf && !(str = idl_strdup(str)))
-        return IDL_RETCODE_NO_MEMORY;
+      if (str == buf && !(str = idl_strdup(str))) return IDL_RETCODE_NO_MEMORY;
       tok->value.str = str;
       break;
     case IDL_TOKEN_CHAR_LITERAL:
       if (len != 1) {
         idl_error(pstate, &lex->location, "invalid character constant");
-        if (str != buf)
-          idl_free(str);
+        if (str != buf) idl_free(str);
         return IDL_RETCODE_SYNTAX_ERROR;
       }
       tok->value.chr = *str;
       /* fall through */
     default:
-      if (str != buf)
-        idl_free(str);
+      if (str != buf) idl_free(str);
       break;
   }
 
@@ -822,15 +752,14 @@ identifier:
   return code;
 }
 
-idl_retcode_t
-idl_scan(idl_pstate_t *pstate, idl_token_t *tok)
+idl_retcode_t idl_scan(idl_pstate_t * pstate, idl_token_t * tok)
 {
   idl_retcode_t code;
   idl_lexeme_t lex;
 
   if ((code = scan(pstate, &lex)) < 0) {
     return code;
-  /* tokenize. sanitize by removing line continuation, etc */
+    /* tokenize. sanitize by removing line continuation, etc */
   } else if ((code = tokenize(pstate, &lex, code, tok)) < 0) {
     /* revert pstate on memory allocation failure */
     pstate->scanner.position = lex.location.first;

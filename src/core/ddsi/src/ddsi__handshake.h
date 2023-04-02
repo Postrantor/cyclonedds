@@ -14,7 +14,7 @@
 
 #include "ddsi__participant.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -24,21 +24,19 @@ struct ddsi_handshake;
 struct dssi_hsadmin;
 
 enum ddsi_handshake_state {
-    STATE_HANDSHAKE_IN_PROGRESS,
-    STATE_HANDSHAKE_TIMED_OUT,
-    STATE_HANDSHAKE_FAILED,
-    STATE_HANDSHAKE_PROCESSED,
-    STATE_HANDSHAKE_SEND_TOKENS,
-    STATE_HANDSHAKE_OK
+  STATE_HANDSHAKE_IN_PROGRESS,
+  STATE_HANDSHAKE_TIMED_OUT,
+  STATE_HANDSHAKE_FAILED,
+  STATE_HANDSHAKE_PROCESSED,
+  STATE_HANDSHAKE_SEND_TOKENS,
+  STATE_HANDSHAKE_OK
 };
 
 /* The handshake will not use the related handshake object after this callback
  * was executed. This means that it can be deleted in this callback. */
 typedef void (*ddsi_handshake_end_cb_t)(
-    struct ddsi_handshake *handshake,
-    struct ddsi_participant *pp,
-    struct ddsi_proxy_participant *proxypp,
-    enum ddsi_handshake_state result);
+  struct ddsi_handshake * handshake, struct ddsi_participant * pp,
+  struct ddsi_proxy_participant * proxypp, enum ddsi_handshake_state result);
 
 #ifdef DDS_HAS_SECURITY
 
@@ -53,7 +51,7 @@ typedef void (*ddsi_handshake_end_cb_t)(
  *
  * @param[in] handshake    The handshake.
  */
-void ddsi_handshake_release(struct ddsi_handshake *handshake);
+void ddsi_handshake_release(struct ddsi_handshake * handshake);
 
 /**
  * @brief Handle an authentication handshake message received from the remote participant.
@@ -68,7 +66,10 @@ void ddsi_handshake_release(struct ddsi_handshake *handshake);
  * @param[in] proxypp    The remote participant.
  * @param[in] msg        The handshake message received.
  */
-void ddsi_handshake_handle_message(struct ddsi_handshake *handshake, const struct ddsi_participant *pp, const struct ddsi_proxy_participant *proxypp, const struct ddsi_participant_generic_message *msg);
+void ddsi_handshake_handle_message(
+  struct ddsi_handshake * handshake, const struct ddsi_participant * pp,
+  const struct ddsi_proxy_participant * proxypp,
+  const struct ddsi_participant_generic_message * msg);
 
 /**
  * @brief Notify the handshake that crypto tokens have been received.
@@ -81,7 +82,7 @@ void ddsi_handshake_handle_message(struct ddsi_handshake *handshake, const struc
  *
  * @param[in] handshake     The handshake.
  */
-void ddsi_handshake_crypto_tokens_received(struct ddsi_handshake *handshake);
+void ddsi_handshake_crypto_tokens_received(struct ddsi_handshake * handshake);
 
 /**
  * @brief Get the shared secret handle.
@@ -96,7 +97,7 @@ void ddsi_handshake_crypto_tokens_received(struct ddsi_handshake *handshake);
  *
  * @returns handle to the shared sercet.
  */
-int64_t ddsi_handshake_get_shared_secret(const struct ddsi_handshake *handshake);
+int64_t ddsi_handshake_get_shared_secret(const struct ddsi_handshake * handshake);
 
 /**
  * @brief Get the handshake handle
@@ -109,7 +110,7 @@ int64_t ddsi_handshake_get_shared_secret(const struct ddsi_handshake *handshake)
  *
  * @returns The handshake handle.
  */
-int64_t ddsi_handshake_get_handle(const struct ddsi_handshake *handshake);
+int64_t ddsi_handshake_get_handle(const struct ddsi_handshake * handshake);
 
 /**
  * @brief Create and start the handshake for the participants
@@ -126,7 +127,9 @@ int64_t ddsi_handshake_get_handle(const struct ddsi_handshake *handshake);
  * @param[in] callback   The callback function.
  *
  */
-void ddsi_handshake_register(struct ddsi_participant *pp, struct ddsi_proxy_participant *proxypp, ddsi_handshake_end_cb_t callback);
+void ddsi_handshake_register(
+  struct ddsi_participant * pp, struct ddsi_proxy_participant * proxypp,
+  ddsi_handshake_end_cb_t callback);
 
 /**
  * @brief Remove the handshake associated with the specified participants.
@@ -140,7 +143,7 @@ void ddsi_handshake_register(struct ddsi_participant *pp, struct ddsi_proxy_part
  * @param[in] proxypp    The remote participant.
  *
  */
-void ddsi_handshake_remove(struct ddsi_participant *pp, struct ddsi_proxy_participant *proxypp);
+void ddsi_handshake_remove(struct ddsi_participant * pp, struct ddsi_proxy_participant * proxypp);
 
 /**
  * @brief Searches for the handshake associated with the specified participants
@@ -154,7 +157,8 @@ void ddsi_handshake_remove(struct ddsi_participant *pp, struct ddsi_proxy_partic
  *
  * @returns The handshake
  */
-struct ddsi_handshake * ddsi_handshake_find(struct ddsi_participant *pp, struct ddsi_proxy_participant *proxypp);
+struct ddsi_handshake * ddsi_handshake_find(
+  struct ddsi_participant * pp, struct ddsi_proxy_participant * proxypp);
 
 /**
  * @brief Initialize the handshake administration
@@ -162,7 +166,7 @@ struct ddsi_handshake * ddsi_handshake_find(struct ddsi_participant *pp, struct 
  *
  * @param[in] gv         The global parameters
  */
-void ddsi_handshake_admin_init(struct ddsi_domaingv *gv);
+void ddsi_handshake_admin_init(struct ddsi_domaingv * gv);
 
 /**
  * @brief Stop handshake background processing.
@@ -170,7 +174,7 @@ void ddsi_handshake_admin_init(struct ddsi_domaingv *gv);
  *
  * @param[in] gv         The global parameters
  */
-void ddsi_handshake_admin_stop(struct ddsi_domaingv *gv);
+void ddsi_handshake_admin_stop(struct ddsi_domaingv * gv);
 
 /**
  * @brief Deinitialze the handshake administration.
@@ -178,53 +182,54 @@ void ddsi_handshake_admin_stop(struct ddsi_domaingv *gv);
  *
  * @param[in] gv         The global parameters
  */
-void ddsi_handshake_admin_deinit(struct ddsi_domaingv *gv);
+void ddsi_handshake_admin_deinit(struct ddsi_domaingv * gv);
 
 #else /* DDS_HAS_SECURITY */
 
 #include "dds/ddsi/ddsi_unused.h"
 
 /** @component security_handshake */
-inline void ddsi_handshake_register(UNUSED_ARG(struct ddsi_participant *pp), UNUSED_ARG(struct ddsi_proxy_participant *proxypp), UNUSED_ARG(ddsi_handshake_end_cb_t callback))
+inline void ddsi_handshake_register(
+  UNUSED_ARG(struct ddsi_participant * pp), UNUSED_ARG(struct ddsi_proxy_participant * proxypp),
+  UNUSED_ARG(ddsi_handshake_end_cb_t callback))
 {
 }
 
 /** @component security_handshake */
-inline void ddsi_handshake_release(UNUSED_ARG(struct ddsi_handshake *handshake))
-{
-}
+inline void ddsi_handshake_release(UNUSED_ARG(struct ddsi_handshake * handshake)) {}
 
 /** @component security_handshake */
-inline void ddsi_handshake_crypto_tokens_received(UNUSED_ARG(struct ddsi_handshake *handshake))
-{
-}
+inline void ddsi_handshake_crypto_tokens_received(UNUSED_ARG(struct ddsi_handshake * handshake)) {}
 
 /** @component security_handshake */
-inline int64_t ddsi_handshake_get_shared_secret(UNUSED_ARG(const struct ddsi_handshake *handshake))
+inline int64_t ddsi_handshake_get_shared_secret(UNUSED_ARG(const struct ddsi_handshake * handshake))
 {
   return 0;
 }
 
 /** @component security_handshake */
-inline int64_t ddsi_handshake_get_handle(UNUSED_ARG(const struct ddsi_handshake *handshake))
+inline int64_t ddsi_handshake_get_handle(UNUSED_ARG(const struct ddsi_handshake * handshake))
 {
   return 0;
 }
 
 /** @component security_handshake */
-inline void ddsi_handshake_remove(UNUSED_ARG(struct ddsi_participant *pp), UNUSED_ARG(struct ddsi_proxy_participant *proxypp), UNUSED_ARG(struct ddsi_handshake *handshake))
+inline void ddsi_handshake_remove(
+  UNUSED_ARG(struct ddsi_participant * pp), UNUSED_ARG(struct ddsi_proxy_participant * proxypp),
+  UNUSED_ARG(struct ddsi_handshake * handshake))
 {
 }
 
 /** @component security_handshake */
-inline struct ddsi_handshake * ddsi_handshake_find(UNUSED_ARG(struct ddsi_participant *pp), UNUSED_ARG(struct ddsi_proxy_participant *proxypp))
+inline struct ddsi_handshake * ddsi_handshake_find(
+  UNUSED_ARG(struct ddsi_participant * pp), UNUSED_ARG(struct ddsi_proxy_participant * proxypp))
 {
   return NULL;
 }
 
 #endif /* DDS_HAS_SECURITY */
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

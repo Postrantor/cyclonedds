@@ -9,13 +9,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#include "dds/ddsrt/heap.h"
 #include "dds/ddsrt/ifaddrs.h"
 
-void
-ddsrt_freeifaddrs(ddsrt_ifaddrs_t *ifa)
+#include "dds/ddsrt/heap.h"
+
+void ddsrt_freeifaddrs(ddsrt_ifaddrs_t * ifa)
 {
-  ddsrt_ifaddrs_t *next;
+  ddsrt_ifaddrs_t * next;
 
   while (ifa != NULL) {
     next = ifa->next;
@@ -27,4 +27,3 @@ ddsrt_freeifaddrs(ddsrt_ifaddrs_t *ifa)
     ifa = next;
   }
 }
-

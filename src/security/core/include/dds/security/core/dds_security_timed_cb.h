@@ -13,11 +13,11 @@
 #ifndef DDS_SECURITY_TIMED_CALLBACK_H
 #define DDS_SECURITY_TIMED_CALLBACK_H
 
-#include "dds/export.h"
-#include "dds/ddsrt/time.h"
 #include "dds/ddsi/ddsi_xevent.h"
+#include "dds/ddsrt/time.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -34,10 +34,9 @@ struct dds_security_timed_dispatcher;
  * 2. The related dispatcher is being deleted.
  */
 typedef enum {
-    DDS_SECURITY_TIMED_CB_KIND_TIMEOUT,
-    DDS_SECURITY_TIMED_CB_KIND_DELETE
+  DDS_SECURITY_TIMED_CB_KIND_TIMEOUT,
+  DDS_SECURITY_TIMED_CB_KIND_DELETE
 } dds_security_timed_cb_kind_t;
-
 
 /**
  * Template for the timed callback functions.
@@ -54,7 +53,9 @@ typedef enum {
  * @param arg           User data, provided when adding a callback to the
  *                      related dispatcher.
  */
-typedef void (*dds_security_timed_cb_t) (dds_security_time_event_handle_t timer, dds_time_t trigger_time, dds_security_timed_cb_kind_t kind, void *arg);
+typedef void (*dds_security_timed_cb_t)(
+  dds_security_time_event_handle_t timer, dds_time_t trigger_time,
+  dds_security_timed_cb_kind_t kind, void * arg);
 
 /**
  * Create a new dispatcher for timed callbacks.
@@ -63,7 +64,8 @@ typedef void (*dds_security_timed_cb_t) (dds_security_time_event_handle_t timer,
  * @return              New (disabled) timed callbacks dispatcher.
  * @param evq           The event queue used to handle the timers.
  */
-DDS_EXPORT struct dds_security_timed_dispatcher * dds_security_timed_dispatcher_new(struct ddsi_xeventq *evq);
+DDS_EXPORT struct dds_security_timed_dispatcher * dds_security_timed_dispatcher_new(
+  struct ddsi_xeventq * evq);
 
 /**
  * Frees the given dispatcher.
@@ -74,7 +76,7 @@ DDS_EXPORT struct dds_security_timed_dispatcher * dds_security_timed_dispatcher_
  * @param d             The dispatcher to free.
  *
  */
-DDS_EXPORT void dds_security_timed_dispatcher_free(struct dds_security_timed_dispatcher *d);
+DDS_EXPORT void dds_security_timed_dispatcher_free(struct dds_security_timed_dispatcher * d);
 
 /**
  * Enables a dispatcher for timed callbacks.
@@ -96,7 +98,7 @@ DDS_EXPORT void dds_security_timed_dispatcher_free(struct dds_security_timed_dis
  * @param d             The dispatcher to enable.
  *
  */
-DDS_EXPORT void dds_security_timed_dispatcher_enable(struct dds_security_timed_dispatcher *d);
+DDS_EXPORT void dds_security_timed_dispatcher_enable(struct dds_security_timed_dispatcher * d);
 
 /**
  * Disables a dispatcher for timed callbacks.
@@ -117,7 +119,7 @@ DDS_EXPORT void dds_security_timed_dispatcher_enable(struct dds_security_timed_d
  *
  * @return true if disabled, false if it was already disabled
  */
-DDS_EXPORT bool dds_security_timed_dispatcher_disable(struct dds_security_timed_dispatcher *d);
+DDS_EXPORT bool dds_security_timed_dispatcher_disable(struct dds_security_timed_dispatcher * d);
 
 /**
  * Adds a timed callback to a dispatcher.
@@ -143,7 +145,9 @@ DDS_EXPORT bool dds_security_timed_dispatcher_disable(struct dds_security_timed_
  *
  * @return              The timer.
  */
-DDS_EXPORT dds_security_time_event_handle_t dds_security_timed_dispatcher_add(struct dds_security_timed_dispatcher *d, dds_security_timed_cb_t cb, dds_time_t trigger_time, void *arg);
+DDS_EXPORT dds_security_time_event_handle_t dds_security_timed_dispatcher_add(
+  struct dds_security_timed_dispatcher * d, dds_security_timed_cb_t cb, dds_time_t trigger_time,
+  void * arg);
 
 /**
  * Removes a timer from the dispatcher.
@@ -154,9 +158,10 @@ DDS_EXPORT dds_security_time_event_handle_t dds_security_timed_dispatcher_add(st
  * @param d             The dispatcher to add the callback to.
  * @param timer         The timer that has to removed.
  */
-DDS_EXPORT void dds_security_timed_dispatcher_remove(struct dds_security_timed_dispatcher *d, dds_security_time_event_handle_t timer);
+DDS_EXPORT void dds_security_timed_dispatcher_remove(
+  struct dds_security_timed_dispatcher * d, dds_security_time_event_handle_t timer);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

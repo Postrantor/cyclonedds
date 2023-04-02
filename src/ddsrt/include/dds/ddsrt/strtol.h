@@ -14,8 +14,8 @@
 
 #include <stdint.h>
 
-#include "dds/export.h"
 #include "dds/ddsrt/retcode.h"
+#include "dds/export.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -32,8 +32,7 @@ extern "C" {
  *
  * @returns The integer value for the character, or -1 in case @chr cannot be translated to a numeric value
  */
-DDS_EXPORT int32_t
-ddsrt_todigit(const int chr);
+DDS_EXPORT int32_t ddsrt_todigit(const int chr);
 
 /**
  * @brief Convert a string to a long long integer.
@@ -61,11 +60,7 @@ ddsrt_todigit(const int chr);
  *             String converted to an integer, but was out of range.
  */
 DDS_EXPORT dds_return_t
-ddsrt_strtoll(
-  const char *str,
-  char **endptr,
-  int32_t base,
-  long long *llng);
+ddsrt_strtoll(const char * str, char ** endptr, int32_t base, long long * llng);
 
 /**
  * @brief Convert a string to an unsigned long long integer.
@@ -93,11 +88,7 @@ ddsrt_strtoll(
  *             String converted to an integer, but was out of range.
  */
 DDS_EXPORT dds_return_t
-ddsrt_strtoull(
-  const char *str,
-  char **endptr,
-  int32_t base,
-  unsigned long long *ullng);
+ddsrt_strtoull(const char * str, char ** endptr, int32_t base, unsigned long long * ullng);
 
 /**
  * @brief Convert a string to a long long integer.
@@ -114,10 +105,7 @@ ddsrt_strtoull(
  * @retval DDS_RETCODE_OUT_OF_RANGE
  *             String converted to an integer, but was out of range.
  */
-DDS_EXPORT dds_return_t
-ddsrt_atoll(
-  const char *str,
-  long long *llng);
+DDS_EXPORT dds_return_t ddsrt_atoll(const char * str, long long * llng);
 
 /**
  * @brief Convert a string to an unsigned long long integer.
@@ -134,10 +122,7 @@ ddsrt_atoll(
  * @retval DDS_RETCODE_OUT_OF_RANGE
  *             String converted to an integer, but was out of range.
  */
-DDS_EXPORT dds_return_t
-ddsrt_atoull(
-  const char *str,
-  unsigned long long *ullng);
+DDS_EXPORT dds_return_t ddsrt_atoull(const char * str, unsigned long long * ullng);
 
 /**
  * @brief Convert a long long integer into a string.
@@ -150,12 +135,7 @@ ddsrt_atoull(
  *
  * @returns The value of @str on success, otherwise NULL.
  */
-DDS_EXPORT char *
-ddsrt_lltostr(
-  long long num,
-  char *str,
-  size_t len,
-  char **endptr);
+DDS_EXPORT char * ddsrt_lltostr(long long num, char * str, size_t len, char ** endptr);
 
 /**
  * @brief Convert an unsigned long long integer into a string.
@@ -168,12 +148,7 @@ ddsrt_lltostr(
  *
  * @returns The value of @str on success, otherwise NULL.
  */
-DDS_EXPORT char *
-ddsrt_ulltostr(
-  unsigned long long num,
-  char *str,
-  size_t len,
-  char **endptr);
+DDS_EXPORT char * ddsrt_ulltostr(unsigned long long num, char * str, size_t len, char ** endptr);
 
 #if defined(__cplusplus)
 }

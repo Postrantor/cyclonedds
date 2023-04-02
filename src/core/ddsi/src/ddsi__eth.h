@@ -14,14 +14,16 @@
 
 #include "dds/ddsi/ddsi_tran.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 /** @component ethernet */
-int ddsi_eth_enumerate_interfaces(struct ddsi_tran_factory * fact, enum ddsi_transport_selector transport_selector, ddsrt_ifaddrs_t **ifs);
+int ddsi_eth_enumerate_interfaces(
+  struct ddsi_tran_factory * fact, enum ddsi_transport_selector transport_selector,
+  ddsrt_ifaddrs_t ** ifs);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

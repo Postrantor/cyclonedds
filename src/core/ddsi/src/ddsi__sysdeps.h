@@ -12,23 +12,24 @@
 #ifndef DDSI__SYSDEPS_H
 #define DDSI__SYSDEPS_H
 
-#include "dds/export.h"
 #include "dds/ddsrt/threads.h"
+#include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-#define ASSERT_RDLOCK_HELD(x) ((void) 0)
-#define ASSERT_WRLOCK_HELD(x) ((void) 0)
-#define ASSERT_MUTEX_HELD(x) ((void) 0)
+#define ASSERT_RDLOCK_HELD(x) ((void)0)
+#define ASSERT_WRLOCK_HELD(x) ((void)0)
+#define ASSERT_MUTEX_HELD(x) ((void)0)
 
 struct ddsrt_log_cfg;
 
 /** @component debug_support */
-void ddsi_log_stacktrace (const struct ddsrt_log_cfg *logcfg, const char *name, ddsrt_thread_t tid);
+void ddsi_log_stacktrace(
+  const struct ddsrt_log_cfg * logcfg, const char * name, ddsrt_thread_t tid);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

@@ -17,17 +17,18 @@
 #ifdef DDS_HAS_TYPE_DISCOVERY
 
 #include <stdint.h>
-#include "dds/ddsrt/time.h"
-#include "dds/ddsrt/hopscotch.h"
-#include "dds/ddsrt/mh3.h"
+
 #include "dds/ddsi/ddsi_serdata.h"
 #include "dds/ddsi/ddsi_sertype.h"
+#include "dds/ddsi/ddsi_typelib.h"
 #include "dds/ddsi/ddsi_xqos.h"
 #include "dds/ddsi/ddsi_xt_typeinfo.h"
 #include "dds/ddsi/ddsi_xt_typelookup.h"
-#include "dds/ddsi/ddsi_typelib.h"
+#include "dds/ddsrt/hopscotch.h"
+#include "dds/ddsrt/mh3.h"
+#include "dds/ddsrt/time.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -48,7 +49,9 @@ struct ddsi_generic_proxy_endpoint;
  * Send a type lookup request message in order to request type information for the
  * provided type identifier.
  */
-bool ddsi_tl_request_type (struct ddsi_domaingv * const gv, const ddsi_typeid_t *type_id, const ddsi_guid_t *proxypp_guid, ddsi_type_include_deps_t deps);
+bool ddsi_tl_request_type(
+  struct ddsi_domaingv * const gv, const ddsi_typeid_t * type_id, const ddsi_guid_t * proxypp_guid,
+  ddsi_type_include_deps_t deps);
 
 /**
  * @component type_lookup
@@ -58,14 +61,16 @@ bool ddsi_tl_request_type (struct ddsi_domaingv * const gv, const ddsi_typeid_t 
  * lookup reply message. In case none of the requested types is known,
  * an empty reply message will be sent.
  */
-void ddsi_tl_handle_request (struct ddsi_domaingv *gv, struct ddsi_serdata *sample_common);
+void ddsi_tl_handle_request(struct ddsi_domaingv * gv, struct ddsi_serdata * sample_common);
 
 /**
  * @component type_lookup
  *
  * Add type information from a type lookup reply to the type library.
  */
-void ddsi_tl_add_types (struct ddsi_domaingv *gv, const DDS_Builtin_TypeLookup_Reply *reply, struct ddsi_generic_proxy_endpoint ***gpe_match_upd, uint32_t *n_match_upd);
+void ddsi_tl_add_types(
+  struct ddsi_domaingv * gv, const DDS_Builtin_TypeLookup_Reply * reply,
+  struct ddsi_generic_proxy_endpoint *** gpe_match_upd, uint32_t * n_match_upd);
 
 /**
  * @component type_lookup
@@ -74,9 +79,9 @@ void ddsi_tl_add_types (struct ddsi_domaingv *gv, const DDS_Builtin_TypeLookup_R
  * reply are registered in the local type administation and referenced
  * from the corresponding proxy endpoints.
  */
-void ddsi_tl_handle_reply (struct ddsi_domaingv *gv, struct ddsi_serdata *sample_common);
+void ddsi_tl_handle_reply(struct ddsi_domaingv * gv, struct ddsi_serdata * sample_common);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif /* DDS_HAS_TYPE_DISCOVERY */

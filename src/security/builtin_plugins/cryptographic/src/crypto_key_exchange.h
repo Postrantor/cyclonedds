@@ -17,11 +17,9 @@
 /**
  * @brief Allocation function for implementer structure (with internal variables) transparently.
  */
-dds_security_crypto_key_exchange *
-dds_security_crypto_key_exchange__alloc(
-    const dds_security_cryptography *crypto);
+dds_security_crypto_key_exchange * dds_security_crypto_key_exchange__alloc(
+  const dds_security_cryptography * crypto);
 
-void dds_security_crypto_key_exchange__dealloc(
-    dds_security_crypto_key_exchange *instance);
+void dds_security_crypto_key_exchange__dealloc(dds_security_crypto_key_exchange * instance);
 
 #endif /* CRYPTO_KEY_EXCHANGE_H */

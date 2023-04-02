@@ -12,29 +12,31 @@
 #ifndef DDSI__LAT_ESTIM_H
 #define DDSI__LAT_ESTIM_H
 
-#include "dds/ddsi/ddsi_log.h"
 #include "dds/ddsi/ddsi_lat_estim.h"
+#include "dds/ddsi/ddsi_log.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 /** @component latency_estim */
-void ddsi_lat_estim_init (struct ddsi_lat_estim *le);
+void ddsi_lat_estim_init(struct ddsi_lat_estim * le);
 
 /** @component latency_estim */
-void ddsi_lat_estim_fini (struct ddsi_lat_estim *le);
+void ddsi_lat_estim_fini(struct ddsi_lat_estim * le);
 
 /** @component latency_estim */
-void ddsi_lat_estim_update (struct ddsi_lat_estim *le, int64_t est);
+void ddsi_lat_estim_update(struct ddsi_lat_estim * le, int64_t est);
 
 /** @component latency_estim */
-double ddsi_lat_estim_current (const struct ddsi_lat_estim *le);
+double ddsi_lat_estim_current(const struct ddsi_lat_estim * le);
 
 /** @component latency_estim */
-int ddsi_lat_estim_log (uint32_t logcat, const struct ddsrt_log_cfg *logcfg, const char *tag, const struct ddsi_lat_estim *le);
+int ddsi_lat_estim_log(
+  uint32_t logcat, const struct ddsrt_log_cfg * logcfg, const char * tag,
+  const struct ddsi_lat_estim * le);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

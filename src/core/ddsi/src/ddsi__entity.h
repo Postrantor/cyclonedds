@@ -12,20 +12,20 @@
 #ifndef DDSI__ENTITY_H
 #define DDSI__ENTITY_H
 
+#include "dds/ddsi/ddsi_entity.h"
+#include "dds/ddsi/ddsi_guid.h"
+#include "dds/ddsi/ddsi_protocol.h"
+#include "dds/ddsi/ddsi_xqos.h"
+#include "dds/ddsrt/atomics.h"
 #include "dds/export.h"
 #include "dds/features.h"
 
-#include "dds/ddsrt/atomics.h"
-#include "dds/ddsi/ddsi_protocol.h"
-#include "dds/ddsi/ddsi_xqos.h"
-#include "dds/ddsi/ddsi_entity.h"
-#include "dds/ddsi/ddsi_guid.h"
-
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-struct ddsi_alive_state {
+struct ddsi_alive_state
+{
   bool alive;
   uint32_t vclock;
 };
@@ -56,32 +56,35 @@ struct ddsi_alive_state {
    data in a delivery queue.  This is dealt by requeueing garbage
    collection and sending bubbles through the delivery queue. */
 
+/** @component ddsi_generic_entity */
+bool ddsi_is_null_guid(const ddsi_guid_t * guid);
 
 /** @component ddsi_generic_entity */
-bool ddsi_is_null_guid (const ddsi_guid_t *guid);
+int ddsi_is_builtin_entityid(ddsi_entityid_t id, ddsi_vendorid_t vendorid);
 
 /** @component ddsi_generic_entity */
-int ddsi_is_builtin_entityid (ddsi_entityid_t id, ddsi_vendorid_t vendorid);
+bool ddsi_update_qos_locked(
+  struct ddsi_entity_common * e, dds_qos_t * ent_qos, const dds_qos_t * xqos,
+  ddsrt_wctime_t timestamp);
 
 /** @component ddsi_generic_entity */
-bool ddsi_update_qos_locked (struct ddsi_entity_common *e, dds_qos_t *ent_qos, const dds_qos_t *xqos, ddsrt_wctime_t timestamp);
+int ddsi_set_topic_type_name(dds_qos_t * xqos, const char * topic_name, const char * type_name);
 
 /** @component ddsi_generic_entity */
-int ddsi_set_topic_type_name (dds_qos_t *xqos, const char * topic_name, const char * type_name);
+int ddsi_compare_entityid(const void * a, const void * b);
 
 /** @component ddsi_generic_entity */
-int ddsi_compare_entityid (const void *a, const void *b);
+int ddsi_compare_guid(const void * va, const void * vb);
 
 /** @component ddsi_generic_entity */
-int ddsi_compare_guid (const void *va, const void *vb);
+void ddsi_entity_common_init(
+  struct ddsi_entity_common * e, struct ddsi_domaingv * gv, const struct ddsi_guid * guid,
+  enum ddsi_entity_kind kind, ddsrt_wctime_t tcreate, ddsi_vendorid_t vendorid, bool onlylocal);
 
 /** @component ddsi_generic_entity */
-void ddsi_entity_common_init (struct ddsi_entity_common *e, struct ddsi_domaingv *gv, const struct ddsi_guid *guid, enum ddsi_entity_kind kind, ddsrt_wctime_t tcreate, ddsi_vendorid_t vendorid, bool onlylocal);
+void ddsi_entity_common_fini(struct ddsi_entity_common * e);
 
-/** @component ddsi_generic_entity */
-void ddsi_entity_common_fini (struct ddsi_entity_common *e);
-
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

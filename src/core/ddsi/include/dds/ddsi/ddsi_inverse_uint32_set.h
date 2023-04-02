@@ -14,17 +14,18 @@
 
 #include "dds/ddsrt/avl.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-struct ddsi_inverse_uint32_set {
+struct ddsi_inverse_uint32_set
+{
   ddsrt_avl_tree_t ids;
   uint32_t cursor;
   uint32_t min, max;
 };
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

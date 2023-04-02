@@ -22,12 +22,13 @@
  * @param entity 实体，可以是读取器、写入器、发布者或订阅者
  * @return dds_return_t 返回操作结果，当前未实现，返回DDS_RETCODE_UNSUPPORTED
  */
-dds_return_t dds_begin_coherent(dds_entity_t entity)
-{
+dds_return_t dds_begin_coherent(dds_entity_t entity) {
   // 定义支持的实体类型数组
-  static const dds_entity_kind_t kinds[] = {DDS_KIND_READER, DDS_KIND_WRITER, DDS_KIND_PUBLISHER, DDS_KIND_SUBSCRIBER};
+  static const dds_entity_kind_t kinds[] = {DDS_KIND_READER, DDS_KIND_WRITER, DDS_KIND_PUBLISHER,
+                                            DDS_KIND_SUBSCRIBER};
   // 调用通用未实现操作函数，并传入实体类型数组
-  return dds_generic_unimplemented_operation_manykinds(entity, sizeof(kinds) / sizeof(kinds[0]), kinds);
+  return dds_generic_unimplemented_operation_manykinds(entity, sizeof(kinds) / sizeof(kinds[0]),
+                                                       kinds);
 }
 
 /**
@@ -36,10 +37,11 @@ dds_return_t dds_begin_coherent(dds_entity_t entity)
  * @param entity 实体，可以是读取器、写入器、发布者或订阅者
  * @return dds_return_t 返回操作结果，当前未实现，返回DDS_RETCODE_UNSUPPORTED
  */
-dds_return_t dds_end_coherent(dds_entity_t entity)
-{
+dds_return_t dds_end_coherent(dds_entity_t entity) {
   // 定义支持的实体类型数组
-  static const dds_entity_kind_t kinds[] = {DDS_KIND_READER, DDS_KIND_WRITER, DDS_KIND_PUBLISHER, DDS_KIND_SUBSCRIBER};
+  static const dds_entity_kind_t kinds[] = {DDS_KIND_READER, DDS_KIND_WRITER, DDS_KIND_PUBLISHER,
+                                            DDS_KIND_SUBSCRIBER};
   // 调用通用未实现操作函数，并传入实体类型数组
-  return dds_generic_unimplemented_operation_manykinds(entity, sizeof(kinds) / sizeof(kinds[0]), kinds);
+  return dds_generic_unimplemented_operation_manykinds(entity, sizeof(kinds) / sizeof(kinds[0]),
+                                                       kinds);
 }

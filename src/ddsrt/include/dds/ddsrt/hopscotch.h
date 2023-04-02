@@ -16,7 +16,7 @@
 
 #include "dds/export.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -30,83 +30,105 @@ extern "C" {
  * When proper distributed hash values are generated, then hopscotch
  * works nice and quickly.
  */
-typedef uint32_t (*ddsrt_hh_hash_fn) (const void *a);
+typedef uint32_t (*ddsrt_hh_hash_fn)(const void * a);
 
 /*
  * Hopscotch needs to be able to compare two elements.
  * Returns 0 when not equal.
  */
-typedef int (*ddsrt_hh_equals_fn) (const void *a, const void *b);
+typedef int (*ddsrt_hh_equals_fn)(const void * a, const void * b);
 
 /*
  * Hopscotch is will resize its internal buckets list when needed. It will
  * call this garbage collection function with the old buckets list. The
  * caller has to delete the list when it deems it safe to do so.
  */
-typedef void (*ddsrt_hh_buckets_gc_fn) (void *bs, void *arg);
+typedef void (*ddsrt_hh_buckets_gc_fn)(void * bs, void * arg);
 
 /* Sequential version */
 struct ddsrt_hh;
 
-struct ddsrt_hh_iter {
-    struct ddsrt_hh *hh;
-    uint32_t cursor;
+struct ddsrt_hh_iter
+{
+  struct ddsrt_hh * hh;
+  uint32_t cursor;
 };
 
-DDS_EXPORT struct ddsrt_hh *ddsrt_hh_new (uint32_t init_size, ddsrt_hh_hash_fn hash, ddsrt_hh_equals_fn equals) ddsrt_nonnull_all;
-DDS_EXPORT void ddsrt_hh_free (struct ddsrt_hh * __restrict hh) ddsrt_nonnull_all;
-DDS_EXPORT void *ddsrt_hh_lookup (const struct ddsrt_hh * __restrict rt, const void * __restrict keyobject) ddsrt_nonnull_all;
-DDS_EXPORT int ddsrt_hh_add (struct ddsrt_hh * __restrict rt, void * __restrict data) ddsrt_nonnull_all;
-DDS_EXPORT int ddsrt_hh_remove (struct ddsrt_hh * __restrict rt, const void * __restrict keyobject) ddsrt_nonnull_all;
-DDS_EXPORT void ddsrt_hh_add_absent (struct ddsrt_hh * __restrict rt, void * __restrict data) ddsrt_nonnull_all;
-DDS_EXPORT void ddsrt_hh_remove_present (struct ddsrt_hh * __restrict rt, void * __restrict keyobject) ddsrt_nonnull_all;
-DDS_EXPORT void ddsrt_hh_enum (struct ddsrt_hh * __restrict rt, void (*f) (void *a, void *f_arg), void *f_arg) ddsrt_nonnull ((1, 2)); /* may delete a */
-DDS_EXPORT void *ddsrt_hh_iter_first (struct ddsrt_hh * __restrict rt, struct ddsrt_hh_iter * __restrict iter) ddsrt_nonnull_all; /* may delete nodes */
-DDS_EXPORT void *ddsrt_hh_iter_next (struct ddsrt_hh_iter * __restrict iter) ddsrt_nonnull_all;
+DDS_EXPORT struct ddsrt_hh * ddsrt_hh_new(
+  uint32_t init_size, ddsrt_hh_hash_fn hash, ddsrt_hh_equals_fn equals) ddsrt_nonnull_all;
+DDS_EXPORT void ddsrt_hh_free(struct ddsrt_hh * __restrict hh) ddsrt_nonnull_all;
+DDS_EXPORT void * ddsrt_hh_lookup(
+  const struct ddsrt_hh * __restrict rt, const void * __restrict keyobject) ddsrt_nonnull_all;
+DDS_EXPORT int ddsrt_hh_add(struct ddsrt_hh * __restrict rt, void * __restrict data)
+  ddsrt_nonnull_all;
+DDS_EXPORT int ddsrt_hh_remove(struct ddsrt_hh * __restrict rt, const void * __restrict keyobject)
+  ddsrt_nonnull_all;
+DDS_EXPORT void ddsrt_hh_add_absent(struct ddsrt_hh * __restrict rt, void * __restrict data)
+  ddsrt_nonnull_all;
+DDS_EXPORT void ddsrt_hh_remove_present(
+  struct ddsrt_hh * __restrict rt, void * __restrict keyobject) ddsrt_nonnull_all;
+DDS_EXPORT void ddsrt_hh_enum(
+  struct ddsrt_hh * __restrict rt, void (*f)(void * a, void * f_arg), void * f_arg)
+  ddsrt_nonnull((1, 2)); /* may delete a */
+DDS_EXPORT void * ddsrt_hh_iter_first(
+  struct ddsrt_hh * __restrict rt,
+  struct ddsrt_hh_iter * __restrict iter) ddsrt_nonnull_all; /* may delete nodes */
+DDS_EXPORT void * ddsrt_hh_iter_next(struct ddsrt_hh_iter * __restrict iter) ddsrt_nonnull_all;
 
 /* Concurrent version */
 struct ddsrt_chh;
 struct ddsrt_chh_bucket;
 
-#if ! ddsrt_has_feature_thread_sanitizer
-struct ddsrt_chh_iter {
-  struct ddsrt_chh_bucket *bs;
+#if !ddsrt_has_feature_thread_sanitizer
+struct ddsrt_chh_iter
+{
+  struct ddsrt_chh_bucket * bs;
   uint32_t size;
   uint32_t cursor;
 };
 #else
-struct ddsrt_chh_iter {
-  struct ddsrt_chh *chh;
+struct ddsrt_chh_iter
+{
+  struct ddsrt_chh * chh;
   struct ddsrt_hh_iter it;
 };
 #endif
 
-struct ddsrt_chh *ddsrt_chh_new (uint32_t init_size, ddsrt_hh_hash_fn hash, ddsrt_hh_equals_fn equals, ddsrt_hh_buckets_gc_fn gc_buckets, void *gc_buckets_arg);
-void ddsrt_chh_free (struct ddsrt_chh * __restrict hh);
-void *ddsrt_chh_lookup (struct ddsrt_chh * __restrict rt, const void * __restrict keyobject);
-int ddsrt_chh_add (struct ddsrt_chh * __restrict rt, void * __restrict data);
-int ddsrt_chh_remove (struct ddsrt_chh * __restrict rt, const void * __restrict keyobject);
-void ddsrt_chh_enum_unsafe (struct ddsrt_chh * __restrict rt, void (*f) (void *a, void *f_arg), void *f_arg); /* may delete a */
-void *ddsrt_chh_iter_first (struct ddsrt_chh * __restrict rt, struct ddsrt_chh_iter *it);
-void *ddsrt_chh_iter_next (struct ddsrt_chh_iter *it);
+struct ddsrt_chh * ddsrt_chh_new(
+  uint32_t init_size, ddsrt_hh_hash_fn hash, ddsrt_hh_equals_fn equals,
+  ddsrt_hh_buckets_gc_fn gc_buckets, void * gc_buckets_arg);
+void ddsrt_chh_free(struct ddsrt_chh * __restrict hh);
+void * ddsrt_chh_lookup(struct ddsrt_chh * __restrict rt, const void * __restrict keyobject);
+int ddsrt_chh_add(struct ddsrt_chh * __restrict rt, void * __restrict data);
+int ddsrt_chh_remove(struct ddsrt_chh * __restrict rt, const void * __restrict keyobject);
+void ddsrt_chh_enum_unsafe(
+  struct ddsrt_chh * __restrict rt, void (*f)(void * a, void * f_arg),
+  void * f_arg); /* may delete a */
+void * ddsrt_chh_iter_first(struct ddsrt_chh * __restrict rt, struct ddsrt_chh_iter * it);
+void * ddsrt_chh_iter_next(struct ddsrt_chh_iter * it);
 /* Sequential version, embedded data */
 struct ddsrt_ehh;
 
-struct ddsrt_ehh_iter {
-    struct ddsrt_ehh *hh;
-    uint32_t cursor;
+struct ddsrt_ehh_iter
+{
+  struct ddsrt_ehh * hh;
+  uint32_t cursor;
 };
 
-struct ddsrt_ehh *ddsrt_ehh_new (size_t elemsz, uint32_t init_size, ddsrt_hh_hash_fn hash, ddsrt_hh_equals_fn equals);
-void ddsrt_ehh_free (struct ddsrt_ehh * __restrict hh);
-void *ddsrt_ehh_lookup (const struct ddsrt_ehh * __restrict rt, const void * __restrict keyobject);
-int ddsrt_ehh_add (struct ddsrt_ehh * __restrict rt, const void * __restrict data);
-int ddsrt_ehh_remove (struct ddsrt_ehh * __restrict rt, const void * __restrict keyobject);
-void ddsrt_ehh_enum (struct ddsrt_ehh * __restrict rt, void (*f) (void *a, void *f_arg), void *f_arg); /* may delete a */
-void *ddsrt_ehh_iter_first (struct ddsrt_ehh * __restrict rt, struct ddsrt_ehh_iter * __restrict iter); /* may delete nodes */
-void *ddsrt_ehh_iter_next (struct ddsrt_ehh_iter * __restrict iter);
+struct ddsrt_ehh * ddsrt_ehh_new(
+  size_t elemsz, uint32_t init_size, ddsrt_hh_hash_fn hash, ddsrt_hh_equals_fn equals);
+void ddsrt_ehh_free(struct ddsrt_ehh * __restrict hh);
+void * ddsrt_ehh_lookup(const struct ddsrt_ehh * __restrict rt, const void * __restrict keyobject);
+int ddsrt_ehh_add(struct ddsrt_ehh * __restrict rt, const void * __restrict data);
+int ddsrt_ehh_remove(struct ddsrt_ehh * __restrict rt, const void * __restrict keyobject);
+void ddsrt_ehh_enum(
+  struct ddsrt_ehh * __restrict rt, void (*f)(void * a, void * f_arg),
+  void * f_arg); /* may delete a */
+void * ddsrt_ehh_iter_first(
+  struct ddsrt_ehh * __restrict rt, struct ddsrt_ehh_iter * __restrict iter); /* may delete nodes */
+void * ddsrt_ehh_iter_next(struct ddsrt_ehh_iter * __restrict iter);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

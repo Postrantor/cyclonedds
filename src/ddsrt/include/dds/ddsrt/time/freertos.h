@@ -12,18 +12,16 @@
 #ifndef DDSRT_TIME_FREERTOS_H
 #define DDSRT_TIME_FREERTOS_H
 
-#include <assert.h>
 #include <FreeRTOS.h>
+#include <assert.h>
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 #define DDSRT_NSECS_PER_TICK (DDS_NSECS_IN_SEC / configTICK_RATE_HZ)
 
-inline TickType_t
-ddsrt_duration_to_ticks_ceil(
-  dds_duration_t reltime)
+inline TickType_t ddsrt_duration_to_ticks_ceil(dds_duration_t reltime)
 {
   TickType_t ticks = 0;
 
@@ -33,8 +31,8 @@ ddsrt_duration_to_ticks_ceil(
     ticks = portMAX_DELAY;
   } else if (reltime > 0) {
     dds_duration_t max_nsecs =
-      (DDS_INFINITY / DDSRT_NSECS_PER_TICK < portMAX_DELAY
-        ? DDS_INFINITY - 1 : portMAX_DELAY * DDSRT_NSECS_PER_TICK);
+      (DDS_INFINITY / DDSRT_NSECS_PER_TICK < portMAX_DELAY ? DDS_INFINITY - 1
+                                                           : portMAX_DELAY * DDSRT_NSECS_PER_TICK);
 
     if (reltime > max_nsecs - (DDSRT_NSECS_PER_TICK - 1)) {
       ticks = portMAX_DELAY;
@@ -46,7 +44,7 @@ ddsrt_duration_to_ticks_ceil(
   return ticks;
 }
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

@@ -17,12 +17,12 @@ static int g_val = -1;
 #if _WIN32
 __declspec(dllexport)
 #endif
-void set_int(int val);
+  void set_int(int val);
 
 #if _WIN32
 __declspec(dllexport)
 #endif
-int get_int(void);
+  int get_int(void);
 
 void set_int(int val) { g_val = val; }
 

@@ -9,17 +9,22 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/time.h"
+
 #include <assert.h>
 #include <time.h>
 
-#include "dds/ddsrt/time.h"
-#include "dds/ddsrt/string.h"
 #include "dds/ddsrt/static_assert.h"
+#include "dds/ddsrt/string.h"
 
-DDS_EXPORT extern inline dds_time_t ddsrt_time_add_duration(dds_time_t abstime, dds_duration_t reltime);
-DDS_EXPORT extern inline ddsrt_mtime_t ddsrt_mtime_add_duration(ddsrt_mtime_t abstime, dds_duration_t reltime);
-DDS_EXPORT extern inline ddsrt_wctime_t ddsrt_wctime_add_duration(ddsrt_wctime_t abstime, dds_duration_t reltime);
-DDS_EXPORT extern inline ddsrt_etime_t ddsrt_etime_add_duration(ddsrt_etime_t abstime, dds_duration_t reltime);
+DDS_EXPORT extern inline dds_time_t ddsrt_time_add_duration(
+  dds_time_t abstime, dds_duration_t reltime);
+DDS_EXPORT extern inline ddsrt_mtime_t ddsrt_mtime_add_duration(
+  ddsrt_mtime_t abstime, dds_duration_t reltime);
+DDS_EXPORT extern inline ddsrt_wctime_t ddsrt_wctime_add_duration(
+  ddsrt_wctime_t abstime, dds_duration_t reltime);
+DDS_EXPORT extern inline ddsrt_etime_t ddsrt_etime_add_duration(
+  ddsrt_etime_t abstime, dds_duration_t reltime);
 
 #if !_WIN32 && !DDSRT_WITH_FREERTOS
 #include <errno.h>
@@ -29,8 +34,8 @@ void dds_sleepfor(dds_duration_t n)
   struct timespec t, r;
 
   if (n >= 0) {
-    t.tv_sec = (time_t) (n / DDS_NSECS_IN_SEC);
-    t.tv_nsec = (long) (n % DDS_NSECS_IN_SEC);
+    t.tv_sec = (time_t)(n / DDS_NSECS_IN_SEC);
+    t.tv_nsec = (long)(n % DDS_NSECS_IN_SEC);
     while (nanosleep(&t, &r) == -1 && errno == EINTR) {
       t = r;
     }
@@ -38,8 +43,7 @@ void dds_sleepfor(dds_duration_t n)
 }
 #endif
 
-size_t
-ddsrt_ctime(dds_time_t n, char *str, size_t size)
+size_t ddsrt_ctime(dds_time_t n, char * str, size_t size)
 {
   struct tm tm;
 #if __SunOS_5_6 || __MINGW32__
@@ -61,7 +65,7 @@ ddsrt_ctime(dds_time_t n, char *str, size_t size)
 #endif /* _WIN32 */
 
   cnt = strftime(buf, sizeof(buf), fmt, &tm);
-#if ! __SunOS_5_6 && ! __MINGW32__
+#if !__SunOS_5_6 && !__MINGW32__
   /* %z is without a separator between hours and minutes, fixup */
   assert(cnt == (sizeof(buf) - 2 /* ':' + '\0' */));
   buf[sizeof(buf) - 1] = '\0';
@@ -74,23 +78,23 @@ ddsrt_ctime(dds_time_t n, char *str, size_t size)
   return ddsrt_strlcpy(str, buf, size);
 }
 
-static void time_to_sec_usec (int32_t * __restrict sec, int32_t * __restrict usec, int64_t t)
+static void time_to_sec_usec(int32_t * __restrict sec, int32_t * __restrict usec, int64_t t)
 {
-  *sec = (int32_t) (t / DDS_NSECS_IN_SEC);
-  *usec = (int32_t) (t % DDS_NSECS_IN_SEC) / 1000;
+  *sec = (int32_t)(t / DDS_NSECS_IN_SEC);
+  *usec = (int32_t)(t % DDS_NSECS_IN_SEC) / 1000;
 }
 
-void ddsrt_mtime_to_sec_usec (int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_mtime_t t)
+void ddsrt_mtime_to_sec_usec(int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_mtime_t t)
 {
-  time_to_sec_usec (sec, usec, t.v);
+  time_to_sec_usec(sec, usec, t.v);
 }
 
-void ddsrt_wctime_to_sec_usec (int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_wctime_t t)
+void ddsrt_wctime_to_sec_usec(int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_wctime_t t)
 {
-  time_to_sec_usec (sec, usec, t.v);
+  time_to_sec_usec(sec, usec, t.v);
 }
 
-void ddsrt_etime_to_sec_usec (int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_etime_t t)
+void ddsrt_etime_to_sec_usec(int32_t * __restrict sec, int32_t * __restrict usec, ddsrt_etime_t t)
 {
-  time_to_sec_usec (sec, usec, t.v);
+  time_to_sec_usec(sec, usec, t.v);
 }

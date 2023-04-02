@@ -14,10 +14,11 @@
 #define PLUGIN_MOCK_COMMON_H_
 
 #define TEST_IDENTITY_CERTIFICATE_ALL_OK "testtext_IdentityCertificate_testtext"
-#define TEST_CA_CERTIFICATE_ALL_OK       "testtext_IdentityCA_testtext"
-#define TEST_PRIVATE_KEY_ALL_OK          "testtext_PrivateKey_testtext"
+#define TEST_CA_CERTIFICATE_ALL_OK "testtext_IdentityCA_testtext"
+#define TEST_PRIVATE_KEY_ALL_OK "testtext_PrivateKey_testtext"
 
-#define TEST_IDENTITY_CERTIFICATE "data:,-----BEGIN CERTIFICATE-----\n\
+#define TEST_IDENTITY_CERTIFICATE \
+  "data:,-----BEGIN CERTIFICATE-----\n\
 MIIDYDCCAkigAwIBAgIBBDANBgkqhkiG9w0BAQsFADByMQswCQYDVQQGEwJOTDEL\n\
 MAkGA1UECBMCT1YxEzARBgNVBAoTCkFETGluayBJU1QxGTAXBgNVBAMTEElkZW50\n\
 aXR5IENBIFRlc3QxJjAkBgkqhkiG9w0BCQEWF2luZm9AaXN0LmFkbGlua3RlY2gu\n\
@@ -39,7 +40,8 @@ By03727uneuG8HLuNcLEV9H0i7LxtyfFkyCPUQvWG5jehb7xPOz/Ml26NAwwjlTJ\n\
 xEEFrw==\n\
 -----END CERTIFICATE-----"
 
-#define TEST_CA_CERTIFICATE_ALL "data:,-----BEGIN CERTIFICATE-----\n\
+#define TEST_CA_CERTIFICATE_ALL \
+  "data:,-----BEGIN CERTIFICATE-----\n\
 MIIEKTCCAxGgAwIBAgIBATANBgkqhkiG9w0BAQsFADByMQswCQYDVQQGEwJOTDEL\n\
 MAkGA1UECBMCT1YxEzARBgNVBAoTCkFETGluayBJU1QxGTAXBgNVBAMTEElkZW50\n\
 aXR5IENBIFRlc3QxJjAkBgkqhkiG9w0BCQEWF2luZm9AaXN0LmFkbGlua3RlY2gu\n\
@@ -65,7 +67,8 @@ AMNx9ZGD+zAoOUaslpIlEQ+keAxk3jgGMWFMxF81YfhEnXzevSQXWpyek86XUyFL\n\
 O9IAQi5pa15gXjSbUg==\n\
 -----END CERTIFICATE-----"
 
-#define TEST_PRIVATE_KEY_ALL "data:,-----BEGIN RSA PRIVATE KEY-----\n\
+#define TEST_PRIVATE_KEY_ALL \
+  "data:,-----BEGIN RSA PRIVATE KEY-----\n\
 MIIEowIBAAKCAQEA0Fb60RkFrDsRAIRfLMf2fsiRnw9Agp7yEbUsA4Zg4X+hRhBk\n\
 k78fFtagLisWo4LbT4DqKzqQXCvVnOn9a6uT0KsVejk2iaLoBy0fotQznudio3rz\n\
 DpTfzP9eRDFVj8RJnl3JJ8P1DULxH7N0TyDBuKZ1ibBfuKjPffqeCEzYKgAc8NG2\n\
@@ -92,7 +95,5 @@ H/vX5QKBgD2Dq/NHpjCpAsECP9awmNF5Akn5WJbRGmegwXIih2mOtgtYYDeuQyxY\n\
 ZCrdJFfIUjUVPagshEmUklKhkYMYpzy2PQDVtaVcm6UNFroxT5h+J+KDs1LN1H8G\n\
 LsASrzyAg8EpRulwXEfLrWKiu9DKv8bMEgO4Ovgz8zTKJZIFhcac\n\
 -----END RSA PRIVATE KEY-----"
-
-
 
 #endif

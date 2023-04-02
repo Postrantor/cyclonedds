@@ -16,22 +16,23 @@
 #include "dds/ddsrt/fibheap.h"
 #include "dds/ddsrt/time.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 struct ddsi_entity_common;
 
-struct ddsi_lease {
+struct ddsi_lease
+{
   ddsrt_fibheap_node_t heapnode;
   ddsrt_fibheap_node_t pp_heapnode;
-  ddsrt_etime_t tsched;         /* access guarded by leaseheap_lock */
-  ddsrt_atomic_uint64_t tend;   /* really an ddsrt_etime_t */
-  dds_duration_t tdur;          /* constant (renew depends on it) */
-  struct ddsi_entity_common *entity; /* constant */
+  ddsrt_etime_t tsched;               /* access guarded by leaseheap_lock */
+  ddsrt_atomic_uint64_t tend;         /* really an ddsrt_etime_t */
+  dds_duration_t tdur;                /* constant (renew depends on it) */
+  struct ddsi_entity_common * entity; /* constant */
 };
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

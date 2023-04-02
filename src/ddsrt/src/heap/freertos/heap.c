@@ -11,22 +11,22 @@
  */
 #include <FreeRTOS.h>
 
-#if defined(configSUPPORT_DYNAMIC_ALLOCATION) && \
-           (configSUPPORT_DYNAMIC_ALLOCATION == 0)
-# error Dynamic memory allocation is not supported
+#if defined(configSUPPORT_DYNAMIC_ALLOCATION) && (configSUPPORT_DYNAMIC_ALLOCATION == 0)
+#error Dynamic memory allocation is not supported
 #endif
 
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "dds/ddsrt/heap.h"
 
 static const size_t ofst = sizeof(size_t);
 
-void *ddsrt_malloc_s(size_t size)
+void * ddsrt_malloc_s(size_t size)
 {
-  void *ptr = NULL;
+  void * ptr = NULL;
 
   if (size == 0) {
     size = 1;
@@ -47,9 +47,9 @@ void *ddsrt_malloc_s(size_t size)
   return ptr;
 }
 
-void *ddsrt_malloc(size_t size)
+void * ddsrt_malloc(size_t size)
 {
-  void *ptr;
+  void * ptr;
 
   if ((ptr = ddsrt_malloc_s(size)) == NULL) {
     abort();
@@ -58,9 +58,9 @@ void *ddsrt_malloc(size_t size)
   return ptr;
 }
 
-void *ddsrt_calloc_s(size_t nmemb, size_t size)
+void * ddsrt_calloc_s(size_t nmemb, size_t size)
 {
-  void *ptr = NULL;
+  void * ptr = NULL;
 
   if (nmemb == 0 || size == 0) {
     nmemb = size = 1;
@@ -76,9 +76,9 @@ void *ddsrt_calloc_s(size_t nmemb, size_t size)
   return ptr;
 }
 
-void *ddsrt_calloc(size_t nmemb, size_t size)
+void * ddsrt_calloc(size_t nmemb, size_t size)
 {
-  void *ptr = NULL;
+  void * ptr = NULL;
 
   if ((ptr = ddsrt_calloc_s(nmemb, size)) == NULL) {
     abort();
@@ -92,9 +92,9 @@ void *ddsrt_calloc(size_t nmemb, size_t size)
    realloc compatible function and extra information must be embedded in every
    memory block in order to support reallocation of memory (otherwise the
    number of bytes that must be copied is unavailable). */
-void *ddsrt_realloc_s(void *memblk, size_t size)
+void * ddsrt_realloc_s(void * memblk, size_t size)
 {
-  void *ptr = NULL;
+  void * ptr = NULL;
   size_t origsize = 0;
 
   if (memblk != NULL) {
@@ -117,9 +117,9 @@ void *ddsrt_realloc_s(void *memblk, size_t size)
   return memblk;
 }
 
-void *ddsrt_realloc(void *memblk, size_t size)
+void * ddsrt_realloc(void * memblk, size_t size)
 {
-  void *ptr = NULL;
+  void * ptr = NULL;
 
   if ((ptr = ddsrt_realloc_s(memblk, size)) == NULL) {
     abort();
@@ -128,8 +128,7 @@ void *ddsrt_realloc(void *memblk, size_t size)
   return ptr;
 }
 
-void
-ddsrt_free(void *ptr)
+void ddsrt_free(void * ptr)
 {
   if (ptr != NULL) {
     vPortFree(ptr - ofst);

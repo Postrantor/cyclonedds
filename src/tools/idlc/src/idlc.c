@@ -9,8 +9,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#include "config.h"
-
 #include <assert.h>
 #include <errno.h>
 #include <getopt.h>
@@ -20,45 +18,45 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dds/features.h"
+#include "config.h"
 #include "dds/cdr/dds_cdrstream.h"
-#include "idl/heap.h"
-#include "idl/misc.h"
-#include "idl/tree.h"
-#include "idl/string.h"
-#include "idl/processor.h"
-#include "idl/version.h"
-#include "idl/stream.h"
-
-#include "mcpp_lib.h"
-#include "mcpp_out.h"
-
-#include "idlc/generator.h"
-#include "generator.h"
-#include "plugin.h"
-#include "options.h"
+#include "dds/features.h"
 #include "descriptor_type_meta.h"
 #include "file.h"
+#include "generator.h"
+#include "idl/heap.h"
+#include "idl/misc.h"
+#include "idl/processor.h"
+#include "idl/stream.h"
+#include "idl/string.h"
+#include "idl/tree.h"
+#include "idl/version.h"
+#include "idlc/generator.h"
+#include "mcpp_lib.h"
+#include "mcpp_out.h"
+#include "options.h"
+#include "plugin.h"
 
 #if 0
-#define IDLC_DEBUG_PREPROCESSOR (1u<<2)
-#define IDLC_DEBUG_SCANNER (1u<<3)
-#define IDLC_DEBUG_PARSER (1u<<4)
+#define IDLC_DEBUG_PREPROCESSOR (1u << 2)
+#define IDLC_DEBUG_SCANNER (1u << 3)
+#define IDLC_DEBUG_PARSER (1u << 4)
 #endif
 
 #define DISABLE_WARNING_CHSZ 10
 struct idlc_disable_warning_list
 {
-  idl_warning_t *list;
+  idl_warning_t * list;
   size_t size;
   size_t count;
 };
 
-static struct {
-  char *file; /* path of input file or "-" for STDIN */
-  const char *lang;
-  const char *output_dir; /* path to write completed files */
-  const char* base_dir; /* Path to start reconstruction of dir structure */
+static struct
+{
+  char * file; /* path of input file or "-" for STDIN */
+  const char * lang;
+  const char * output_dir; /* path to write completed files */
+  const char * base_dir;   /* Path to start reconstruction of dir structure */
   int compile;
   int preprocess;
   int keylist;
@@ -74,44 +72,41 @@ static struct {
 #endif
   /* (emulated) command line options for mcpp */
   int argc;
-  char **argv;
+  char ** argv;
 } config;
 
 /* mcpp does not accept userdata */
 static idl_retcode_t retcode = IDL_RETCODE_OK;
-static idl_pstate_t *pstate = NULL;
+static idl_pstate_t * pstate = NULL;
 
 static bool has_warnings = false;
 
 static int idlc_putc(int chr, MCPP_OUTDEST od);
-static int idlc_puts(const char *str, MCPP_OUTDEST od);
-static int idlc_printf(MCPP_OUTDEST od, const char *str, ...);
+static int idlc_puts(const char * str, MCPP_OUTDEST od);
+static int idlc_printf(MCPP_OUTDEST od, const char * str, ...);
 
 #define CHUNK (4096)
 
-static int idlc_putn(const char *str, size_t len)
+static int idlc_putn(const char * str, size_t len)
 {
   assert(pstate->config.flags & IDL_WRITE);
 
   /* tokenize to free up space */
   if (pstate->buffer.data && (pstate->buffer.size - pstate->buffer.used) <= len) {
-    if ((retcode = idl_parse(pstate)) == IDL_RETCODE_NEED_REFILL)
-      retcode = IDL_RETCODE_OK;
+    if ((retcode = idl_parse(pstate)) == IDL_RETCODE_NEED_REFILL) retcode = IDL_RETCODE_OK;
     /* move non-tokenized data to start of buffer */
-    pstate->buffer.used =
-      (uintptr_t)pstate->scanner.limit - (uintptr_t)pstate->scanner.cursor;
+    pstate->buffer.used = (uintptr_t)pstate->scanner.limit - (uintptr_t)pstate->scanner.cursor;
     memmove(pstate->buffer.data, pstate->scanner.cursor, pstate->buffer.used);
     pstate->scanner.cursor = pstate->buffer.data;
     pstate->scanner.limit = pstate->scanner.cursor + pstate->buffer.used;
   }
 
-  if (retcode != IDL_RETCODE_OK)
-    return -1;
+  if (retcode != IDL_RETCODE_OK) return -1;
 
   /* expand buffer if necessary */
   if (pstate->buffer.data == NULL || (pstate->buffer.size - pstate->buffer.used) <= len) {
     size_t size = pstate->buffer.size + (((len / CHUNK) + 1) * CHUNK);
-    char *buf = idl_realloc(pstate->buffer.data, size + 2 /* '\0' + '\0' */);
+    char * buf = idl_realloc(pstate->buffer.data, size + 2 /* '\0' + '\0' */);
     if (buf == NULL) {
       retcode = IDL_RETCODE_NO_MEMORY;
       return -1;
@@ -137,33 +132,33 @@ static int idlc_putn(const char *str, size_t len)
 static int idlc_putc(int chr, MCPP_OUTDEST od)
 {
   int ret = -1;
-  char str[2] = { (char)chr, '\0' };
+  char str[2] = {(char)chr, '\0'};
 
   switch (od) {
-  case MCPP_OUT:
-    if (!(config.compile))
-      ret = printf("%c", chr);
-    else
-      ret = idlc_putn(str, 1);
-    break;
-  case MCPP_ERR:
-    ret = fprintf(stderr, "%c", chr);
-    break;
-  case MCPP_DBG:
+    case MCPP_OUT:
+      if (!(config.compile))
+        ret = printf("%c", chr);
+      else
+        ret = idlc_putn(str, 1);
+      break;
+    case MCPP_ERR:
+      ret = fprintf(stderr, "%c", chr);
+      break;
+    case MCPP_DBG:
 #if 0
     if (config.flags & IDLC_DEBUG_PREPROCESSOR)
 #endif
       ret = fprintf(stderr, "%c", chr);
-    break;
-  default:
-    assert(0);
-    break;
+      break;
+    default:
+      assert(0);
+      break;
   }
 
   return ret < 0 ? -1 : ret;
 }
 
-static int idlc_puts(const char *str, MCPP_OUTDEST od)
+static int idlc_puts(const char * str, MCPP_OUTDEST od)
 {
   int ret = -1;
   size_t len = strlen(str);
@@ -172,33 +167,33 @@ static int idlc_puts(const char *str, MCPP_OUTDEST od)
   assert(len <= INT_MAX);
 
   switch (od) {
-  case MCPP_OUT:
-    if (!(config.compile))
-      ret = printf("%s", str);
-    else
-      ret = idlc_putn(str, len);
-    break;
-  case MCPP_ERR:
-    ret = fprintf(stderr, "%s", str);
-    break;
-  case MCPP_DBG:
+    case MCPP_OUT:
+      if (!(config.compile))
+        ret = printf("%s", str);
+      else
+        ret = idlc_putn(str, len);
+      break;
+    case MCPP_ERR:
+      ret = fprintf(stderr, "%s", str);
+      break;
+    case MCPP_DBG:
 #if 0
     if (config.flags & IDLC_DEBUG_PREPROCESSOR)
 #endif
       ret = fprintf(stderr, "%s", str);
-    break;
-  default:
-    assert(0);
-    break;
+      break;
+    default:
+      assert(0);
+      break;
   }
 
   return ret < 0 ? -1 : (int)len;
 }
 
-static int idlc_printf(MCPP_OUTDEST od, const char *fmt, ...)
+static int idlc_printf(MCPP_OUTDEST od, const char * fmt, ...)
 {
   int ret = -1;
-  char *str = NULL;
+  char * str = NULL;
   int len;
   va_list ap;
 
@@ -214,24 +209,24 @@ static int idlc_printf(MCPP_OUTDEST od, const char *fmt, ...)
   }
 
   switch (od) {
-  case MCPP_OUT:
-    if (!(config.compile))
-      ret = printf("%s", str);
-    else
-      ret = idlc_putn(str, (size_t)len);
-    break;
-  case MCPP_ERR:
-    ret = fprintf(stderr, "%s", str);
-    break;
-  case MCPP_DBG:
+    case MCPP_OUT:
+      if (!(config.compile))
+        ret = printf("%s", str);
+      else
+        ret = idlc_putn(str, (size_t)len);
+      break;
+    case MCPP_ERR:
+      ret = fprintf(stderr, "%s", str);
+      break;
+    case MCPP_DBG:
 #if 0
     if (config.flags & IDLC_DEBUG_PREPROCESSOR)
 #endif
       ret = fprintf(stderr, "%s", str);
-    break;
-  default:
-    assert(0);
-    break;
+      break;
+    default:
+      assert(0);
+      break;
   }
 
   idl_free(str);
@@ -239,34 +234,28 @@ static int idlc_printf(MCPP_OUTDEST od, const char *fmt, ...)
   return ret < 0 ? -1 : ret;
 }
 
-static bool track_warning (idl_warning_t warning)
+static bool track_warning(idl_warning_t warning)
 {
   for (size_t n = 0; n < config.disable_warnings.count; n++)
-    if (config.disable_warnings.list[n] == warning)
-      return false;
+    if (config.disable_warnings.list[n] == warning) return false;
 
   has_warnings = true;
   return true;
 }
 
-static idl_retcode_t figure_file(idl_file_t **filep)
+static idl_retcode_t figure_file(idl_file_t ** filep)
 {
-  idl_file_t *file;
+  idl_file_t * file;
   idl_retcode_t ret = IDL_RETCODE_NO_MEMORY;
   char *dir = NULL, *abs = NULL, *norm = NULL;
 
-  if (!(file = idl_malloc(sizeof(*file))))
-    goto err_file;
+  if (!(file = idl_malloc(sizeof(*file)))) goto err_file;
   if (idl_isabsolute(config.file)) {
-    if ((ret = idl_normalize_path(config.file, &norm)) < 0)
-      goto err_norm;
+    if ((ret = idl_normalize_path(config.file, &norm)) < 0) goto err_norm;
   } else {
-    if (idl_current_path(&dir) < 0)
-      goto err_dir;
-    if (idl_asprintf(&abs, "%s/%s", dir, config.file) == -1)
-      goto err_abs;
-    if ((ret = idl_normalize_path(abs, &norm)) < 0)
-      goto err_norm;
+    if (idl_current_path(&dir) < 0) goto err_dir;
+    if (idl_asprintf(&abs, "%s/%s", dir, config.file) == -1) goto err_abs;
+    if ((ret = idl_normalize_path(abs, &norm)) < 0) goto err_norm;
     idl_free(abs);
     idl_free(dir);
   }
@@ -284,11 +273,10 @@ err_file:
   return ret;
 }
 
-static idl_file_t *idlc_parse_make_file (const char *file)
+static idl_file_t * idlc_parse_make_file(const char * file)
 {
-  idl_file_t *f;
-  if ((f = idl_malloc(sizeof(*f))) == NULL)
-    return NULL;
+  idl_file_t * f;
+  if ((f = idl_malloc(sizeof(*f))) == NULL) return NULL;
   f->next = NULL;
   if (!(f->name = idl_strdup(file))) {
     idl_free(f);
@@ -297,11 +285,11 @@ static idl_file_t *idlc_parse_make_file (const char *file)
   return f;
 }
 
-static idl_source_t *idlc_parse_make_source (idl_position_t *position, idl_file_t *paths, idl_file_t *files)
+static idl_source_t * idlc_parse_make_source(
+  idl_position_t * position, idl_file_t * paths, idl_file_t * files)
 {
-  idl_source_t *source;
-  if ((source = idl_malloc (sizeof (*source))) == NULL)
-    return NULL;
+  idl_source_t * source;
+  if ((source = idl_malloc(sizeof(*source))) == NULL) return NULL;
   source->parent = NULL;
   source->previous = source->next = NULL;
   source->includes = NULL;
@@ -309,7 +297,7 @@ static idl_source_t *idlc_parse_make_source (idl_position_t *position, idl_file_
   source->path = paths;
   source->file = files;
   position->source = source;
-  position->file = (const idl_file_t *) files;
+  position->file = (const idl_file_t *)files;
   position->line = 1;
   position->column = 1;
   return source;
@@ -318,15 +306,13 @@ static idl_source_t *idlc_parse_make_source (idl_position_t *position, idl_file_
 static idl_retcode_t idlc_parse(const idl_builtin_annotation_t ** generator_annotations)
 {
   idl_retcode_t ret = IDL_RETCODE_OK;
-  uint32_t flags = IDL_FLAG_EXTENDED_DATA_TYPES |
-                   IDL_FLAG_ANONYMOUS_TYPES |
-                   IDL_FLAG_ANNOTATIONS;
+  uint32_t flags = IDL_FLAG_EXTENDED_DATA_TYPES | IDL_FLAG_ANONYMOUS_TYPES | IDL_FLAG_ANNOTATIONS;
 
-  if(config.case_sensitive)
-    flags |= IDL_FLAG_CASE_SENSITIVE;
+  if (config.case_sensitive) flags |= IDL_FLAG_CASE_SENSITIVE;
 
-  if(config.compile) {
-    if ((ret = idl_create_pstate(flags, generator_annotations == NULL ? NULL : *generator_annotations, &pstate))) {
+  if (config.compile) {
+    if ((ret = idl_create_pstate(
+           flags, generator_annotations == NULL ? NULL : *generator_annotations, &pstate))) {
       pstate = NULL;
       return ret;
     }
@@ -339,22 +325,22 @@ static idl_retcode_t idlc_parse(const idl_builtin_annotation_t ** generator_anno
       return ret;
     }
 #if __GNUC__ >= 12
-    IDL_WARNING_GNUC_OFF(analyzer-malloc-leak)
+    IDL_WARNING_GNUC_OFF(analyzer - malloc - leak)
 #endif
-    if ((pstate->files = idlc_parse_make_file (config.file)) == NULL)
-    {
+    if ((pstate->files = idlc_parse_make_file(config.file)) == NULL) {
       idl_delete_pstate(pstate);
       pstate = NULL;
       return IDL_RETCODE_NO_MEMORY;
     }
-    if ((pstate->sources = idlc_parse_make_source (&pstate->scanner.position, pstate->paths, pstate->files)) == NULL)
-    {
+    if (
+      (pstate->sources =
+         idlc_parse_make_source(&pstate->scanner.position, pstate->paths, pstate->files)) == NULL) {
       idl_delete_pstate(pstate);
       pstate = NULL;
       return IDL_RETCODE_NO_MEMORY;
     }
 #if __GNUC__ >= 12
-    IDL_WARNING_GNUC_ON(analyzer-malloc-leak)
+    IDL_WARNING_GNUC_ON(analyzer - malloc - leak)
 #endif
     pstate->config.flags |= IDL_WRITE;
     pstate->config.default_extensibility = config.default_extensibility;
@@ -378,7 +364,7 @@ static idl_retcode_t idlc_parse(const idl_builtin_annotation_t ** generator_anno
       pstate->config.flags &= ~IDL_WRITE;
     }
   } else {
-    FILE *fin = NULL;
+    FILE * fin = NULL;
     char buf[1024];
     size_t nrd;
     int nwr;
@@ -398,19 +384,18 @@ static idl_retcode_t idlc_parse(const idl_builtin_annotation_t ** generator_anno
     } else {
       while ((nrd = fread(buf, sizeof(buf), 1, fin)) > 0) {
 #if __GNUC__ >= 12
-        IDL_WARNING_GNUC_OFF(analyzer-malloc-leak)
+        IDL_WARNING_GNUC_OFF(analyzer - malloc - leak)
 #endif
         if ((nwr = idlc_putn(buf, nrd)) == -1) {
           ret = retcode;
           assert(ret != 0);
         }
 #if __GNUC__ >= 12
-        IDL_WARNING_GNUC_ON(analyzer-malloc-leak)
+        IDL_WARNING_GNUC_ON(analyzer - malloc - leak)
 #endif
         assert(nrd == (size_t)nwr);
       }
-      if (fin != stdin)
-        fclose(fin);
+      if (fin != stdin) fclose(fin);
     }
   }
 
@@ -422,7 +407,8 @@ static idl_retcode_t idlc_parse(const idl_builtin_annotation_t ** generator_anno
       if (config.keylist) {
         pstate->config.flags |= IDL_FLAG_KEYLIST;
       } else if (pstate->keylists && pstate->annotations) {
-        idl_error(pstate, NULL,
+        idl_error(
+          pstate, NULL,
           "Translation unit contains both annotations and #pragma keylist "
           "directives, use only one of these or use the -f keylist command "
           "line option to force using only #pragma keylist and ignore "
@@ -434,8 +420,7 @@ static idl_retcode_t idlc_parse(const idl_builtin_annotation_t ** generator_anno
     }
   }
 
-  if (ret != IDL_RETCODE_OK)
-  {
+  if (ret != IDL_RETCODE_OK) {
     idl_delete_pstate(pstate);
     pstate = NULL;
   }
@@ -466,7 +451,7 @@ static int set_debug(const idlc_option_t *opt, const char *optarg)
 }
 #endif
 
-static int set_compile_only(const idlc_option_t *opt, const char *arg)
+static int set_compile_only(const idlc_option_t * opt, const char * arg)
 {
   (void)opt;
   (void)arg;
@@ -475,7 +460,7 @@ static int set_compile_only(const idlc_option_t *opt, const char *arg)
   return 0;
 }
 
-static int set_preprocess_only(const idlc_option_t *opt, const char *arg)
+static int set_preprocess_only(const idlc_option_t * opt, const char * arg)
 {
   (void)opt;
   (void)arg;
@@ -484,7 +469,7 @@ static int set_preprocess_only(const idlc_option_t *opt, const char *arg)
   return 0;
 }
 
-static int config_default_extensibility(const idlc_option_t *opt, const char *arg)
+static int config_default_extensibility(const idlc_option_t * opt, const char * arg)
 {
   (void)opt;
   if (strcmp(arg, "final") == 0)
@@ -498,7 +483,7 @@ static int config_default_extensibility(const idlc_option_t *opt, const char *ar
   return 0;
 }
 
-static int config_default_nested(const idlc_option_t *opt, const char *arg)
+static int config_default_nested(const idlc_option_t * opt, const char * arg)
 {
   (void)opt;
   if (strcmp(arg, "true") == 0)
@@ -514,16 +499,17 @@ static int add_disable_warning(idl_warning_t warning)
 {
   if (config.disable_warnings.count == config.disable_warnings.size) {
     config.disable_warnings.size += DISABLE_WARNING_CHSZ;
-    idl_warning_t *tmp = idl_realloc(config.disable_warnings.list, config.disable_warnings.size * sizeof(*config.disable_warnings.list));
-    if (!tmp)
-      return IDLC_NO_MEMORY;
+    idl_warning_t * tmp = idl_realloc(
+      config.disable_warnings.list,
+      config.disable_warnings.size * sizeof(*config.disable_warnings.list));
+    if (!tmp) return IDLC_NO_MEMORY;
     config.disable_warnings.list = tmp;
   }
   config.disable_warnings.list[config.disable_warnings.count++] = warning;
   return 0;
 }
 
-static int config_warning(const idlc_option_t *opt, const char *arg)
+static int config_warning(const idlc_option_t * opt, const char * arg)
 {
   (void)opt;
   if (strcmp(arg, "no-implicit-extensibility") == 0)
@@ -545,29 +531,29 @@ static int config_warning(const idlc_option_t *opt, const char *arg)
   return 0;
 }
 
-static int add_include(const idlc_option_t *opt, const char *arg)
+static int add_include(const idlc_option_t * opt, const char * arg)
 {
   (void)opt;
   config.argv[config.argc++] = "-I";
-  config.argv[config.argc++] = (char*)arg;
+  config.argv[config.argc++] = (char *)arg;
   return 0;
 }
 
-static int add_macro(const idlc_option_t *opt, const char *arg)
+static int add_macro(const idlc_option_t * opt, const char * arg)
 {
   (void)opt;
   config.argv[config.argc++] = "-D";
-  config.argv[config.argc++] = (char*)arg;
+  config.argv[config.argc++] = (char *)arg;
   return 0;
 }
 
-  /* FIXME: introduce compatibility options
+/* FIXME: introduce compatibility options
    * -e(xtension) with e.g. embedded-struct-def. The -e flags can also be used
    *  to enable/disable building blocks from IDL 4.x.
    * -s with e.g. 3.5 and 4.0 to enable everything allowed in the specific IDL
    *  specification.
    */
-static const idlc_option_t *compopts[] = {
+static const idlc_option_t * compopts[] = {
 #if 0
   &(idlc_option_t){
     IDLC_FUNCTION, { .function = &set_debug }, 'd', "", "<component>",
@@ -575,83 +561,118 @@ static const idlc_option_t *compopts[] = {
     "more than one -d option to specify multiple components.\n"
     "Components: preprocessor, scanner, parser." },
 #endif
+  &(idlc_option_t){IDLC_FUNCTION, {.function = &set_compile_only}, 'S', "", "", "Compile only."},
   &(idlc_option_t){
-    IDLC_FUNCTION, { .function = &set_compile_only }, 'S', "", "",
-    "Compile only." },
+    IDLC_FUNCTION, {.function = &set_preprocess_only}, 'E', "", NULL, "Preprocess only."},
   &(idlc_option_t){
-    IDLC_FUNCTION, { .function = &set_preprocess_only }, 'E', "", NULL,
-    "Preprocess only."},
-  &(idlc_option_t){
-    IDLC_FLAG, { .flag = &config.keylist }, 'f', "keylist", "",
+    IDLC_FLAG,
+    {.flag = &config.keylist},
+    'f',
+    "keylist",
+    "",
     "Force use of #pragma keylist directive even if annotations occur "
-    "in the translation unit." },
+    "in the translation unit."},
   &(idlc_option_t){
-    IDLC_FLAG, { .flag = &config.case_sensitive }, 'f', "case-sensitive", "",
+    IDLC_FLAG,
+    {.flag = &config.case_sensitive},
+    'f',
+    "case-sensitive",
+    "",
     "Switch to case-sensitive mode of operation. e.g. to allow constructed "
-    "entities to contain fields that differ only in case." },
+    "entities to contain fields that differ only in case."},
+  &(idlc_option_t){IDLC_FLAG, {.flag = &config.help}, 'h', "", "", "Display available options."},
   &(idlc_option_t){
-    IDLC_FLAG, { .flag = &config.help }, 'h', "", "",
-    "Display available options." },
+    IDLC_FUNCTION,
+    {.function = &add_include},
+    'I',
+    "",
+    "<directory>",
+    "Add <directory> to include search list."},
   &(idlc_option_t){
-    IDLC_FUNCTION, { .function = &add_include }, 'I', "", "<directory>",
-    "Add <directory> to include search list." },
+    IDLC_FUNCTION,
+    {.function = &add_macro},
+    'D',
+    "",
+    "<macro>[=value]",
+    "Define <macro> to <value> (default:1)."},
   &(idlc_option_t){
-    IDLC_FUNCTION, { .function = &add_macro }, 'D', "", "<macro>[=value]",
-    "Define <macro> to <value> (default:1)." },
+    IDLC_STRING,
+    {.string = &config.lang},
+    'l',
+    "",
+    "<language>",
+    "Compile representation for <language>. (default:c)."},
   &(idlc_option_t){
-    IDLC_STRING, { .string = &config.lang }, 'l', "", "<language>",
-    "Compile representation for <language>. (default:c)." },
+    IDLC_FLAG, {.flag = &config.version}, 'v', "", "", "Display version information."},
   &(idlc_option_t){
-    IDLC_FLAG, { .flag = &config.version }, 'v', "", "",
-    "Display version information." },
-  &(idlc_option_t){
-    IDLC_FUNCTION, { .function = &config_default_extensibility }, 'x', "", "<extensibility>",
+    IDLC_FUNCTION,
+    {.function = &config_default_extensibility},
+    'x',
+    "",
+    "<extensibility>",
     "Set the default extensibility that is used in case no extensibility"
     "is set on a type. Possible values are final, appendable and mutable. "
-    "(default: final)" },
+    "(default: final)"},
   &(idlc_option_t){
-    IDLC_FUNCTION, { .function = &config_default_nested }, 'n', "", "<nested>",
+    IDLC_FUNCTION,
+    {.function = &config_default_nested},
+    'n',
+    "",
+    "<nested>",
     "Set the default nestedness that is used in the absence of nestedness specifiers on a type "
     "(@topic/nested), or other specifiers in its hierarchy (@default_nestedness on modules), "
     "with an unset nestedness implicitly being false. Possible values for this option are: true, "
-    "false (default: true). " },
+    "false (default: true). "},
   &(idlc_option_t){
-    IDLC_FUNCTION, { .function = &config_warning }, 'W', "", "<[no-]warning>",
+    IDLC_FUNCTION,
+    {.function = &config_warning},
+    'W',
+    "",
+    "<[no-]warning>",
     "Enable or disable warnings. Possible values are: -Wno-implicit-extensibility, "
     "-Wno-extra-token-directive, -Wno-unknown_escape_seq, -Wno-inherit-appendable, "
     "-Wno-eof-newline, -Wno-enum-consecutive. Use -Werror to make all warnings into "
-    "errors. " },
+    "errors. "},
   &(idlc_option_t){
-    IDLC_STRING, { .string = &config.output_dir }, 'o', "", "<directory>",
-    "Set the output directory for compiled files." },
+    IDLC_STRING,
+    {.string = &config.output_dir},
+    'o',
+    "",
+    "<directory>",
+    "Set the output directory for compiled files."},
   &(idlc_option_t){
-    IDLC_STRING, { .string = &config.base_dir }, 'b', "", "<directory>",
+    IDLC_STRING,
+    {.string = &config.base_dir},
+    'b',
+    "",
+    "<directory>",
     "Enable directory reconstruction starting from <base_dir> "
     "Attempts to recreate directory structure matching input. "
     "Use without the -o option will compile IDL files in-place. "
-    "Fail-silent if root_dir is not a parent of input" },
+    "Fail-silent if root_dir is not a parent of input"},
 #ifdef DDS_HAS_TYPE_DISCOVERY
   &(idlc_option_t){
-    IDLC_FLAG, { .flag = &config.no_type_info }, 't', "", "",
-    "Don't generate type information in the topic descriptor" },
+    IDLC_FLAG,
+    {.flag = &config.no_type_info},
+    't',
+    "",
+    "",
+    "Don't generate type information in the topic descriptor"},
 #endif
-  NULL
-};
+  NULL};
 
-static void print_version(const char *prog)
+static void print_version(const char * prog)
 {
   printf("%s (Eclipse Cyclone DDS) %s\n", prog, IDL_VERSION);
 }
 
-static const char *figure_language(int argc, char **argv)
+static const char * figure_language(int argc, char ** argv)
 {
-  const char *lang = "c";
+  const char * lang = "c";
 
-  for (int i=1; i < argc; ) {
-    if (argv[i][0] != '-' || argv[i][1] == '\0')
-      break;
-    if (strcmp(argv[i], "--") == 0)
-      break;
+  for (int i = 1; i < argc;) {
+    if (argv[i][0] != '-' || argv[i][1] == '\0') break;
+    if (strcmp(argv[i], "--") == 0) break;
     if (argv[i][1] == 'l') {
       if (argv[i][2] != '\0')
         lang = &argv[i][2];
@@ -670,20 +691,19 @@ static const char *figure_language(int argc, char **argv)
 #define xstr(s) str(s)
 #define str(s) #s
 
-int main(int argc, char *argv[])
+int main(int argc, char * argv[])
 {
   int exit_code = EXIT_FAILURE;
-  const char *prog = argv[0];
-  const char *lang;
+  const char * prog = argv[0];
+  const char * lang;
   const idl_builtin_annotation_t ** generator_annotations;
   idlc_generator_plugin_t gen;
-  idlc_option_t **opts = NULL;
-  const idlc_option_t **genopts = NULL;
+  idlc_option_t ** opts = NULL;
+  const idlc_option_t ** genopts = NULL;
   size_t nopts = 0, ncompopts = 0, ngenopts = 0;
 
-  for (const char *sep = argv[0]; *sep; sep++) {
-    if (idl_isseparator(*sep))
-      prog = sep + 1;
+  for (const char * sep = argv[0]; *sep; sep++) {
+    if (idl_isseparator(*sep)) prog = sep + 1;
   }
 
   config.compile = 1;
@@ -705,8 +725,7 @@ int main(int argc, char *argv[])
     fprintf(stderr, "%s: cannot load generator %s\n", prog, lang);
 
   config.argc = 0;
-  if (!(config.argv = idl_calloc((size_t)argc + 7, sizeof(config.argv[0]))))
-    goto err_argv;
+  if (!(config.argv = idl_calloc((size_t)argc + 7, sizeof(config.argv[0])))) goto err_argv;
 
   config.argv[config.argc++] = argv[0];
   config.argv[config.argc++] = "-C"; /* keep comments */
@@ -721,17 +740,16 @@ int main(int argc, char *argv[])
   config.argv[config.argc++] = "-D__IDLC_MINOR__=" xstr(IDL_VERSION_MINOR);
   config.argv[config.argc++] = "-D__IDLC_PATCHLEVEL__=" xstr(IDL_VERSION_PATCH);
   /* parse command line options */
-  ncompopts = (sizeof(compopts)/sizeof(compopts[0])) - 1;
+  ncompopts = (sizeof(compopts) / sizeof(compopts[0])) - 1;
   if (gen.generator_options) {
     genopts = gen.generator_options();
-    for (; genopts[ngenopts]; ngenopts++) ;
+    for (; genopts[ngenopts]; ngenopts++)
+      ;
   }
   nopts = ncompopts + ngenopts;
-  if (!(opts = idl_calloc(nopts + 1, sizeof(opts[0]))))
-    goto err_alloc_opts;
+  if (!(opts = idl_calloc(nopts + 1, sizeof(opts[0])))) goto err_alloc_opts;
   memcpy(opts, compopts, ncompopts * sizeof(opts[0]));
-  if (ngenopts)
-    memcpy(opts+ncompopts, genopts, ngenopts * sizeof(opts[0]));
+  if (ngenopts) memcpy(opts + ncompopts, genopts, ngenopts * sizeof(opts[0]));
   opts[nopts] = NULL;
 
   switch (parse_options(argc, argv, opts)) {
@@ -766,37 +784,29 @@ int main(int argc, char *argv[])
 
     if ((ret = idlc_parse(generator_annotations))) {
       /* assume other errors are reported by processor */
-      if (ret == IDL_RETCODE_NO_MEMORY)
-        fprintf(stderr, "Out of memory\n");
+      if (ret == IDL_RETCODE_NO_MEMORY) fprintf(stderr, "Out of memory\n");
       goto err_parse;
     } else if (config.compile) {
       idlc_generator_config_t generator_config;
       memset(&generator_config, 0, sizeof(generator_config));
 
       // Duplicate/Untaint the output dir to keep header guards neat
-      if(config.output_dir) {
-        if(!(generator_config.output_dir = idl_strdup(config.output_dir)))
-          goto err_generate;
-        if(idl_untaint_path(generator_config.output_dir) < 0)
-          goto err_generate;
+      if (config.output_dir) {
+        if (!(generator_config.output_dir = idl_strdup(config.output_dir))) goto err_generate;
+        if (idl_untaint_path(generator_config.output_dir) < 0) goto err_generate;
       }
       // Root dir must be normalized because relativity comparison will be done
-      if(config.base_dir) {
-        if(idl_normalize_path(config.base_dir, &generator_config.base_dir) < 0)
-          goto err_generate;
+      if (config.base_dir) {
+        if (idl_normalize_path(config.base_dir, &generator_config.base_dir) < 0) goto err_generate;
       }
 #ifdef DDS_HAS_TYPE_DISCOVERY
-      if(!config.no_type_info)
-        generator_config.generate_type_info = true;
+      if (!config.no_type_info) generator_config.generate_type_info = true;
       generator_config.generate_typeinfo_typemap = generate_type_meta_ser;
-#endif // DDS_HAS_TYPE_DISCOVERY
-      if (gen.generate)
-        ret = gen.generate(pstate, &generator_config);
+#endif  // DDS_HAS_TYPE_DISCOVERY
+      if (gen.generate) ret = gen.generate(pstate, &generator_config);
 
-      if(generator_config.output_dir)
-        idl_free(generator_config.output_dir);
-      if(generator_config.base_dir)
-        idl_free(generator_config.base_dir);
+      if (generator_config.output_dir) idl_free(generator_config.output_dir);
+      if (generator_config.base_dir) idl_free(generator_config.base_dir);
       if (ret) {
         fprintf(stderr, "Failed to compile '%s'\n", config.file);
         goto err_generate;
@@ -810,8 +820,7 @@ err_parse:
 err_parse_opts:
   idl_free(opts);
 err_alloc_opts:
-  if (config.disable_warnings.list)
-    idl_free(config.disable_warnings.list);
+  if (config.disable_warnings.list) idl_free(config.disable_warnings.list);
   idl_free(config.argv);
 err_argv:
   idl_delete_pstate(pstate);

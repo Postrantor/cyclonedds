@@ -14,19 +14,19 @@
 
 #include "ddsi__protocol.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 /** @component misc */
-inline ddsi_seqno_t ddsi_from_seqno (const ddsi_sequence_number_t sn)
+inline ddsi_seqno_t ddsi_from_seqno(const ddsi_sequence_number_t sn)
 {
-  uint64_t sn_high = (uint32_t) sn.high;
+  uint64_t sn_high = (uint32_t)sn.high;
   return (sn_high << 32) | sn.low;
 }
 
 /** @component misc */
-inline bool ddsi_validating_from_seqno (const ddsi_sequence_number_t sn, ddsi_seqno_t *res)
+inline bool ddsi_validating_from_seqno(const ddsi_sequence_number_t sn, ddsi_seqno_t * res)
 {
   // ddsi_from_seqno does not checks whatsoever (and shouldn't because it is used quite a lot)
   // Valid sequence numbers are in [1 .. 2**63-1] union { SEQUENCE_NUMBER_UNKNOWN }
@@ -38,38 +38,38 @@ inline bool ddsi_validating_from_seqno (const ddsi_sequence_number_t sn, ddsi_se
   // to do differently.  That leaves [1 .. 2**63-1]
   //
   // Since we use uint64_t, we can easily test by checking whether (s-1) is in [0 .. 2**63-1)
-  const ddsi_seqno_t tmp = ddsi_from_seqno (sn);
+  const ddsi_seqno_t tmp = ddsi_from_seqno(sn);
   *res = tmp;
   return (tmp - 1) < DDSI_MAX_SEQ_NUMBER;
 }
 
 /** @component misc */
-inline ddsi_sequence_number_t ddsi_to_seqno (ddsi_seqno_t n)
+inline ddsi_sequence_number_t ddsi_to_seqno(ddsi_seqno_t n)
 {
   ddsi_sequence_number_t x;
-  x.high = (int32_t) (n >> 32);
-  x.low = (uint32_t) n;
+  x.high = (int32_t)(n >> 32);
+  x.low = (uint32_t)n;
   return x;
 }
 
 /** @component misc */
-unsigned char ddsi_normalize_data_datafrag_flags (const ddsi_rtps_submessage_header_t *smhdr);
+unsigned char ddsi_normalize_data_datafrag_flags(const ddsi_rtps_submessage_header_t * smhdr);
 
 extern const ddsi_guid_t ddsi_nullguid;
 
 /** @component misc */
-bool ddsi_guid_prefix_zero (const ddsi_guid_prefix_t *a);
+bool ddsi_guid_prefix_zero(const ddsi_guid_prefix_t * a);
 
 /** @component misc */
-int ddsi_guid_prefix_eq (const ddsi_guid_prefix_t *a, const ddsi_guid_prefix_t *b);
+int ddsi_guid_prefix_eq(const ddsi_guid_prefix_t * a, const ddsi_guid_prefix_t * b);
 
 /** @component misc */
-int ddsi_guid_eq (const struct ddsi_guid *a, const struct ddsi_guid *b);
+int ddsi_guid_eq(const struct ddsi_guid * a, const struct ddsi_guid * b);
 
 /** @component misc */
-int ddsi_patmatch (const char *pat, const char *str);
+int ddsi_patmatch(const char * pat, const char * str);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

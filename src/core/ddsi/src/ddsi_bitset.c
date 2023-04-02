@@ -11,9 +11,8 @@
  */
 #include "ddsi__bitset.h"
 
-extern inline int ddsi_bitset_isset (uint32_t numbits, const uint32_t *bits, uint32_t idx);
-extern inline void ddsi_bitset_set (uint32_t numbits, uint32_t *bits, uint32_t idx);
-extern inline void ddsi_bitset_clear (uint32_t numbits, uint32_t *bits, uint32_t idx);
-extern inline void ddsi_bitset_zero (uint32_t numbits, uint32_t *bits);
-extern inline void ddsi_bitset_one (uint32_t numbits, uint32_t *bits);
-
+extern inline int ddsi_bitset_isset(uint32_t numbits, const uint32_t * bits, uint32_t idx);
+extern inline void ddsi_bitset_set(uint32_t numbits, uint32_t * bits, uint32_t idx);
+extern inline void ddsi_bitset_clear(uint32_t numbits, uint32_t * bits, uint32_t idx);
+extern inline void ddsi_bitset_zero(uint32_t numbits, uint32_t * bits);
+extern inline void ddsi_bitset_one(uint32_t numbits, uint32_t * bits);

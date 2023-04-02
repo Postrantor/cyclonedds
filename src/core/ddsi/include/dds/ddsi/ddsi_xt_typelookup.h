@@ -9,10 +9,9 @@
 #ifndef DDSI_XT_TYPELOOKUP_H
 #define DDSI_XT_TYPELOOKUP_H
 
-#include "dds/ddsi/ddsi_xt_typeinfo.h"
-
-#include "dds/ddsc/dds_public_impl.h"
 #include "dds/cdr/dds_cdrstream.h"
+#include "dds/ddsc/dds_public_impl.h"
+#include "dds/ddsi/ddsi_xt_typeinfo.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,8 +19,7 @@ extern "C" {
 
 typedef uint8_t DDS_GuidPrefix_t[12];
 
-#define DDS_GuidPrefix_t__alloc() \
-((DDS_GuidPrefix_t*) dds_alloc (sizeof (DDS_GuidPrefix_t)));
+#define DDS_GuidPrefix_t__alloc() ((DDS_GuidPrefix_t *)dds_alloc(sizeof(DDS_GuidPrefix_t)));
 
 typedef struct DDS_EntityId_t
 {
@@ -51,20 +49,19 @@ typedef struct DDS_SampleIdentity
 typedef uint8_t DDS_RPC_UnknownOperation;
 
 #define DDS_RPC_UnknownOperation__alloc() \
-((DDS_RPC_UnknownOperation*) dds_alloc (sizeof (DDS_RPC_UnknownOperation)));
+  ((DDS_RPC_UnknownOperation *)dds_alloc(sizeof(DDS_RPC_UnknownOperation)));
 
 typedef uint8_t DDS_RPC_UnknownException;
 
 #define DDS_RPC_UnknownException__alloc() \
-((DDS_RPC_UnknownException*) dds_alloc (sizeof (DDS_RPC_UnknownException)));
+  ((DDS_RPC_UnknownException *)dds_alloc(sizeof(DDS_RPC_UnknownException)));
 
 typedef uint8_t DDS_RPC_UnusedMember;
 
 #define DDS_RPC_UnusedMember__alloc() \
-((DDS_RPC_UnusedMember*) dds_alloc (sizeof (DDS_RPC_UnusedMember)));
+  ((DDS_RPC_UnusedMember *)dds_alloc(sizeof(DDS_RPC_UnusedMember)));
 
-typedef enum DDS_RPC_RemoteExceptionCode
-{
+typedef enum DDS_RPC_RemoteExceptionCode {
   DDS_RPC_REMOTE_EX_OK,
   DDS_RPC_REMOTE_EX_UNSUPPORTED,
   DDS_RPC_REMOTE_EX_INVALID_ARGUMENT,
@@ -74,12 +71,12 @@ typedef enum DDS_RPC_RemoteExceptionCode
 } DDS_RPC_RemoteExceptionCode;
 
 #define DDS_RPC_RemoteExceptionCode__alloc() \
-((DDS_RPC_RemoteExceptionCode*) dds_alloc (sizeof (DDS_RPC_RemoteExceptionCode)));
+  ((DDS_RPC_RemoteExceptionCode *)dds_alloc(sizeof(DDS_RPC_RemoteExceptionCode)));
 
 typedef char DDS_RPC_InstanceName[256];
 
 #define DDS_RPC_InstanceName__alloc() \
-((DDS_RPC_InstanceName*) dds_alloc (sizeof (DDS_RPC_InstanceName)));
+  ((DDS_RPC_InstanceName *)dds_alloc(sizeof(DDS_RPC_InstanceName)));
 
 typedef struct DDS_RPC_RequestHeader
 {
@@ -101,15 +98,16 @@ typedef struct dds_sequence_DDS_XTypes_TypeIdentifier
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifier *_buffer;
+  struct DDS_XTypes_TypeIdentifier * _buffer;
   bool _release;
 } dds_sequence_DDS_XTypes_TypeIdentifier;
 
 #define dds_sequence_DDS_XTypes_TypeIdentifier__alloc() \
-((dds_sequence_DDS_XTypes_TypeIdentifier*) dds_alloc (sizeof (dds_sequence_DDS_XTypes_TypeIdentifier)));
+  ((dds_sequence_DDS_XTypes_TypeIdentifier *)dds_alloc( \
+    sizeof(dds_sequence_DDS_XTypes_TypeIdentifier)));
 
 #define dds_sequence_DDS_XTypes_TypeIdentifier_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifier *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifier)))
+  ((struct DDS_XTypes_TypeIdentifier *)dds_alloc((l) * sizeof(struct DDS_XTypes_TypeIdentifier)))
 #endif /* DDS_SEQUENCE_DDS_XTYPES_TYPEIDENTIFIER_DEFINED */
 
 typedef struct DDS_Builtin_TypeLookup_getTypes_In
@@ -123,15 +121,17 @@ typedef struct dds_sequence_DDS_XTypes_TypeIdentifierTypeObjectPair
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifierTypeObjectPair *_buffer;
+  struct DDS_XTypes_TypeIdentifierTypeObjectPair * _buffer;
   bool _release;
 } dds_sequence_DDS_XTypes_TypeIdentifierTypeObjectPair;
 
 #define dds_sequence_DDS_XTypes_TypeIdentifierTypeObjectPair__alloc() \
-((dds_sequence_DDS_XTypes_TypeIdentifierTypeObjectPair*) dds_alloc (sizeof (dds_sequence_DDS_XTypes_TypeIdentifierTypeObjectPair)));
+  ((dds_sequence_DDS_XTypes_TypeIdentifierTypeObjectPair *)dds_alloc( \
+    sizeof(dds_sequence_DDS_XTypes_TypeIdentifierTypeObjectPair)));
 
 #define dds_sequence_DDS_XTypes_TypeIdentifierTypeObjectPair_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifierTypeObjectPair *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifierTypeObjectPair)))
+  ((struct DDS_XTypes_TypeIdentifierTypeObjectPair *)dds_alloc(          \
+    (l) * sizeof(struct DDS_XTypes_TypeIdentifierTypeObjectPair)))
 #endif /* DDS_SEQUENCE_DDS_XTYPES_TYPEIDENTIFIERTYPEOBJECTPAIR_DEFINED */
 
 #ifndef DDS_SEQUENCE_DDS_XTYPES_TYPEIDENTIFIERPAIR_DEFINED
@@ -140,15 +140,17 @@ typedef struct dds_sequence_DDS_XTypes_TypeIdentifierPair
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifierPair *_buffer;
+  struct DDS_XTypes_TypeIdentifierPair * _buffer;
   bool _release;
 } dds_sequence_DDS_XTypes_TypeIdentifierPair;
 
 #define dds_sequence_DDS_XTypes_TypeIdentifierPair__alloc() \
-((dds_sequence_DDS_XTypes_TypeIdentifierPair*) dds_alloc (sizeof (dds_sequence_DDS_XTypes_TypeIdentifierPair)));
+  ((dds_sequence_DDS_XTypes_TypeIdentifierPair *)dds_alloc( \
+    sizeof(dds_sequence_DDS_XTypes_TypeIdentifierPair)));
 
 #define dds_sequence_DDS_XTypes_TypeIdentifierPair_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifierPair *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifierPair)))
+  ((struct DDS_XTypes_TypeIdentifierPair *)dds_alloc(          \
+    (l) * sizeof(struct DDS_XTypes_TypeIdentifierPair)))
 #endif /* DDS_SEQUENCE_DDS_XTYPES_TYPEIDENTIFIERPAIR_DEFINED */
 
 typedef struct DDS_Builtin_TypeLookup_getTypes_Out
@@ -160,8 +162,7 @@ typedef struct DDS_Builtin_TypeLookup_getTypes_Out
 typedef struct DDS_Builtin_TypeLookup_getTypes_Result
 {
   int32_t _d;
-  union
-  {
+  union {
     struct DDS_Builtin_TypeLookup_getTypes_Out result;
   } _u;
 } DDS_Builtin_TypeLookup_getTypes_Result;
@@ -172,15 +173,16 @@ typedef struct dds_sequence_DDS_XTypes_TypeIdentifier
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifier *_buffer;
+  struct DDS_XTypes_TypeIdentifier * _buffer;
   bool _release;
 } dds_sequence_DDS_XTypes_TypeIdentifier;
 
 #define dds_sequence_DDS_XTypes_TypeIdentifier__alloc() \
-((dds_sequence_DDS_XTypes_TypeIdentifier*) dds_alloc (sizeof (dds_sequence_DDS_XTypes_TypeIdentifier)));
+  ((dds_sequence_DDS_XTypes_TypeIdentifier *)dds_alloc( \
+    sizeof(dds_sequence_DDS_XTypes_TypeIdentifier)));
 
 #define dds_sequence_DDS_XTypes_TypeIdentifier_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifier *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifier)))
+  ((struct DDS_XTypes_TypeIdentifier *)dds_alloc((l) * sizeof(struct DDS_XTypes_TypeIdentifier)))
 #endif /* DDS_SEQUENCE_DDS_XTYPES_TYPEIDENTIFIER_DEFINED */
 
 #ifndef DDS_SEQUENCE_OCTET_DEFINED
@@ -189,15 +191,13 @@ typedef struct dds_sequence_octet
 {
   uint32_t _maximum;
   uint32_t _length;
-  uint8_t *_buffer;
+  uint8_t * _buffer;
   bool _release;
 } dds_sequence_octet;
 
-#define dds_sequence_octet__alloc() \
-((dds_sequence_octet*) dds_alloc (sizeof (dds_sequence_octet)));
+#define dds_sequence_octet__alloc() ((dds_sequence_octet *)dds_alloc(sizeof(dds_sequence_octet)));
 
-#define dds_sequence_octet_allocbuf(l) \
-((uint8_t *) dds_alloc ((l) * sizeof (uint8_t)))
+#define dds_sequence_octet_allocbuf(l) ((uint8_t *)dds_alloc((l) * sizeof(uint8_t)))
 #endif /* DDS_SEQUENCE_OCTET_DEFINED */
 
 typedef struct DDS_Builtin_TypeLookup_getTypeDependencies_In
@@ -212,15 +212,17 @@ typedef struct dds_sequence_DDS_XTypes_TypeIdentifierWithSize
 {
   uint32_t _maximum;
   uint32_t _length;
-  struct DDS_XTypes_TypeIdentifierWithSize *_buffer;
+  struct DDS_XTypes_TypeIdentifierWithSize * _buffer;
   bool _release;
 } dds_sequence_DDS_XTypes_TypeIdentifierWithSize;
 
 #define dds_sequence_DDS_XTypes_TypeIdentifierWithSize__alloc() \
-((dds_sequence_DDS_XTypes_TypeIdentifierWithSize*) dds_alloc (sizeof (dds_sequence_DDS_XTypes_TypeIdentifierWithSize)));
+  ((dds_sequence_DDS_XTypes_TypeIdentifierWithSize *)dds_alloc( \
+    sizeof(dds_sequence_DDS_XTypes_TypeIdentifierWithSize)));
 
 #define dds_sequence_DDS_XTypes_TypeIdentifierWithSize_allocbuf(l) \
-((struct DDS_XTypes_TypeIdentifierWithSize *) dds_alloc ((l) * sizeof (struct DDS_XTypes_TypeIdentifierWithSize)))
+  ((struct DDS_XTypes_TypeIdentifierWithSize *)dds_alloc(          \
+    (l) * sizeof(struct DDS_XTypes_TypeIdentifierWithSize)))
 #endif /* DDS_SEQUENCE_DDS_XTYPES_TYPEIDENTIFIERWITHSIZE_DEFINED */
 
 #ifndef DDS_SEQUENCE_OCTET_DEFINED
@@ -229,15 +231,13 @@ typedef struct dds_sequence_octet
 {
   uint32_t _maximum;
   uint32_t _length;
-  uint8_t *_buffer;
+  uint8_t * _buffer;
   bool _release;
 } dds_sequence_octet;
 
-#define dds_sequence_octet__alloc() \
-((dds_sequence_octet*) dds_alloc (sizeof (dds_sequence_octet)));
+#define dds_sequence_octet__alloc() ((dds_sequence_octet *)dds_alloc(sizeof(dds_sequence_octet)));
 
-#define dds_sequence_octet_allocbuf(l) \
-((uint8_t *) dds_alloc ((l) * sizeof (uint8_t)))
+#define dds_sequence_octet_allocbuf(l) ((uint8_t *)dds_alloc((l) * sizeof(uint8_t)))
 #endif /* DDS_SEQUENCE_OCTET_DEFINED */
 
 typedef struct DDS_Builtin_TypeLookup_getTypeDependencies_Out
@@ -249,8 +249,7 @@ typedef struct DDS_Builtin_TypeLookup_getTypeDependencies_Out
 typedef struct DDS_Builtin_TypeLookup_getTypeDependencies_Result
 {
   int32_t _d;
-  union
-  {
+  union {
     struct DDS_Builtin_TypeLookup_getTypeDependencies_Out result;
   } _u;
 } DDS_Builtin_TypeLookup_getTypeDependencies_Result;
@@ -258,8 +257,7 @@ typedef struct DDS_Builtin_TypeLookup_getTypeDependencies_Result
 typedef struct DDS_Builtin_TypeLookup_Call
 {
   int32_t _d;
-  union
-  {
+  union {
     struct DDS_Builtin_TypeLookup_getTypes_In getTypes;
     struct DDS_Builtin_TypeLookup_getTypeDependencies_In getTypeDependencies;
   } _u;
@@ -274,18 +272,17 @@ typedef struct DDS_Builtin_TypeLookup_Request
 DDS_EXPORT extern const dds_topic_descriptor_t DDS_Builtin_TypeLookup_Request_desc;
 
 #define DDS_Builtin_TypeLookup_Request__alloc() \
-((DDS_Builtin_TypeLookup_Request*) dds_alloc (sizeof (DDS_Builtin_TypeLookup_Request)));
+  ((DDS_Builtin_TypeLookup_Request *)dds_alloc(sizeof(DDS_Builtin_TypeLookup_Request)));
 
-#define DDS_Builtin_TypeLookup_Request_free(d,o) \
-dds_sample_free ((d), &DDS_Builtin_TypeLookup_Request_desc, (o))
+#define DDS_Builtin_TypeLookup_Request_free(d, o) \
+  dds_sample_free((d), &DDS_Builtin_TypeLookup_Request_desc, (o))
 
 DDS_EXPORT extern const struct dds_cdrstream_desc DDS_Builtin_TypeLookup_Request_cdrstream_desc;
 
 typedef struct DDS_Builtin_TypeLookup_Return
 {
   int32_t _d;
-  union
-  {
+  union {
     struct DDS_Builtin_TypeLookup_getTypes_Result getType;
     struct DDS_Builtin_TypeLookup_getTypeDependencies_Result getTypeDependencies;
   } _u;
@@ -300,10 +297,10 @@ typedef struct DDS_Builtin_TypeLookup_Reply
 DDS_EXPORT extern const dds_topic_descriptor_t DDS_Builtin_TypeLookup_Reply_desc;
 
 #define DDS_Builtin_TypeLookup_Reply__alloc() \
-((DDS_Builtin_TypeLookup_Reply*) dds_alloc (sizeof (DDS_Builtin_TypeLookup_Reply)));
+  ((DDS_Builtin_TypeLookup_Reply *)dds_alloc(sizeof(DDS_Builtin_TypeLookup_Reply)));
 
-#define DDS_Builtin_TypeLookup_Reply_free(d,o) \
-dds_sample_free ((d), &DDS_Builtin_TypeLookup_Reply_desc, (o))
+#define DDS_Builtin_TypeLookup_Reply_free(d, o) \
+  dds_sample_free((d), &DDS_Builtin_TypeLookup_Reply_desc, (o))
 
 DDS_EXPORT extern const struct dds_cdrstream_desc DDS_Builtin_TypeLookup_Reply_cdrstream_desc;
 

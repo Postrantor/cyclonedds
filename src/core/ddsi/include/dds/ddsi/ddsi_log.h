@@ -16,29 +16,29 @@
 
 #include "dds/ddsrt/log.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-#define GVTRACE(...)        DDS_CTRACE (&gv->logconfig, __VA_ARGS__)
-#define GVLOG(cat, ...)     DDS_CLOG ((cat), &gv->logconfig, __VA_ARGS__)
-#define GVWARNING(...)      DDS_CLOG (DDS_LC_WARNING, &gv->logconfig, __VA_ARGS__)
-#define GVERROR(...)        DDS_CLOG (DDS_LC_ERROR, &gv->logconfig, __VA_ARGS__)
+#define GVTRACE(...) DDS_CTRACE(&gv->logconfig, __VA_ARGS__)
+#define GVLOG(cat, ...) DDS_CLOG((cat), &gv->logconfig, __VA_ARGS__)
+#define GVWARNING(...) DDS_CLOG(DDS_LC_WARNING, &gv->logconfig, __VA_ARGS__)
+#define GVERROR(...) DDS_CLOG(DDS_LC_ERROR, &gv->logconfig, __VA_ARGS__)
 
-#define RSTTRACE(...)       DDS_CTRACE (&rst->gv->logconfig, __VA_ARGS__)
+#define RSTTRACE(...) DDS_CTRACE(&rst->gv->logconfig, __VA_ARGS__)
 
-#define ETRACE(e_, ...)     DDS_CTRACE (&(e_)->e.gv->logconfig, __VA_ARGS__)
-#define EETRACE(e_, ...)    DDS_CTRACE (&(e_)->gv->logconfig, __VA_ARGS__)
-#define ELOG(cat, e_, ...)  DDS_CLOG ((cat), &(e_)->e.gv->logconfig, __VA_ARGS__)
-#define EELOG(cat, e_, ...) DDS_CLOG ((cat), &(e_)->gv->logconfig, __VA_ARGS__)
+#define ETRACE(e_, ...) DDS_CTRACE(&(e_)->e.gv->logconfig, __VA_ARGS__)
+#define EETRACE(e_, ...) DDS_CTRACE(&(e_)->gv->logconfig, __VA_ARGS__)
+#define ELOG(cat, e_, ...) DDS_CLOG((cat), &(e_)->e.gv->logconfig, __VA_ARGS__)
+#define EELOG(cat, e_, ...) DDS_CLOG((cat), &(e_)->gv->logconfig, __VA_ARGS__)
 
 /* There are quite a few places where discovery-related things are logged, so abbreviate those
    a bit */
-#define GVLOGDISC(...)      DDS_CLOG (DDS_LC_DISCOVERY, &gv->logconfig, __VA_ARGS__)
-#define ELOGDISC(e_,...)    DDS_CLOG (DDS_LC_DISCOVERY, &(e_)->e.gv->logconfig, __VA_ARGS__)
-#define EELOGDISC(e_, ...)  DDS_CLOG (DDS_LC_DISCOVERY, &(e_)->gv->logconfig, __VA_ARGS__)
+#define GVLOGDISC(...) DDS_CLOG(DDS_LC_DISCOVERY, &gv->logconfig, __VA_ARGS__)
+#define ELOGDISC(e_, ...) DDS_CLOG(DDS_LC_DISCOVERY, &(e_)->e.gv->logconfig, __VA_ARGS__)
+#define EELOGDISC(e_, ...) DDS_CLOG(DDS_LC_DISCOVERY, &(e_)->gv->logconfig, __VA_ARGS__)
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

@@ -12,10 +12,10 @@
 #ifndef DDSRT_PROCESS_H
 #define DDSRT_PROCESS_H
 
-#include "dds/export.h"
+#include "dds/ddsrt/retcode.h"
 #include "dds/ddsrt/time.h"
 #include "dds/ddsrt/types.h"
-#include "dds/ddsrt/retcode.h"
+#include "dds/export.h"
 
 #if DDSRT_WITH_FREERTOS
 #include <FreeRTOS.h>
@@ -42,8 +42,7 @@ typedef pid_t ddsrt_pid_t;
 #endif
 #endif
 
-
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -52,8 +51,7 @@ extern "C" {
  *
  * @returns The process ID of the calling process.
  */
-DDS_EXPORT ddsrt_pid_t
-ddsrt_getpid(void);
+DDS_EXPORT ddsrt_pid_t ddsrt_getpid(void);
 
 /**
  * @brief Return process name of the calling process.
@@ -64,10 +62,9 @@ ddsrt_getpid(void);
  *
  * @returns The process name of the calling process.
  */
-DDS_EXPORT char *
-ddsrt_getprocessname(void);
+DDS_EXPORT char * ddsrt_getprocessname(void);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

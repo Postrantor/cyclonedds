@@ -16,11 +16,11 @@
 #include <stdint.h>
 
 #if _WIN32
-# include "dds/ddsrt/types/windows.h"
+#include "dds/ddsrt/types/windows.h"
 #elif __VXWORKS__
-# include "dds/ddsrt/types/vxworks.h"
+#include "dds/ddsrt/types/vxworks.h"
 #else
-# include "dds/ddsrt/types/posix.h"
+#include "dds/ddsrt/types/posix.h"
 #endif
 
 #define PRIdSIZE "zd"

@@ -12,13 +12,13 @@
 #ifndef CRYPTO_UTILS_H
 #define CRYPTO_UTILS_H
 
+#include "crypto_defs.h"
 #include "dds/ddsrt/bswap.h"
 #include "dds/ddsrt/endian.h"
 #include "dds/ddsrt/types.h"
-#include "dds/security/export.h"
-#include "dds/security/dds_security_api.h"
 #include "dds/security/core/dds_security_types.h"
-#include "crypto_defs.h"
+#include "dds/security/dds_security_api.h"
+#include "dds/security/export.h"
 
 #define CRYPTO_TRANSFORM_KIND(k) ddsrt_fromBE4u((*(uint32_t *)&((k)[0])))
 #define CRYPTO_TRANSFORM_ID(k) ddsrt_fromBE4u((*(uint32_t *)&((k)[0])))
@@ -38,7 +38,7 @@ struct init_vector_suffix
  * used to retrieve a descriptive error string.
  * Note that the returned string should be freed.
  */
-char *crypto_openssl_error_message(void);
+char * crypto_openssl_error_message(void);
 
 /**
  * @param[in,out] session_key           Session key
@@ -49,12 +49,9 @@ char *crypto_openssl_error_message(void);
  * @param[in,out] ex                    Security exception
  */
 SECURITY_EXPORT bool crypto_calculate_session_key(
-    crypto_session_key_t *session_key,
-    uint32_t session_id,
-    const unsigned char *master_salt,
-    const unsigned char *master_key,
-    DDS_Security_CryptoTransformKind_Enum transformation_kind,
-    DDS_Security_SecurityException *ex);
+  crypto_session_key_t * session_key, uint32_t session_id, const unsigned char * master_salt,
+  const unsigned char * master_key, DDS_Security_CryptoTransformKind_Enum transformation_kind,
+  DDS_Security_SecurityException * ex);
 
 /**
  * @param[in,out] session_key           Session key
@@ -65,12 +62,9 @@ SECURITY_EXPORT bool crypto_calculate_session_key(
  * @param[in,out] ex                    Security exception
  */
 SECURITY_EXPORT bool crypto_calculate_receiver_specific_key(
-    crypto_session_key_t *session_key,
-    uint32_t session_id,
-    const unsigned char *master_salt,
-    const unsigned char *master_key,
-    DDS_Security_CryptoTransformKind_Enum transformation_kind,
-    DDS_Security_SecurityException *ex);
+  crypto_session_key_t * session_key, uint32_t session_id, const unsigned char * master_salt,
+  const unsigned char * master_key, DDS_Security_CryptoTransformKind_Enum transformation_kind,
+  DDS_Security_SecurityException * ex);
 
 SECURITY_EXPORT uint32_t crypto_get_key_size(DDS_Security_CryptoTransformKind_Enum kind);
 SECURITY_EXPORT uint32_t crypto_get_random_uint32(void);
@@ -85,11 +79,8 @@ SECURITY_EXPORT uint64_t crypto_get_random_uint64(void);
  * @param[in]     data_size The size of the data
  * @param[in,out] ex        Security exception
  */
-SECURITY_EXPORT unsigned char *crypto_hmac256(
-    const unsigned char *key,
-    uint32_t key_size,
-    const unsigned char *data,
-    uint32_t data_size,
-    DDS_Security_SecurityException *ex);
+SECURITY_EXPORT unsigned char * crypto_hmac256(
+  const unsigned char * key, uint32_t key_size, const unsigned char * data, uint32_t data_size,
+  DDS_Security_SecurityException * ex);
 
 #endif /* CRYPTO_UTILS_H */

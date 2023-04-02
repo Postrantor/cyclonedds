@@ -13,8 +13,10 @@
 #define IDLC_TEST_COMMON_H
 
 #include <stdlib.h>
+
 #include "descriptor.h"
 
-idl_retcode_t generate_test_descriptor (idl_pstate_t *pstate, const char *idl, struct descriptor *descriptor);
+idl_retcode_t generate_test_descriptor(
+  idl_pstate_t * pstate, const char * idl, struct descriptor * descriptor);
 
 #endif /* IDLC_TEST_COMMON_H */

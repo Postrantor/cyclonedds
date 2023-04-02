@@ -9,6 +9,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+
 #include <assert.h>
 #include <string.h>
 
@@ -28,172 +29,220 @@
 #include "dds__participant.h"
 #include "dds__qos.h"
 
-// 定义一个宏，用于实现实体的锁定和解锁操作
+/** @file
+ *  Cyclone DDS相关的C代码示例，包括实体锁定/解锁、参与者状态验证和删除等功能。
+ */
+
+// 声明实体锁定/解锁函数
 DECL_ENTITY_LOCK_UNLOCK(dds_participant)
 
-// 定义一个常量，表示参与者状态掩码
+// 定义参与者状态掩码
 #define DDS_PARTICIPANT_STATUS_MASK (0u)
-// 比较两个话题名称的函数
-static int cmp_ktopic_name(const void *a, const void *b)
-{
-  return strcmp(a, b);
-}
 
-// 定义一个 AVL 树，用于存储参与者的话题
-const ddsrt_avl_treedef_t participant_ktopics_treedef = DDSRT_AVL_TREEDEF_INITIALIZER_INDKEY(offsetof(struct dds_ktopic, pp_ktopics_avlnode), offsetof(struct dds_ktopic, name), cmp_ktopic_name, 0);
+/**
+ * @brief 比较两个主题名称的字符串
+ *
+ * @param[in] a 第一个主题名称
+ * @param[in] b 第二个主题名称
+ * @return 字符串比较结果
+ */
+static int cmp_ktopic_name(const void *a, const void *b) { return strcmp(a, b); }
 
-// 验证参与者状态掩码是否合法
-static dds_return_t dds_participant_status_validate(uint32_t mask)
-{
+// 初始化参与者主题树定义
+const ddsrt_avl_treedef_t participant_ktopics_treedef =
+    DDSRT_AVL_TREEDEF_INITIALIZER_INDKEY(offsetof(struct dds_ktopic, pp_ktopics_avlnode),
+                                         offsetof(struct dds_ktopic, name),
+                                         cmp_ktopic_name,
+                                         0);
+
+/**
+ * @brief 验证参与者状态掩码是否有效
+ *
+ * @param[in] mask 参与者状态掩码
+ * @return 验证结果，如果有效返回DDS_RETCODE_OK，否则返回DDS_RETCODE_BAD_PARAMETER
+ */
+static dds_return_t dds_participant_status_validate(uint32_t mask) {
   return (mask & ~DDS_PARTICIPANT_STATUS_MASK) ? DDS_RETCODE_BAD_PARAMETER : DDS_RETCODE_OK;
 }
 
-// 删除参与者实体
-static dds_return_t dds_participant_delete(dds_entity *e)
-{
+// 声明参与者删除函数
+static dds_return_t dds_participant_delete(dds_entity *e) ddsrt_nonnull_all;
+
+/**
+ * @brief 删除参与者实体 (Delete a participant entity)
+ *
+ * @param[in] e 指向要删除的参与者实体的指针 (Pointer to the participant entity to be deleted)
+ *
+ * @return 返回操作结果，成功时返回 DDS_RETCODE_OK (Returns the operation result, returns
+ * DDS_RETCODE_OK on success)
+ */
+static dds_return_t dds_participant_delete(dds_entity *e) {
+  // 定义返回值变量 (Define return value variable)
   dds_return_t ret;
-  // 确保实体类型为参与者
+
+  // 断言实体类型为参与者 (Assert that the entity kind is participant)
   assert(dds_entity_kind(e) == DDS_KIND_PARTICIPANT);
 
-  // 确保参与者的所有话题都已经被删除
+  // ktopics 和 topics 是子节点，因此在我们到达这里之前，它们必须已经全部被删除
+  // (ktopics & topics are children and therefore must all have been deleted by the time we get
+  // here)
   assert(ddsrt_avl_is_empty(&((struct dds_participant *)e)->m_ktopics));
 
-  // 唤醒线程状态，以便删除参与者实体
+  // 唤醒线程状态 (Wake up thread state)
   ddsi_thread_state_awake(ddsi_lookup_thread_state(), &e->m_domain->gv);
+
+  // 尝试删除参与者，如果失败则记录错误日志
+  // (Attempt to delete participant, if failed then log an error message)
   if ((ret = ddsi_delete_participant(&e->m_domain->gv, &e->m_guid)) < 0)
-    DDS_CERROR(&e->m_domain->gv.logconfig, "dds_participant_delete: internal error %" PRId32 "\n", ret);
-  // 休眠线程状态
+    DDS_CERROR(&e->m_domain->gv.logconfig, "dds_participant_delete: internal error %" PRId32 "\n",
+               ret);
+
+  // 线程进入休眠状态 (Put the thread to sleep)
   ddsi_thread_state_asleep(ddsi_lookup_thread_state());
+
+  // 返回操作成功的结果代码 (Return the success result code)
   return DDS_RETCODE_OK;
 }
 
-// 设置参与者实体的 QoS
-static dds_return_t dds_participant_qos_set(dds_entity *e, const dds_qos_t *qos, bool enabled)
-{
-  // 注意：e->m_qos 仍然是旧的 QoS，以便在此处失败
-  if (enabled)
-  {
+/**
+ * @brief 设置参与者的QoS（Quality of Service，服务质量）属性。
+ *
+ * @param[in] e       指向dds_entity结构体的指针，表示要设置QoS属性的参与者实体。
+ * @param[in] qos     指向dds_qos_t结构体的指针，包含要设置的QoS属性值。
+ * @param[in] enabled
+ * 布尔值，表示是否启用QoS设置。如果为true，则应用QoS设置；如果为false，则不进行任何操作。
+ *
+ * @return 返回dds_return_t类型的结果代码。如果成功设置QoS属性，则返回DDS_RETCODE_OK。
+ */
+static dds_return_t dds_participant_qos_set(dds_entity *e, const dds_qos_t *qos, bool enabled) {
+  // 注意：e->m_qos仍然是旧的QoS设置，以允许在此处失败
+  if (enabled) {
+    // 定义一个ddsi_participant类型的指针pp
     struct ddsi_participant *pp;
-    // 唤醒线程状态，以便设置参与者实体的 QoS
+
+    // 唤醒当前线程，并获取实体所在域的全局变量
     ddsi_thread_state_awake(ddsi_lookup_thread_state(), &e->m_domain->gv);
-    if ((pp = ddsi_entidx_lookup_participant_guid(e->m_domain->gv.entity_index, &e->m_guid)) != NULL)
-    {
+
+    // 查找参与者实体的GUID，并将其赋值给pp
+    if ((pp = ddsi_entidx_lookup_participant_guid(e->m_domain->gv.entity_index, &e->m_guid)) !=
+        NULL) {
+      // 定义并初始化一个ddsi_plist_t类型的变量plist
       ddsi_plist_t plist;
       ddsi_plist_init_empty(&plist);
+
+      // 将qos的present属性赋值给plist.qos.present和plist.qos.aliased
       plist.qos.present = plist.qos.aliased = qos->present;
+
+      // 将qos结构体的内容复制到plist.qos中
       plist.qos = *qos;
+
+      // 更新参与者实体的QoS设置
       ddsi_update_participant_plist(pp, &plist);
     }
-    // 休眠线程状态
+
+    // 使当前线程进入休眠状态
     ddsi_thread_state_asleep(ddsi_lookup_thread_state());
   }
+
+  // 返回操作成功的结果代码
   return DDS_RETCODE_OK;
 }
-// 定义了一个名为dds_entity_deriver_participant的结构体，其中包含了一些函数指针，用于操作DDS实体
+
+/** @file
+ *  Cyclone DDS 相关的 C 代码，包括实体派生器和参与者创建函数。
+ */
+
+/**
+ * 实体派生器结构体，用于定义参与者实体的操作。
+ */
 const struct dds_entity_deriver dds_entity_deriver_participant = {
-    .interrupt = dds_entity_deriver_dummy_interrupt,                  // 中断处理函数
-    .close = dds_entity_deriver_dummy_close,                          // 关闭函数
-    .delete = dds_participant_delete,                                 // 删除函数
-    .set_qos = dds_participant_qos_set,                               // 设置QoS函数
-    .validate_status = dds_participant_status_validate,               // 验证状态函数
-    .create_statistics = dds_entity_deriver_dummy_create_statistics,  // 创建统计信息函数
-    .refresh_statistics = dds_entity_deriver_dummy_refresh_statistics // 刷新统计信息函数
+    .interrupt = dds_entity_deriver_dummy_interrupt,                   ///< 中断操作
+    .close = dds_entity_deriver_dummy_close,                           ///< 关闭操作
+    .delete = dds_participant_delete,                                  ///< 删除操作
+    .set_qos = dds_participant_qos_set,                                ///< 设置 QoS 操作
+    .validate_status = dds_participant_status_validate,                ///< 验证状态操作
+    .create_statistics = dds_entity_deriver_dummy_create_statistics,   ///< 创建统计信息操作
+    .refresh_statistics = dds_entity_deriver_dummy_refresh_statistics  ///< 刷新统计信息操作
 };
 
-// 创建一个DDS参与者实体
-dds_entity_t dds_create_participant(const dds_domainid_t domain, const dds_qos_t *qos, const dds_listener_t *listener)
-{
-  dds_domain *dom;           // DDS域
-  dds_entity_t ret;          // 返回值
-  ddsi_guid_t guid;          // GUID
-  dds_participant *pp;       // DDS参与者
-  ddsi_plist_t plist;        // 属性列表
-  dds_qos_t *new_qos = NULL; // 新的QoS
-  const char *config = "";   // 配置信息
+/**
+ * 创建参与者实体。
+ *
+ * @param[in] domain    域 ID
+ * @param[in] qos       参与者的 QoS 设置
+ * @param[in] listener  参与者的监听器
+ * @return 成功时返回参与者实体的句柄，失败时返回错误代码
+ */
+dds_entity_t dds_create_participant(const dds_domainid_t domain,
+                                    const dds_qos_t *qos,
+                                    const dds_listener_t *listener) {
+  dds_domain *dom;
+  dds_entity_t ret;
+  ddsi_guid_t guid;
+  dds_participant *pp;
+  ddsi_plist_t plist;
+  dds_qos_t *new_qos = NULL;
+  const char *config = "";
 
-  // 确保DDS实例已经初始化
-  if ((ret = dds_init()) < 0)
-    goto err_dds_init;
+  /* 确保 DDS 实例已初始化。 */
+  if ((ret = dds_init()) < 0) goto err_dds_init;
 
-  // 获取环境变量CYCLONEDDS_URI的值
   (void)ddsrt_getenv("CYCLONEDDS_URI", &config);
 
-  // 创建DDS域
-  if ((ret = dds_domain_create_internal(&dom, domain, true, config)) < 0)
-    goto err_domain_create;
+  /* 创建域。 */
+  if ((ret = dds_domain_create_internal(&dom, domain, true, config)) < 0) goto err_domain_create;
 
-  // 创建新的QoS
+  /* 创建新的 QoS 设置。 */
   new_qos = dds_create_qos();
-  // 如果传入的QoS不为空，则将其与默认的本地QoS合并
-  if (qos != NULL)
-    ddsi_xqos_mergein_missing(new_qos, qos, DDS_PARTICIPANT_QOS_MASK);
-  // 将默认的本地QoS合并到新的QoS中
+  if (qos != NULL) ddsi_xqos_mergein_missing(new_qos, qos, DDS_PARTICIPANT_QOS_MASK);
   ddsi_xqos_mergein_missing(new_qos, &dom->gv.default_local_xqos_pp, ~(uint64_t)0);
-  // 应用实体命名规则
   dds_apply_entity_naming(new_qos, NULL, &dom->gv);
 
-  // 验证QoS是否有效
-  if ((ret = ddsi_xqos_valid(&dom->gv.logconfig, new_qos)) < 0)
-    goto err_qos_validation; // 检查活性状态的类型是否为自动 if (new_qos->liveliness.kind != DDS_LIVELINESS_AUTOMATIC)
-  {
+  /* 验证 QoS 设置。 */
+  if ((ret = ddsi_xqos_valid(&dom->gv.logconfig, new_qos)) < 0) goto err_qos_validation;
+  // 通用验证代码将检查租约持续时间，我们只需要检查种类是否符合要求
+  if (new_qos->liveliness.kind != DDS_LIVELINESS_AUTOMATIC) {
     ret = DDS_RETCODE_BAD_PARAMETER;
     goto err_qos_validation;
   }
 
-  // DDSI层需要一个plist，它将被复制，DDS层接管传递给entity_init的QoS对象的所有权
-  // 我们需要在这里将QoS复制到plist中
+  // DDSI 层需要一个它将复制的 plist，DDS 层获取传入 entity_init 的 QoS 对象的所有权。
+  // 这里我们必须将 QoS 复制到 plist 中
   ddsi_plist_init_empty(&plist);
   ddsi_xqos_mergein_missing(&plist.qos, new_qos, ~(uint64_t)0);
 
-  // 唤醒线程状态并创建新的参与者
   ddsi_thread_state_awake(ddsi_lookup_thread_state(), &dom->gv);
   ret = ddsi_new_participant(&guid, &dom->gv, 0, &plist);
   ddsi_thread_state_asleep(ddsi_lookup_thread_state());
-
-  // 清理plist
   ddsi_plist_fini(&plist);
-
-  // 如果创建参与者失败，则跳转到错误处理
-  if (ret < 0)
-  {
+  if (ret < 0) {
     ret = DDS_RETCODE_ERROR;
     goto err_new_participant;
   }
 
-  // 分配新的参与者实体
+  /* 初始化参与者实体。 */
   pp = dds_alloc(sizeof(*pp));
-
-  // 初始化实体并将其注册为子实体
-  if ((ret = dds_entity_init(&pp->m_entity, &dom->m_entity, DDS_KIND_PARTICIPANT, false, true, new_qos, listener, DDS_PARTICIPANT_STATUS_MASK)) < 0)
+  if ((ret = dds_entity_init(&pp->m_entity, &dom->m_entity, DDS_KIND_PARTICIPANT, false, true,
+                             new_qos, listener, DDS_PARTICIPANT_STATUS_MASK)) < 0)
     goto err_entity_init;
 
-  // 设置实体的GUID和IID
   pp->m_entity.m_guid = guid;
   pp->m_entity.m_iid = ddsi_get_entity_instanceid(&dom->gv, &guid);
-
-  // 设置实体的域和内置订阅者
   pp->m_entity.m_domain = dom;
   pp->m_builtin_subscriber = 0;
-
-  // 初始化参与者的主题列表
   ddsrt_avl_init(&participant_ktopics_treedef, &pp->m_ktopics);
 
-  // 将参与者添加到域的范围内
+  /* 将参与者添加到范围中。 */
   ddsrt_mutex_lock(&dom->m_entity.m_mutex);
   dds_entity_register_child(&dom->m_entity, &pp->m_entity);
-  ddrt_mutex_unlock(&dom->m_entity.m_mutex);
+  ddsrt_mutex_unlock(&dom->m_entity.m_mutex);
 
-  // 完成实体初始化
   dds_entity_init_complete(&pp->m_entity);
-
-  // 释放对域和dds_init的临时引用
+  /* 删除临时额外引用的域和 dds_init。 */
   dds_entity_unpin_and_drop_ref(&dom->m_entity);
   dds_entity_unpin_and_drop_ref(&dds_global.m_entity);
-
-  // 返回参与者实体
   return ret;
 
-// 错误处理
 err_entity_init:
   dds_free(pp);
 err_new_participant:
@@ -204,52 +253,52 @@ err_domain_create:
   dds_entity_unpin_and_drop_ref(&dds_global.m_entity);
 err_dds_init:
   return ret;
-  // 定义函数 dds_lookup_participant，接收 domain_id、participants 和 size 三个参数
-  dds_return_t dds_lookup_participant(dds_domainid_t domain_id, dds_entity_t * participants, size_t size)
-  {
-    dds_return_t ret;
+}
 
-    // 检查参数是否合法
-    if ((participants != NULL && (size == 0 || size >= INT32_MAX)) || (participants == NULL && size != 0))
-      return DDS_RETCODE_BAD_PARAMETER;
+/**
+ * @brief 查找参与者实体 (Lookup participant entities)
+ *
+ * @param domain_id 域ID (Domain ID)
+ * @param participants 参与者实体数组指针 (Pointer to an array of participant entities)
+ * @param size 参与者实体数组的大小 (Size of the participant entities array)
+ * @return dds_return_t 返回操作结果 (Return operation result)
+ */
+dds_return_t dds_lookup_participant(dds_domainid_t domain_id,
+                                    dds_entity_t *participants,
+                                    size_t size) {
+  dds_return_t ret;
 
-    // 如果 participants 不为 NULL，则将第一个元素设置为 0
-    if (participants)
-      participants[0] = 0;
+  // 检查参数是否有效 (Check if parameters are valid)
+  if ((participants != NULL && (size == 0 || size >= INT32_MAX)) ||
+      (participants == NULL && size != 0))
+    return DDS_RETCODE_BAD_PARAMETER;
 
-    // 初始化 DDS
-    if ((ret = dds_init()) < 0)
-      return ret;
+  // 初始化参与者数组 (Initialize the participants array)
+  if (participants) participants[0] = 0;
 
-    // 初始化 ret 为 0
-    ret = 0;
+  // 初始化DDS (Initialize DDS)
+  if ((ret = dds_init()) < 0) return ret;
 
-    // 定义一个指向 dds_domain 结构体的指针 dom
-    struct dds_domain *dom;
-
-    // 加锁以访问全局变量 dds_global
-    ddsrt_mutex_lock(&dds_global.m_mutex);
-
-    // 在 dds_domain 中查找指定的 domain_id
-    if ((dom = dds_domain_find_locked(domain_id)) != NULL)
-    {
-      // 遍历 domain_id 中的所有实体
-      ddsrt_avl_iter_t it;
-      for (dds_entity *e = ddsrt_avl_iter_first(&dds_entity_children_td, &dom->m_entity.m_children, &it); e != NULL; e = ddsrt_avl_iter_next(&it))
-      {
-        // 如果 ret 小于 size，则将实体的句柄存储在 participants 数组中
-        if ((size_t)ret < size)
-          participants[ret] = e->m_hdllink.hdl;
-        ret++;
-      }
+  ret = 0;
+  struct dds_domain *dom;
+  // 锁定全局互斥锁 (Lock the global mutex)
+  ddsrt_mutex_lock(&dds_global.m_mutex);
+  // 查找域 (Find the domain)
+  if ((dom = dds_domain_find_locked(domain_id)) != NULL) {
+    ddsrt_avl_iter_t it;
+    // 遍历实体子节点 (Iterate through entity children)
+    for (dds_entity *e =
+             ddsrt_avl_iter_first(&dds_entity_children_td, &dom->m_entity.m_children, &it);
+         e != NULL; e = ddsrt_avl_iter_next(&it)) {
+      // 如果数组未满，则将实体添加到参与者数组中 (If the array is not full, add the entity to the
+      // participants array)
+      if ((size_t)ret < size) participants[ret] = e->m_hdllink.hdl;
+      ret++;
     }
-
-    // 解锁以访问全局变量 dds_global
-    ddsrt_mutex_unlock(&dds_global.m_mutex);
-
-    // 释放 dds_global.m_entity 的引用并将其从引用计数中删除
-    dds_entity_unpin_and_drop_ref(&dds_global.m_entity);
-
-    // 返回 ret
-    return ret;
   }
+  // 解锁全局互斥锁 (Unlock the global mutex)
+  ddsrt_mutex_unlock(&dds_global.m_mutex);
+  // 取消引用并删除实体 (Unpin and drop reference to the entity)
+  dds_entity_unpin_and_drop_ref(&dds_global.m_entity);
+  return ret;
+}

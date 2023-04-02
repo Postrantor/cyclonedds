@@ -12,19 +12,18 @@
 #ifndef DDSI__PARTICIPANT_H
 #define DDSI__PARTICIPANT_H
 
+#include "dds/ddsi/ddsi_entity.h"
+#include "dds/ddsi/ddsi_gc.h"
+#include "dds/ddsi/ddsi_participant.h"
+#include "dds/ddsi/ddsi_plist.h"
+#include "dds/ddsrt/avl.h"
+#include "dds/ddsrt/fibheap.h"
+#include "dds/ddsrt/log.h"
+#include "dds/ddsrt/sync.h"
 #include "dds/export.h"
 #include "dds/features.h"
 
-#include "dds/ddsrt/avl.h"
-#include "dds/ddsrt/fibheap.h"
-#include "dds/ddsrt/sync.h"
-#include "dds/ddsrt/log.h"
-#include "dds/ddsi/ddsi_gc.h"
-#include "dds/ddsi/ddsi_entity.h"
-#include "dds/ddsi/ddsi_plist.h"
-#include "dds/ddsi/ddsi_participant.h"
-
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -36,17 +35,19 @@ extern const ddsrt_fibheap_def_t ddsi_lease_fhdef_pp;
 
 struct ddsi_writer;
 
-struct ddsi_deleted_participant {
+struct ddsi_deleted_participant
+{
   ddsrt_avl_node_t avlnode;
   ddsi_guid_t guid;
   unsigned for_what;
   ddsrt_mtime_t t_prune;
 };
 
-struct ddsi_deleted_participants_admin {
+struct ddsi_deleted_participants_admin
+{
   ddsrt_mutex_t deleted_participants_lock;
   ddsrt_avl_tree_t deleted_participants;
-  const ddsrt_log_cfg_t *logcfg;
+  const ddsrt_log_cfg_t * logcfg;
   int64_t delay;
 };
 
@@ -63,49 +64,58 @@ struct ddsi_deleted_participants_admin {
    participant", there can only be one of these.  The privileged
    participant MUST have all builtin readers and writers. */
 #define RTPS_PF_PRIVILEGED_PP 4u
-  /* Set this flag to mark the participant as is_ddsi2_pp. */
+/* Set this flag to mark the participant as is_ddsi2_pp. */
 #define RTPS_PF_IS_DDSI2_PP 8u
-  /* Set this flag to mark the participant as an local entity only. */
+/* Set this flag to mark the participant as an local entity only. */
 #define RTPS_PF_ONLY_LOCAL 16u
 
 /** @component ddsi_participant */
-void ddsi_participant_add_wr_lease_locked (struct ddsi_participant * pp, const struct ddsi_writer * wr);
+void ddsi_participant_add_wr_lease_locked(
+  struct ddsi_participant * pp, const struct ddsi_writer * wr);
 
 /** @component ddsi_participant */
-void ddsi_participant_remove_wr_lease_locked (struct ddsi_participant * pp, struct ddsi_writer * wr);
+void ddsi_participant_remove_wr_lease_locked(struct ddsi_participant * pp, struct ddsi_writer * wr);
 
 /** @component ddsi_participant */
-dds_return_t ddsi_participant_allocate_entityid (ddsi_entityid_t *id, uint32_t kind, struct ddsi_participant *pp);
+dds_return_t ddsi_participant_allocate_entityid(
+  ddsi_entityid_t * id, uint32_t kind, struct ddsi_participant * pp);
 
 /** @component ddsi_participant */
-void ddsi_participant_release_entityid (struct ddsi_participant *pp, ddsi_entityid_t id);
+void ddsi_participant_release_entityid(struct ddsi_participant * pp, ddsi_entityid_t id);
 
 /** @component ddsi_participant */
-void ddsi_gc_participant_lease (struct ddsi_gcreq *gcreq);
+void ddsi_gc_participant_lease(struct ddsi_gcreq * gcreq);
 
 /** @component ddsi_participant */
-void ddsi_prune_deleted_participant_guids (struct ddsi_deleted_participants_admin *admin, ddsrt_mtime_t tnow);
+void ddsi_prune_deleted_participant_guids(
+  struct ddsi_deleted_participants_admin * admin, ddsrt_mtime_t tnow);
 
 /** @component ddsi_participant */
-void ddsi_remove_deleted_participant_guid (struct ddsi_deleted_participants_admin *admin, const struct ddsi_guid *guid, unsigned for_what);
+void ddsi_remove_deleted_participant_guid(
+  struct ddsi_deleted_participants_admin * admin, const struct ddsi_guid * guid, unsigned for_what);
 
 /** @component ddsi_participant */
-void ddsi_remember_deleted_participant_guid (struct ddsi_deleted_participants_admin *admin, const struct ddsi_guid *guid);
+void ddsi_remember_deleted_participant_guid(
+  struct ddsi_deleted_participants_admin * admin, const struct ddsi_guid * guid);
 
 /** @component ddsi_participant */
-struct ddsi_participant *ddsi_ref_participant (struct ddsi_participant *pp, const struct ddsi_guid *guid_of_refing_entity);
+struct ddsi_participant * ddsi_ref_participant(
+  struct ddsi_participant * pp, const struct ddsi_guid * guid_of_refing_entity);
 
 /** @component ddsi_participant */
-void ddsi_unref_participant (struct ddsi_participant *pp, const struct ddsi_guid *guid_of_refing_entity);
+void ddsi_unref_participant(
+  struct ddsi_participant * pp, const struct ddsi_guid * guid_of_refing_entity);
 
 /** @component ddsi_participant */
-struct ddsi_deleted_participants_admin *ddsi_deleted_participants_admin_new (const ddsrt_log_cfg_t *logcfg, int64_t delay);
+struct ddsi_deleted_participants_admin * ddsi_deleted_participants_admin_new(
+  const ddsrt_log_cfg_t * logcfg, int64_t delay);
 
 /** @component ddsi_participant */
-void ddsi_deleted_participants_admin_free (struct ddsi_deleted_participants_admin *admin);
+void ddsi_deleted_participants_admin_free(struct ddsi_deleted_participants_admin * admin);
 
 /** @component ddsi_participant */
-int ddsi_is_deleted_participant_guid (struct ddsi_deleted_participants_admin *admin, const struct ddsi_guid *guid, unsigned for_what);
+int ddsi_is_deleted_participant_guid(
+  struct ddsi_deleted_participants_admin * admin, const struct ddsi_guid * guid, unsigned for_what);
 
 /**
  * @component ddsi_participant
@@ -116,7 +126,7 @@ int ddsi_is_deleted_participant_guid (struct ddsi_deleted_participants_admin *ad
  * @param[in] pp The participant
  * @returns The PMD interval of the participant
  */
-dds_duration_t ddsi_participant_get_pmd_interval (struct ddsi_participant *pp);
+dds_duration_t ddsi_participant_get_pmd_interval(struct ddsi_participant * pp);
 
 /**
  * @component ddsi_participant
@@ -128,9 +138,9 @@ dds_duration_t ddsi_participant_get_pmd_interval (struct ddsi_participant *pp);
  * @param[in] entityid The entity ID of the writer
  * @returns The built-in writer
  */
-struct ddsi_writer *ddsi_get_builtin_writer (const struct ddsi_participant *pp, unsigned entityid);
+struct ddsi_writer * ddsi_get_builtin_writer(const struct ddsi_participant * pp, unsigned entityid);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

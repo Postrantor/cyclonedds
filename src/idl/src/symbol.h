@@ -14,45 +14,28 @@
 
 #include "idl/processor.h"
 
-idl_retcode_t
-idl_create_name(
-  idl_pstate_t *state,
-  const idl_location_t *location,
-  char *identifier,
-  bool is_annotation,
-  idl_name_t **namep);
+idl_retcode_t idl_create_name(
+  idl_pstate_t * state, const idl_location_t * location, char * identifier, bool is_annotation,
+  idl_name_t ** namep);
 
-void idl_delete_name(idl_name_t *name);
+void idl_delete_name(idl_name_t * name);
 
-idl_retcode_t
-idl_create_scoped_name(
-  idl_pstate_t *state,
-  const idl_location_t *location,
-  idl_name_t *name,
-  bool absolute,
-  idl_scoped_name_t **scoped_namep);
+idl_retcode_t idl_create_scoped_name(
+  idl_pstate_t * state, const idl_location_t * location, idl_name_t * name, bool absolute,
+  idl_scoped_name_t ** scoped_namep);
 
-idl_retcode_t
-idl_push_scoped_name(
-  idl_pstate_t *pstate,
-  idl_scoped_name_t *scoped_name,
-  idl_name_t *name);
+idl_retcode_t idl_push_scoped_name(
+  idl_pstate_t * pstate, idl_scoped_name_t * scoped_name, idl_name_t * name);
 
-void idl_delete_scoped_name(idl_scoped_name_t *scoped_name);
+void idl_delete_scoped_name(idl_scoped_name_t * scoped_name);
 
-idl_retcode_t
-idl_create_field_name(
-  idl_pstate_t *pstate,
-  const idl_location_t *location,
-  idl_name_t *name,
-  idl_field_name_t **field_namep);
+idl_retcode_t idl_create_field_name(
+  idl_pstate_t * pstate, const idl_location_t * location, idl_name_t * name,
+  idl_field_name_t ** field_namep);
 
-idl_retcode_t
-idl_push_field_name(
-  idl_pstate_t *pstate,
-  idl_field_name_t *field_name,
-  idl_name_t *name);
+idl_retcode_t idl_push_field_name(
+  idl_pstate_t * pstate, idl_field_name_t * field_name, idl_name_t * name);
 
-void idl_delete_field_name(idl_field_name_t *field_name);
+void idl_delete_field_name(idl_field_name_t * field_name);
 
 #endif /* SYMBOL_H */

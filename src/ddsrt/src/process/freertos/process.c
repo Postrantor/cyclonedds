@@ -14,14 +14,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-ddsrt_pid_t
-ddsrt_getpid(void)
-{
-  return xTaskGetCurrentTaskHandle();
-}
+ddsrt_pid_t ddsrt_getpid(void) { return xTaskGetCurrentTaskHandle(); }
 
-char *
-ddsrt_getprocessname(void)
-{
-  return pcTaskGetName(xTaskGetCurrentTaskHandle());
-}
+char * ddsrt_getprocessname(void) { return pcTaskGetName(xTaskGetCurrentTaskHandle()); }

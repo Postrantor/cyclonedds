@@ -14,9 +14,9 @@
 
 #include <stdint.h>
 
-#include "dds/export.h"
 #include "dds/config.h"
 #include "dds/ddsrt/retcode.h"
+#include "dds/export.h"
 
 #if DDSRT_HAVE_NETSTAT
 
@@ -24,7 +24,8 @@
 extern "C" {
 #endif
 
-struct ddsrt_netstat {
+struct ddsrt_netstat
+{
   uint64_t ipkt;
   uint64_t opkt;
   uint64_t ibytes;
@@ -40,24 +41,18 @@ struct ddsrt_netstat_control;
  * @brief Prepare for gathering network statistics for specified interface.
  */
 DDS_EXPORT dds_return_t
-ddsrt_netstat_new (
-  struct ddsrt_netstat_control **control,
-  const char *device);
+ddsrt_netstat_new(struct ddsrt_netstat_control ** control, const char * device);
 
 /**
  * @brief Release resources for gathering network statistics.
  */
-DDS_EXPORT dds_return_t
-ddsrt_netstat_free (
-  struct ddsrt_netstat_control *control);
+DDS_EXPORT dds_return_t ddsrt_netstat_free(struct ddsrt_netstat_control * control);
 
 /**
  * @brief Get network statistics.
  */
 DDS_EXPORT dds_return_t
-ddsrt_netstat_get (
-  struct ddsrt_netstat_control *control,
-  struct ddsrt_netstat *stats);
+ddsrt_netstat_get(struct ddsrt_netstat_control * control, struct ddsrt_netstat * stats);
 
 #if defined(__cplusplus)
 }

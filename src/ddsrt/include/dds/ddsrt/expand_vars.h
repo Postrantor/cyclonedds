@@ -12,15 +12,15 @@
 #ifndef DDSRT_EXPAND_VARS_H
 #define DDSRT_EXPAND_VARS_H
 
-#include "dds/export.h"
 #include "dds/ddsrt/attributes.h"
 #include "dds/ddsrt/retcode.h"
+#include "dds/export.h"
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-typedef const char * (*expand_lookup_fn)(const char *name, void *data);
+typedef const char * (*expand_lookup_fn)(const char * name, void * data);
 
 /**
  * @brief Expand variables within string.
@@ -40,11 +40,7 @@ typedef const char * (*expand_lookup_fn)(const char *name, void *data);
  * @retval Pointer
  *             Copy of the string argument with the variables expanded.
  */
-char*
-ddsrt_expand_vars(
-  const char *string,
-  expand_lookup_fn lookup,
-  void * data);
+char * ddsrt_expand_vars(const char * string, expand_lookup_fn lookup, void * data);
 
 /**
  * @brief Expand variables within string.
@@ -65,11 +61,7 @@ ddsrt_expand_vars(
  * @retval Pointer
  *             Copy of the string argument with the variables expanded.
  */
-char*
-ddsrt_expand_vars_sh(
-  const char *string,
-  expand_lookup_fn lookup,
-  void * data);
+char * ddsrt_expand_vars_sh(const char * string, expand_lookup_fn lookup, void * data);
 
 #if defined(__cplusplus)
 }

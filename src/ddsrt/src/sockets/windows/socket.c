@@ -14,26 +14,25 @@
 #include <stddef.h>
 #include <winerror.h>
 
-#include "sockets_priv.h"
 #include "dds/ddsrt/log.h"
 #include "dds/ddsrt/misc.h"
 #include "dds/ddsrt/retcode.h"
 #include "dds/ddsrt/time.h"
+#include "sockets_priv.h"
 
 #ifdef ddsrt_select
 #undef ddsrt_select /* See sockets.h for details. */
 #endif
 
-DDSRT_WARNING_GNUC_OFF(missing-prototypes)
-DDSRT_WARNING_CLANG_OFF(missing-prototypes)
+DDSRT_WARNING_GNUC_OFF(missing - prototypes)
+DDSRT_WARNING_CLANG_OFF(missing - prototypes)
 
-void
-ddsrt_winsock_init(void)
+void ddsrt_winsock_init(void)
 {
   int err;
   WSADATA wsa_data;
 
-  err = WSAStartup(MAKEWORD(2,0), &wsa_data);
+  err = WSAStartup(MAKEWORD(2, 0), &wsa_data);
   if (err != 0) {
     DDS_FATAL("WSAStartup(2.0, ...) failed with %d\n", err);
   }
@@ -41,25 +40,18 @@ ddsrt_winsock_init(void)
   /* Confirm Windows Socket version 2.0 is supported. If versions greater
      than 2.0 in addition to 2.0 are supported, 2.0 will still be returned as
      that is the requested version. */
-  if (LOBYTE(wsa_data.wVersion) != 2 ||
-      HIBYTE(wsa_data.wVersion) != 0)
-  {
+  if (LOBYTE(wsa_data.wVersion) != 2 || HIBYTE(wsa_data.wVersion) != 0) {
     WSACleanup();
     DDS_FATAL("WSAStartup(2.0, ...) failed\n");
   }
 }
 
-void
-ddsrt_winsock_fini(void)
-{
-  WSACleanup();
-}
+void ddsrt_winsock_fini(void) { WSACleanup(); }
 
-DDSRT_WARNING_GNUC_ON(missing-prototypes)
-DDSRT_WARNING_CLANG_ON(missing-prototypes)
+DDSRT_WARNING_GNUC_ON(missing - prototypes)
+DDSRT_WARNING_CLANG_ON(missing - prototypes)
 
-dds_return_t
-ddsrt_socket(ddsrt_socket_t *sockptr, int domain, int type, int protocol)
+dds_return_t ddsrt_socket(ddsrt_socket_t * sockptr, int domain, int type, int protocol)
 {
   int err;
   ddsrt_socket_t sock = DDSRT_INVALID_SOCKET;
@@ -98,13 +90,11 @@ ddsrt_socket(ddsrt_socket_t *sockptr, int domain, int type, int protocol)
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_close(ddsrt_socket_t sock)
+dds_return_t ddsrt_close(ddsrt_socket_t sock)
 {
   int err;
 
-  if (closesocket(sock) != SOCKET_ERROR)
-    return DDS_RETCODE_OK;
+  if (closesocket(sock) != SOCKET_ERROR) return DDS_RETCODE_OK;
 
   err = WSAGetLastError();
   assert(err != WSANOTINITIALISED);
@@ -125,12 +115,8 @@ ddsrt_close(ddsrt_socket_t sock)
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_accept(
-  ddsrt_socket_t sock,
-  struct sockaddr *addr,
-  socklen_t *addrlen,
-  ddsrt_socket_t *connptr)
+dds_return_t ddsrt_accept(
+  ddsrt_socket_t sock, struct sockaddr * addr, socklen_t * addrlen, ddsrt_socket_t * connptr)
 {
   int err;
   ddsrt_socket_t conn;
@@ -167,13 +153,11 @@ ddsrt_accept(
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_bind(ddsrt_socket_t sock, const struct sockaddr *addr, socklen_t addrlen)
+dds_return_t ddsrt_bind(ddsrt_socket_t sock, const struct sockaddr * addr, socklen_t addrlen)
 {
   int err;
 
-  if (bind(sock, addr, addrlen) != SOCKET_ERROR)
-    return DDS_RETCODE_OK;
+  if (bind(sock, addr, addrlen) != SOCKET_ERROR) return DDS_RETCODE_OK;
 
   err = WSAGetLastError();
   assert(err != WSANOTINITIALISED);
@@ -200,15 +184,11 @@ ddsrt_bind(ddsrt_socket_t sock, const struct sockaddr *addr, socklen_t addrlen)
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_listen(
-  ddsrt_socket_t sock,
-  int backlog)
+dds_return_t ddsrt_listen(ddsrt_socket_t sock, int backlog)
 {
   int err;
 
-  if (listen(sock, backlog) != SOCKET_ERROR)
-    return DDS_RETCODE_OK;
+  if (listen(sock, backlog) != SOCKET_ERROR) return DDS_RETCODE_OK;
 
   err = WSAGetLastError();
   assert(err != WSANOTINITIALISED);
@@ -232,16 +212,11 @@ ddsrt_listen(
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_connect(
-  ddsrt_socket_t sock,
-  const struct sockaddr *addr,
-  socklen_t addrlen)
+dds_return_t ddsrt_connect(ddsrt_socket_t sock, const struct sockaddr * addr, socklen_t addrlen)
 {
   int err;
 
-  if (connect(sock, addr, addrlen) != SOCKET_ERROR)
-    return DDS_RETCODE_OK;
+  if (connect(sock, addr, addrlen) != SOCKET_ERROR) return DDS_RETCODE_OK;
 
   err = WSAGetLastError();
   assert(err != WSANOTINITIALISED);
@@ -280,19 +255,14 @@ ddsrt_connect(
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_getsockname(
-  ddsrt_socket_t sock,
-  struct sockaddr *addr,
-  socklen_t *addrlen)
+dds_return_t ddsrt_getsockname(ddsrt_socket_t sock, struct sockaddr * addr, socklen_t * addrlen)
 {
   int err;
 
   assert(sock != INVALID_SOCKET);
   assert(addr != NULL);
 
-  if (getsockname(sock, addr, addrlen) != SOCKET_ERROR)
-    return DDS_RETCODE_OK;
+  if (getsockname(sock, addr, addrlen) != SOCKET_ERROR) return DDS_RETCODE_OK;
 
   err = WSAGetLastError();
   assert(err != WSANOTINITIALISED);
@@ -314,19 +284,12 @@ ddsrt_getsockname(
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_getsockopt(
-  ddsrt_socket_t sock,
-  int32_t level,
-  int32_t optname,
-  void *optval,
-  socklen_t *optlen)
+dds_return_t ddsrt_getsockopt(
+  ddsrt_socket_t sock, int32_t level, int32_t optname, void * optval, socklen_t * optlen)
 {
   int err, ret;
 
-  if (level == IPPROTO_IP && (optname == IP_MULTICAST_TTL ||
-                              optname == IP_MULTICAST_LOOP))
-  {
+  if (level == IPPROTO_IP && (optname == IP_MULTICAST_TTL || optname == IP_MULTICAST_LOOP)) {
     /* IP_MULTICAST_TTL and IP_MULTICAST_LOOP take a DWORD* rather than a
        char* on Windows. */
     int dwoptlen = sizeof(DWORD);
@@ -335,14 +298,13 @@ ddsrt_getsockopt(
     if (ret != SOCKET_ERROR) {
       assert(dwoptlen == sizeof(DWORD));
       *((unsigned char *)optval) = (unsigned char)dwoptval;
-      *optlen = sizeof( unsigned char );
+      *optlen = sizeof(unsigned char);
     }
   } else {
     ret = getsockopt(sock, level, optname, optval, (int *)optlen);
   }
 
-  if (ret != SOCKET_ERROR)
-    return DDS_RETCODE_OK;
+  if (ret != SOCKET_ERROR) return DDS_RETCODE_OK;
 
   err = WSAGetLastError();
   assert(err != WSANOTINITIALISED);
@@ -364,20 +326,13 @@ ddsrt_getsockopt(
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_setsockopt(
-  ddsrt_socket_t sock,
-  int32_t level,
-  int32_t optname,
-  const void *optval,
-  socklen_t optlen)
+dds_return_t ddsrt_setsockopt(
+  ddsrt_socket_t sock, int32_t level, int32_t optname, const void * optval, socklen_t optlen)
 {
   int err, ret;
   DWORD dwoptval;
 
-  if (level == IPPROTO_IP && (optname == IP_MULTICAST_TTL ||
-                              optname == IP_MULTICAST_LOOP))
-  {
+  if (level == IPPROTO_IP && (optname == IP_MULTICAST_TTL || optname == IP_MULTICAST_LOOP)) {
     /* On win32 IP_MULTICAST_TTL and IP_MULTICAST_LOOP take DWORD * param
        rather than char * */
     dwoptval = *((unsigned char *)optval);
@@ -388,8 +343,7 @@ ddsrt_setsockopt(
     ret = setsockopt(sock, level, optname, optval, (int)optlen);
   }
 
-  if (ret != SOCKET_ERROR)
-    return DDS_RETCODE_OK;
+  if (ret != SOCKET_ERROR) return DDS_RETCODE_OK;
 
   err = WSAGetLastError();
   assert(err != WSANOTINITIALISED);
@@ -411,10 +365,7 @@ ddsrt_setsockopt(
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_setsocknonblocking(
-  ddsrt_socket_t sock,
-  bool nonblock)
+dds_return_t ddsrt_setsocknonblocking(ddsrt_socket_t sock, bool nonblock)
 {
   int err;
   u_long mode;
@@ -423,8 +374,7 @@ ddsrt_setsocknonblocking(
    * if mode != 0, non-blocking is enabled. */
   mode = nonblock ? 1 : 0;
 
-  if (ioctlsocket(sock, (long)FIONBIO, &mode) != SOCKET_ERROR)
-    return DDS_RETCODE_OK;
+  if (ioctlsocket(sock, (long)FIONBIO, &mode) != SOCKET_ERROR) return DDS_RETCODE_OK;
 
   err = WSAGetLastError();
   assert(err != WSANOTINITIALISED);
@@ -477,13 +427,7 @@ static dds_return_t recv_error_to_retcode(int errnum)
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_recv(
-  ddsrt_socket_t sock,
-  void *buf,
-  size_t len,
-  int flags,
-  ssize_t *rcvd)
+dds_return_t ddsrt_recv(ddsrt_socket_t sock, void * buf, size_t len, int flags, ssize_t * rcvd)
 {
   ssize_t n;
 
@@ -497,12 +441,7 @@ ddsrt_recv(
   return recv_error_to_retcode(WSAGetLastError());
 }
 
-dds_return_t
-ddsrt_recvmsg(
-  ddsrt_socket_t sock,
-  ddsrt_msghdr_t *msg,
-  int flags,
-  ssize_t *rcvd)
+dds_return_t ddsrt_recvmsg(ddsrt_socket_t sock, ddsrt_msghdr_t * msg, int flags, ssize_t * rcvd)
 {
   int err, n;
 
@@ -513,12 +452,8 @@ ddsrt_recvmsg(
 
   msg->msg_flags = 0;
   n = recvfrom(
-    sock,
-    msg->msg_iov[0].iov_base,
-    (int)msg->msg_iov[0].iov_len,
-    flags,
-    msg->msg_name,
-   &msg->msg_namelen);
+    sock, msg->msg_iov[0].iov_base, (int)msg->msg_iov[0].iov_len, flags, msg->msg_name,
+    &msg->msg_namelen);
 
   if (n != -1) {
     *rcvd = n;
@@ -539,8 +474,7 @@ ddsrt_recvmsg(
   return recv_error_to_retcode(err);
 }
 
-static dds_return_t
-send_error_to_retcode(int errnum)
+static dds_return_t send_error_to_retcode(int errnum)
 {
   assert(errnum != WSANOTINITIALISED);
   switch (errnum) {
@@ -553,26 +487,26 @@ send_error_to_retcode(int errnum)
     case WSAEINPROGRESS: /* Blocking sockets call in progress. */
     case WSA_IO_PENDING: /* Operation pending (WSASentTo). */
       return DDS_RETCODE_IN_PROGRESS;
-    case WSAEFAULT: /* A parameter was not part of the user address space or
+    case WSAEFAULT:        /* A parameter was not part of the user address space or
                        destination address was to small (WSASendTo). */
     case WSAEADDRNOTAVAIL: /* Remote address is not valid (WSASentTo). */
-    case WSAEAFNOSUPPORT: /* Remote address is in wrong family (WSASentTo). */
+    case WSAEAFNOSUPPORT:  /* Remote address is in wrong family (WSASentTo). */
       return DDS_RETCODE_BAD_PARAMETER;
-    case WSAENETRESET: /* Time to live expired. */
-    case WSAEHOSTUNREACH: /* Host is unreachable. */
-    case WSAECONNABORTED: /* Time-out or other failure (send). */
-    case WSAETIMEDOUT: /* Network or remote host failure (send). */
-    case WSAENETUNREACH: /* Network is unreachable. (WSASentTo). */
+    case WSAENETRESET:          /* Time to live expired. */
+    case WSAEHOSTUNREACH:       /* Host is unreachable. */
+    case WSAECONNABORTED:       /* Time-out or other failure (send). */
+    case WSAETIMEDOUT:          /* Network or remote host failure (send). */
+    case WSAENETUNREACH:        /* Network is unreachable. (WSASentTo). */
     case WSA_OPERATION_ABORTED: /* Socket was closed (WSASentTo). */
       return DDS_RETCODE_NO_CONNECTION;
     case WSAENOBUFS:
       return DDS_RETCODE_OUT_OF_RESOURCES;
     case WSAENOTCONN: /* Socket is not connected. */
-    case WSAEINVAL: /* Socket has not been bound. */
+    case WSAEINVAL:   /* Socket has not been bound. */
       return DDS_RETCODE_PRECONDITION_NOT_MET;
-    case WSAENOTSOCK: /* Descriptor is not a socket. */
+    case WSAENOTSOCK:   /* Descriptor is not a socket. */
     case WSAEOPNOTSUPP: /* Operation not supported (send). */
-    case WSAESHUTDOWN: /* Socket shut down. */
+    case WSAESHUTDOWN:  /* Socket shut down. */
       return DDS_RETCODE_ILLEGAL_OPERATION;
     case WSAEWOULDBLOCK: /* Socket is nonblocking and call would block. */
       return DDS_RETCODE_TRY_AGAIN;
@@ -585,13 +519,8 @@ send_error_to_retcode(int errnum)
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_send(
-  ddsrt_socket_t sock,
-  const void *buf,
-  size_t len,
-  int flags,
-  ssize_t *sent)
+dds_return_t ddsrt_send(
+  ddsrt_socket_t sock, const void * buf, size_t len, int flags, ssize_t * sent)
 {
   int n;
 
@@ -608,20 +537,19 @@ ddsrt_send(
 }
 
 /* Compile time check to ensure iovec matches WSABUF. */
-struct iovec_matches_WSABUF {
+struct iovec_matches_WSABUF
+{
   char sizeof_matches[sizeof(ddsrt_iovec_t) == sizeof(WSABUF) ? 1 : -1];
   char base_off_matches[offsetof(ddsrt_iovec_t, iov_base) == offsetof(WSABUF, buf) ? 1 : -1];
-  char base_size_matches[sizeof(((ddsrt_iovec_t *)8)->iov_base) == sizeof(((WSABUF *)8)->buf) ? 1 : -1];
+  char base_size_matches
+    [sizeof(((ddsrt_iovec_t *)8)->iov_base) == sizeof(((WSABUF *)8)->buf) ? 1 : -1];
   char len_off_matches[offsetof(ddsrt_iovec_t, iov_len) == offsetof(WSABUF, len) ? 1 : -1];
-  char len_size_matches[sizeof(((ddsrt_iovec_t *)8)->iov_len) == sizeof(((WSABUF *)8)->len) ? 1 : -1];
+  char
+    len_size_matches[sizeof(((ddsrt_iovec_t *)8)->iov_len) == sizeof(((WSABUF *)8)->len) ? 1 : -1];
 };
 
-dds_return_t
-ddsrt_sendmsg(
-  ddsrt_socket_t sock,
-  const ddsrt_msghdr_t *msg,
-  int flags,
-  ssize_t *sent)
+dds_return_t ddsrt_sendmsg(
+  ddsrt_socket_t sock, const ddsrt_msghdr_t * msg, int flags, ssize_t * sent)
 {
   int ret;
   DWORD n;
@@ -630,15 +558,8 @@ ddsrt_sendmsg(
   assert(msg->msg_controllen == 0);
 
   ret = WSASendTo(
-        sock,
-        (WSABUF *)msg->msg_iov,
-        (DWORD)msg->msg_iovlen,
-        &n,
-        (DWORD)flags,
-        (SOCKADDR *)msg->msg_name,
-        msg->msg_namelen,
-        NULL,
-        NULL);
+    sock, (WSABUF *)msg->msg_iov, (DWORD)msg->msg_iovlen, &n, (DWORD)flags,
+    (SOCKADDR *)msg->msg_name, msg->msg_namelen, NULL, NULL);
   if (ret != SOCKET_ERROR) {
     *sent = (ssize_t)n;
     return DDS_RETCODE_OK;
@@ -647,17 +568,12 @@ ddsrt_sendmsg(
   return send_error_to_retcode(WSAGetLastError());
 }
 
-dds_return_t
-ddsrt_select(
-  int32_t nfds,
-  fd_set *readfds,
-  fd_set *writefds,
-  fd_set *errorfds,
-  dds_duration_t reltime)
+dds_return_t ddsrt_select(
+  int32_t nfds, fd_set * readfds, fd_set * writefds, fd_set * errorfds, dds_duration_t reltime)
 {
   int err;
   int32_t n;
-  struct timeval tv = { .tv_sec = 0, .tv_usec = 0 }, *tvp = NULL;
+  struct timeval tv = {.tv_sec = 0, .tv_usec = 0}, *tvp = NULL;
 
   (void)nfds;
 

@@ -14,21 +14,21 @@
 
 #include <stdbool.h>
 
-#include "dds/ddsrt/ifaddrs.h"
-#include "dds/ddsrt/sockets.h"
 #include "dds/ddsi/ddsi_locator.h"
 #include "dds/ddsi/ddsi_ownip.h"
+#include "dds/ddsrt/ifaddrs.h"
+#include "dds/ddsrt/sockets.h"
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 struct ddsi_domaingv;
 
 /** @component network_if_selection */
-int ddsi_find_own_ip (struct ddsi_domaingv *gv);
+int ddsi_find_own_ip(struct ddsi_domaingv * gv);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

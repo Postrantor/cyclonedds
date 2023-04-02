@@ -14,61 +14,51 @@
 
 #include <limits.h>
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
 #define DDSRT_STRINGIFY(x) DDSRT_STRINGIFY1(x)
 #define DDSRT_STRINGIFY1(x) #x
 
-#if defined(__clang__) || \
-    defined(__GNUC__) && ((__GNUC__ * 100) + __GNUC_MINOR__) >= 402
-# define DDSRT_STR(s) #s
-# define DDSRT_JOINSTR(x,y) DDSRT_STR(x ## y)
-# define DDSRT_DO_PRAGMA(x) _Pragma(#x)
-# define DDSRT_PRAGMA(x) DDSRT_DO_PRAGMA(GCC diagnostic x)
+#if defined(__clang__) || defined(__GNUC__) && ((__GNUC__ * 100) + __GNUC_MINOR__) >= 402
+#define DDSRT_STR(s) #s
+#define DDSRT_JOINSTR(x, y) DDSRT_STR(x##y)
+#define DDSRT_DO_PRAGMA(x) _Pragma(#x)
+#define DDSRT_PRAGMA(x) DDSRT_DO_PRAGMA(GCC diagnostic x)
 
-# if defined(__clang__)
-#   define DDSRT_WARNING_CLANG_OFF(x) \
-      DDSRT_PRAGMA(push) \
-      DDSRT_PRAGMA(ignored DDSRT_JOINSTR(-W,x))
-#   define DDSRT_WARNING_CLANG_ON(x) \
-      DDSRT_PRAGMA(pop)
-# elif ((__GNUC__ * 100) + __GNUC_MINOR__) >= 406
-#   define DDSRT_WARNING_GNUC_OFF(x) \
-      DDSRT_PRAGMA(push) \
-      DDSRT_PRAGMA(ignored DDSRT_JOINSTR(-W,x))
-#   define DDSRT_WARNING_GNUC_ON(x) \
-      DDSRT_PRAGMA(pop)
-# else
-#   define DDSRT_WARNING_GNUC_OFF(x) \
-      DDSRT_PRAGMA(ignored DDSRT_JOINSTR(-W,x))
-#   define DDSRT_WARNING_GNUC_ON(x) \
-      DDSRT_PRAGMA(warning DDSRT_JOINSTR(-W,x))
-# endif
+#if defined(__clang__)
+#define DDSRT_WARNING_CLANG_OFF(x) \
+  DDSRT_PRAGMA(push)               \
+  DDSRT_PRAGMA(ignored DDSRT_JOINSTR(-W, x))
+#define DDSRT_WARNING_CLANG_ON(x) DDSRT_PRAGMA(pop)
+#elif ((__GNUC__ * 100) + __GNUC_MINOR__) >= 406
+#define DDSRT_WARNING_GNUC_OFF(x) \
+  DDSRT_PRAGMA(push)              \
+  DDSRT_PRAGMA(ignored DDSRT_JOINSTR(-W, x))
+#define DDSRT_WARNING_GNUC_ON(x) DDSRT_PRAGMA(pop)
+#else
+#define DDSRT_WARNING_GNUC_OFF(x) DDSRT_PRAGMA(ignored DDSRT_JOINSTR(-W, x))
+#define DDSRT_WARNING_GNUC_ON(x) DDSRT_PRAGMA(warning DDSRT_JOINSTR(-W, x))
+#endif
 #endif
 
-#if !defined(DDSRT_WARNING_CLANG_OFF) && \
-    !defined(DDSRT_WARNING_CLANG_ON)
-# define DDSRT_WARNING_CLANG_OFF(x)
-# define DDSRT_WARNING_CLANG_ON(x)
+#if !defined(DDSRT_WARNING_CLANG_OFF) && !defined(DDSRT_WARNING_CLANG_ON)
+#define DDSRT_WARNING_CLANG_OFF(x)
+#define DDSRT_WARNING_CLANG_ON(x)
 #endif
 
-#if !defined(DDSRT_WARNING_GNUC_OFF) && \
-    !defined(DDSRT_WARNING_GNUC_ON)
-# define DDSRT_WARNING_GNUC_OFF(x)
-# define DDSRT_WARNING_GNUC_ON(x)
+#if !defined(DDSRT_WARNING_GNUC_OFF) && !defined(DDSRT_WARNING_GNUC_ON)
+#define DDSRT_WARNING_GNUC_OFF(x)
+#define DDSRT_WARNING_GNUC_ON(x)
 #endif
 
 #if defined(_MSC_VER)
-# define DDSRT_WARNING_MSVC_OFF(x) \
-    __pragma (warning(push)) \
-    __pragma (warning(disable: ## x))
-# define DDSRT_WARNING_MSVC_ON(x) \
-    __pragma (warning(pop))
+#define DDSRT_WARNING_MSVC_OFF(x) __pragma(warning(push)) __pragma(warning(disable :##x))
+#define DDSRT_WARNING_MSVC_ON(x) __pragma(warning(pop))
 #else
-# define DDSRT_WARNING_MSVC_OFF(x)
-# define DDSRT_WARNING_MSVC_ON(x)
+#define DDSRT_WARNING_MSVC_OFF(x)
+#define DDSRT_WARNING_MSVC_ON(x)
 #endif
 
 /**
@@ -79,20 +69,20 @@ extern "C" {
 /**
  * @brief Macro to disable warnings for calling deprecated interfaces
  */
-#define DDSRT_WARNING_DEPRECATED_OFF \
-  DDSRT_WARNING_CLANG_OFF(deprecated-declarations) \
-  DDSRT_WARNING_GNUC_OFF(deprecated-declarations) \
+#define DDSRT_WARNING_DEPRECATED_OFF                 \
+  DDSRT_WARNING_CLANG_OFF(deprecated - declarations) \
+  DDSRT_WARNING_GNUC_OFF(deprecated - declarations)  \
   DDSRT_WARNING_MSVC_OFF(4996)
 
 /**
  * @brief Macro to enable warnings for calling deprecated interfaces
  */
-#define DDSRT_WARNING_DEPRECATED_ON \
-  DDSRT_WARNING_CLANG_ON(deprecated-declarations) \
-  DDSRT_WARNING_GNUC_ON(deprecated-declarations) \
+#define DDSRT_WARNING_DEPRECATED_ON                 \
+  DDSRT_WARNING_CLANG_ON(deprecated - declarations) \
+  DDSRT_WARNING_GNUC_ON(deprecated - declarations)  \
   DDSRT_WARNING_MSVC_ON(4996)
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

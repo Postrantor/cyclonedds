@@ -9,32 +9,27 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include "dds/ddsrt/environ.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "dds/ddsrt/misc.h"
-#include "dds/ddsrt/environ.h"
 #include "dds/ddsrt/retcode.h"
 
-static int
-isenvvar(const char *name)
-{
-  return (*name == '\0' || strchr(name, '=') != NULL) == 0;
-}
+static int isenvvar(const char * name) { return (*name == '\0' || strchr(name, '=') != NULL) == 0; }
 
 DDSRT_WARNING_MSVC_OFF(4996)
-dds_return_t
-ddsrt_getenv(const char *name, const char **value)
+dds_return_t ddsrt_getenv(const char * name, const char ** value)
 {
-  char *env;
+  char * env;
 
   assert(name != NULL);
   assert(value != NULL);
 
-  if (!isenvvar(name))
-    return DDS_RETCODE_BAD_PARAMETER;
+  if (!isenvvar(name)) return DDS_RETCODE_BAD_PARAMETER;
   if ((env = getenv(name)) != NULL) {
     *value = env;
     return DDS_RETCODE_OK;
@@ -43,14 +38,12 @@ ddsrt_getenv(const char *name, const char **value)
 }
 DDSRT_WARNING_MSVC_ON(4996)
 
-dds_return_t
-ddsrt_setenv(const char *name, const char *value)
+dds_return_t ddsrt_setenv(const char * name, const char * value)
 {
   assert(name != NULL);
   assert(value != NULL);
 
-  if (!isenvvar(name))
-    return DDS_RETCODE_BAD_PARAMETER;
+  if (!isenvvar(name)) return DDS_RETCODE_BAD_PARAMETER;
   switch (_putenv_s(name, value)) {
     case 0:
       return DDS_RETCODE_OK;
@@ -65,8 +58,7 @@ ddsrt_setenv(const char *name, const char *value)
   return DDS_RETCODE_ERROR;
 }
 
-dds_return_t
-ddsrt_unsetenv(const char *name)
+dds_return_t ddsrt_unsetenv(const char * name)
 {
   assert(name != NULL);
   return ddsrt_setenv(name, "");

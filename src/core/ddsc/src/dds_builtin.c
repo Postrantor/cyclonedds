@@ -9,6 +9,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
+#include <assert.h>
+#include <string.h>
+
 #include "dds/ddsi/ddsi_domaingv.h"
 #include "dds/ddsi/ddsi_endpoint.h"
 #include "dds/ddsi/ddsi_entity.h"
@@ -31,8 +34,6 @@
 #include "dds__whc_builtintopic.h"
 #include "dds__write.h"
 #include "dds__writer.h"
-#include <assert.h>
-#include <string.h>
 
 /**
  * @brief 创建内置的QoS对象
@@ -41,8 +42,7 @@
  *
  * @return 返回创建的dds_qos_t指针
  */
-dds_qos_t *dds__create_builtin_qos(void)
-{
+dds_qos_t *dds__create_builtin_qos(void) {
   // 定义内置分区名
   const char *partition = "__BUILT-IN PARTITION__";
 
@@ -65,7 +65,8 @@ dds_qos_t *dds__create_builtin_qos(void)
   ddsi_xqos_mergein_missing(qos, &ddsi_default_qos_topic, DDS_TOPIC_QOS_MASK);
 
   // 设置Data Representation QoS策略为XCDR1
-  dds_qset_data_representation(qos, 1, (dds_data_representation_id_t[]){DDS_DATA_REPRESENTATION_XCDR1});
+  dds_qset_data_representation(qos, 1,
+                               (dds_data_representation_id_t[]){DDS_DATA_REPRESENTATION_XCDR1});
 
   // 返回创建的QoS对象
   return qos;
@@ -77,16 +78,18 @@ dds_qos_t *dds__create_builtin_qos(void)
  */
 
 // 内置主题列表，包含伪句柄、名称和类型名
-static const struct
-{
-  dds_entity_t pseudo_handle; ///< 伪句柄
-  const char *name;           ///< 主题名称
-  const char *typename;       ///< 类型名
-} builtin_topic_list[] = {
-    {DDS_BUILTIN_TOPIC_DCPSPARTICIPANT, DDS_BUILTIN_TOPIC_PARTICIPANT_NAME, "org::eclipse::cyclonedds::builtin::DCPSParticipant"},
-    {DDS_BUILTIN_TOPIC_DCPSTOPIC, DDS_BUILTIN_TOPIC_TOPIC_NAME, "org::eclipse::cyclonedds::builtin::DCPSTopic"},
-    {DDS_BUILTIN_TOPIC_DCPSPUBLICATION, DDS_BUILTIN_TOPIC_PUBLICATION_NAME, "org::eclipse::cyclonedds::builtin::DCPSPublication"},
-    {DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION, DDS_BUILTIN_TOPIC_SUBSCRIPTION_NAME, "org::eclipse::cyclonedds::builtin::DCPSSubscription"}};
+static const struct {
+  dds_entity_t pseudo_handle;  ///< 伪句柄
+  const char *name;            ///< 主题名称
+  const char *typename;        ///< 类型名
+} builtin_topic_list[] = {{DDS_BUILTIN_TOPIC_DCPSPARTICIPANT, DDS_BUILTIN_TOPIC_PARTICIPANT_NAME,
+                           "org::eclipse::cyclonedds::builtin::DCPSParticipant"},
+                          {DDS_BUILTIN_TOPIC_DCPSTOPIC, DDS_BUILTIN_TOPIC_TOPIC_NAME,
+                           "org::eclipse::cyclonedds::builtin::DCPSTopic"},
+                          {DDS_BUILTIN_TOPIC_DCPSPUBLICATION, DDS_BUILTIN_TOPIC_PUBLICATION_NAME,
+                           "org::eclipse::cyclonedds::builtin::DCPSPublication"},
+                          {DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION, DDS_BUILTIN_TOPIC_SUBSCRIPTION_NAME,
+                           "org::eclipse::cyclonedds::builtin::DCPSSubscription"}};
 
 /**
  * @brief 获取内置主题的名称和类型名
@@ -96,8 +99,9 @@ static const struct
  * @param[out] typename       指向类型名的指针（可选）
  * @return 成功时返回0，失败时返回错误代码
  */
-dds_return_t dds__get_builtin_topic_name_typename(dds_entity_t pseudo_handle, const char **name, const char **typename)
-{
+dds_return_t dds__get_builtin_topic_name_typename(dds_entity_t pseudo_handle,
+                                                  const char **name,
+                                                  const char **typename) {
   const char *n;
   const char *tn;
 
@@ -106,29 +110,24 @@ dds_return_t dds__get_builtin_topic_name_typename(dds_entity_t pseudo_handle, co
                       DDS_BUILTIN_TOPIC_DCPSPUBLICATION == DDS_BUILTIN_TOPIC_DCPSTOPIC + 1 &&
                       DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION == DDS_BUILTIN_TOPIC_DCPSPUBLICATION + 1);
 
-  switch (pseudo_handle)
-  {
-  case DDS_BUILTIN_TOPIC_DCPSPARTICIPANT:
-  case DDS_BUILTIN_TOPIC_DCPSTOPIC:
-  case DDS_BUILTIN_TOPIC_DCPSPUBLICATION:
-  case DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION:
-  {
-    dds_entity_t idx = pseudo_handle - DDS_BUILTIN_TOPIC_DCPSPARTICIPANT;
-    n = builtin_topic_list[idx].name;
-    tn = builtin_topic_list[idx].typename;
-    break;
-  }
-  default:
-  {
-    // 没有断言：这也被一些API调用使用
-    return DDS_RETCODE_BAD_PARAMETER;
-  }
+  switch (pseudo_handle) {
+    case DDS_BUILTIN_TOPIC_DCPSPARTICIPANT:
+    case DDS_BUILTIN_TOPIC_DCPSTOPIC:
+    case DDS_BUILTIN_TOPIC_DCPSPUBLICATION:
+    case DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION: {
+      dds_entity_t idx = pseudo_handle - DDS_BUILTIN_TOPIC_DCPSPARTICIPANT;
+      n = builtin_topic_list[idx].name;
+      tn = builtin_topic_list[idx].typename;
+      break;
+    }
+    default: {
+      // 没有断言：这也被一些API调用使用
+      return DDS_RETCODE_BAD_PARAMETER;
+    }
   }
 
-  if (name)
-    *name = n;
-  if (typename)
-    *typename = tn;
+  if (name) *name = n;
+  if (typename) *typename = tn;
 
   return 0;
 }
@@ -139,11 +138,9 @@ dds_return_t dds__get_builtin_topic_name_typename(dds_entity_t pseudo_handle, co
  * @param[in] typename 类型名称
  * @return 内置主题的伪句柄，如果找不到则返回 DDS_RETCODE_BAD_PARAMETER
  */
-dds_entity_t dds__get_builtin_topic_pseudo_handle_from_typename(const char *typename)
-{
+dds_entity_t dds__get_builtin_topic_pseudo_handle_from_typename(const char *typename) {
   // 遍历内置主题列表
-  for (size_t i = 0; i < sizeof(builtin_topic_list) / sizeof(builtin_topic_list[0]); i++)
-  {
+  for (size_t i = 0; i < sizeof(builtin_topic_list) / sizeof(builtin_topic_list[0]); i++) {
     // 如果找到匹配的类型名
     if (strcmp(typename, builtin_topic_list[i].typename) == 0)
       // 返回对应的伪句柄
@@ -160,19 +157,16 @@ dds_entity_t dds__get_builtin_topic_pseudo_handle_from_typename(const char *type
  * @param[in] topic 主题
  * @return 成功时返回内置主题，失败时返回错误码
  */
-dds_entity_t dds__get_builtin_topic(dds_entity_t entity, dds_entity_t topic)
-{
+dds_entity_t dds__get_builtin_topic(dds_entity_t entity, dds_entity_t topic) {
   dds_entity_t tp;
   dds_return_t rc;
   dds_entity *e;
   dds_participant *par;
 
   // 尝试锁定实体
-  if ((rc = dds_entity_pin(entity, &e)) < 0)
-    return rc;
+  if ((rc = dds_entity_pin(entity, &e)) < 0) return rc;
   // 获取参与者
-  if ((par = dds_entity_participant(e)) == NULL)
-  {
+  if ((par = dds_entity_participant(e)) == NULL) {
     // 解锁实体并返回错误码
     dds_entity_unpin(e);
     return DDS_RETCODE_ILLEGAL_OPERATION;
@@ -183,34 +177,33 @@ dds_entity_t dds__get_builtin_topic(dds_entity_t entity, dds_entity_t topic)
   // 获取内置主题的名称和类型名
   (void)dds__get_builtin_topic_name_typename(topic, &topic_name, NULL);
   // 根据主题选择对应的序列化类型
-  switch (topic)
-  {
-  case DDS_BUILTIN_TOPIC_DCPSPARTICIPANT:
-    sertype = e->m_domain->builtin_participant_type;
-    break;
+  switch (topic) {
+    case DDS_BUILTIN_TOPIC_DCPSPARTICIPANT:
+      sertype = e->m_domain->builtin_participant_type;
+      break;
 #ifdef DDS_HAS_TOPIC_DISCOVERY
-  case DDS_BUILTIN_TOPIC_DCPSTOPIC:
-    sertype = e->m_domain->builtin_topic_type;
-    break;
+    case DDS_BUILTIN_TOPIC_DCPSTOPIC:
+      sertype = e->m_domain->builtin_topic_type;
+      break;
 #endif
-  case DDS_BUILTIN_TOPIC_DCPSPUBLICATION:
-    sertype = e->m_domain->builtin_writer_type;
-    break;
-  case DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION:
-    sertype = e->m_domain->builtin_reader_type;
-    break;
-  default:
-    assert(0);
-    // 解锁实体并返回错误码
-    dds_entity_unpin(e);
-    return DDS_RETCODE_BAD_PARAMETER;
+    case DDS_BUILTIN_TOPIC_DCPSPUBLICATION:
+      sertype = e->m_domain->builtin_writer_type;
+      break;
+    case DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION:
+      sertype = e->m_domain->builtin_reader_type;
+      break;
+    default:
+      assert(0);
+      // 解锁实体并返回错误码
+      dds_entity_unpin(e);
+      return DDS_RETCODE_BAD_PARAMETER;
   }
 
   // 创建内置 QoS
   dds_qos_t *qos = dds__create_builtin_qos();
   // 创建主题实现
-  if ((tp = dds_create_topic_impl(par->m_entity.m_hdllink.hdl, topic_name, true, &sertype, qos, NULL, true)) > 0)
-  {
+  if ((tp = dds_create_topic_impl(par->m_entity.m_hdllink.hdl, topic_name, true, &sertype, qos,
+                                  NULL, true)) > 0) {
     /* 保持内置序列化类型的所有权，因为它们会被重用，这些序列化类型的生命周期与域绑定 */
     ddsi_sertype_ref(sertype);
   }
@@ -227,8 +220,7 @@ dds_entity_t dds__get_builtin_topic(dds_entity_t entity, dds_entity_t topic)
  * @param[in] qos 要检查的 dds_qos_t 结构指针。
  * @return 如果存在资源限制，则返回 true，否则返回 false。
  */
-static bool qos_has_resource_limits(const dds_qos_t *qos)
-{
+static bool qos_has_resource_limits(const dds_qos_t *qos) {
   // 断言 QoS 中包含资源限制
   assert(qos->present & DDSI_QP_RESOURCE_LIMITS);
 
@@ -246,35 +238,34 @@ static bool qos_has_resource_limits(const dds_qos_t *qos)
  * @param[in] qos 要验证的 dds_qos_t 结构指针。
  * @return 如果 QoS 设置有效，则返回 true，否则返回 false。
  */
-bool dds__validate_builtin_reader_qos(const dds_domain *dom, dds_entity_t topic, const dds_qos_t *qos)
-{
+bool dds__validate_builtin_reader_qos(const dds_domain *dom,
+                                      dds_entity_t topic,
+                                      const dds_qos_t *qos) {
   if (qos == NULL)
     // 默认 QoS 继承自主题，因此默认情况下有效
     return true;
-  else
-  {
+  else {
     /* 如果内置主题的写入者具有资源限制，为避免失败的写操作带来的复杂问题，
        禁止创建与内置主题写入者匹配的读取器 */
     struct ddsi_local_orphan_writer *bwr;
-    switch (topic)
-    {
-    case DDS_BUILTIN_TOPIC_DCPSPARTICIPANT:
-      bwr = dom->builtintopic_writer_participant;
-      break;
+    switch (topic) {
+      case DDS_BUILTIN_TOPIC_DCPSPARTICIPANT:
+        bwr = dom->builtintopic_writer_participant;
+        break;
 #ifdef DDS_HAS_TOPIC_DISCOVERY
-    case DDS_BUILTIN_TOPIC_DCPSTOPIC:
-      bwr = dom->builtintopic_writer_topics;
-      break;
+      case DDS_BUILTIN_TOPIC_DCPSTOPIC:
+        bwr = dom->builtintopic_writer_topics;
+        break;
 #endif
-    case DDS_BUILTIN_TOPIC_DCPSPUBLICATION:
-      bwr = dom->builtintopic_writer_publications;
-      break;
-    case DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION:
-      bwr = dom->builtintopic_writer_subscriptions;
-      break;
-    default:
-      assert(0);
-      return false;
+      case DDS_BUILTIN_TOPIC_DCPSPUBLICATION:
+        bwr = dom->builtintopic_writer_publications;
+        break;
+      case DDS_BUILTIN_TOPIC_DCPSSUBSCRIPTION:
+        bwr = dom->builtintopic_writer_subscriptions;
+        break;
+      default:
+        assert(0);
+        return false;
     }
 
     /* FIXME: DDSI 级别的读取器、写入者在 QoS 中具有主题和类型名称，
@@ -284,9 +275,12 @@ bool dds__validate_builtin_reader_qos(const dds_domain *dom, dds_entity_t topic,
     const uint64_t qmask = ~(DDSI_QP_TOPIC_NAME | DDSI_QP_TYPE_NAME | DDSI_QP_TYPE_INFORMATION);
     dds_qos_policy_id_t dummy;
 #ifdef DDS_HAS_TYPE_DISCOVERY
-    return ddsi_qos_match_mask_p(bwr->wr.e.gv, qos, bwr->wr.xqos, qmask, &dummy, NULL, NULL, NULL, NULL) && !qos_has_resource_limits(qos);
+    return ddsi_qos_match_mask_p(bwr->wr.e.gv, qos, bwr->wr.xqos, qmask, &dummy, NULL, NULL, NULL,
+                                 NULL) &&
+           !qos_has_resource_limits(qos);
 #else
-    return ddsi_qos_match_mask_p(bwr->wr.e.gv, qos, bwr->wr.xqos, qmask, &dummy) && !qos_has_resource_limits(qos);
+    return ddsi_qos_match_mask_p(bwr->wr.e.gv, qos, bwr->wr.xqos, qmask, &dummy) &&
+           !qos_has_resource_limits(qos);
 #endif
   }
 }
@@ -297,8 +291,7 @@ bool dds__validate_builtin_reader_qos(const dds_domain *dom, dds_entity_t topic,
  * @param[in] participant 指向dds_participant结构体的指针
  * @return 返回创建的内置订阅者实体
  */
-static dds_entity_t dds__create_builtin_subscriber(dds_participant *participant)
-{
+static dds_entity_t dds__create_builtin_subscriber(dds_participant *participant) {
   // 创建内置QoS对象
   dds_qos_t *qos = dds__create_builtin_qos();
   // 使用内置QoS创建订阅者实体
@@ -315,23 +308,19 @@ static dds_entity_t dds__create_builtin_subscriber(dds_participant *participant)
  * @param[in] e 实体标识符
  * @return 返回内置订阅者实体，如果失败则返回错误代码
  */
-dds_entity_t dds__get_builtin_subscriber(dds_entity_t e)
-{
+dds_entity_t dds__get_builtin_subscriber(dds_entity_t e) {
   dds_entity_t sub;
   dds_return_t ret;
   dds_entity_t pp;
   dds_participant *p;
 
   // 获取参与者实体
-  if ((pp = dds_get_participant(e)) <= 0)
-    return pp;
+  if ((pp = dds_get_participant(e)) <= 0) return pp;
   // 锁定参与者实体
-  if ((ret = dds_participant_lock(pp, &p)) != DDS_RETCODE_OK)
-    return ret;
+  if ((ret = dds_participant_lock(pp, &p)) != DDS_RETCODE_OK) return ret;
 
   // 如果内置订阅者不存在，则创建一个
-  if (p->m_builtin_subscriber <= 0)
-  {
+  if (p->m_builtin_subscriber <= 0) {
     p->m_builtin_subscriber = dds__create_builtin_subscriber(p);
   }
   // 获取内置订阅者实体
@@ -349,8 +338,7 @@ dds_entity_t dds__get_builtin_subscriber(dds_entity_t e)
  * @param[in] vdomain 未使用的参数
  * @return 如果是内置主题则返回true，否则返回false
  */
-static bool dds__builtin_is_builtintopic(const struct ddsi_sertype *tp, void *vdomain)
-{
+static bool dds__builtin_is_builtintopic(const struct ddsi_sertype *tp, void *vdomain) {
   (void)vdomain;
   return tp->ops == &ddsi_sertype_ops_builtintopic;
 }
@@ -363,10 +351,12 @@ static bool dds__builtin_is_builtintopic(const struct ddsi_sertype *tp, void *vd
  * @param[in] vdomain 未使用的参数
  * @return 如果GUID可见则返回true，否则返回false
  */
-static bool dds__builtin_is_visible(const ddsi_guid_t *guid, ddsi_vendorid_t vendorid, void *vdomain)
-{
+static bool dds__builtin_is_visible(const ddsi_guid_t *guid,
+                                    ddsi_vendorid_t vendorid,
+                                    void *vdomain) {
   (void)vdomain;
-  if (ddsi_is_builtin_endpoint(guid->entityid, vendorid) || ddsi_is_builtin_topic(guid->entityid, vendorid))
+  if (ddsi_is_builtin_endpoint(guid->entityid, vendorid) ||
+      ddsi_is_builtin_topic(guid->entityid, vendorid))
     return false;
   return true;
 }
@@ -378,13 +368,14 @@ static bool dds__builtin_is_visible(const ddsi_guid_t *guid, ddsi_vendorid_t ven
  * @param[in] vdomain   指向dds_domain结构体的指针
  * @return 返回对应的ddsi_tkmap_instance指针
  */
-static struct ddsi_tkmap_instance *dds__builtin_get_tkmap_entry(const struct ddsi_guid *guid, void *vdomain)
-{
+static struct ddsi_tkmap_instance *dds__builtin_get_tkmap_entry(const struct ddsi_guid *guid,
+                                                                void *vdomain) {
   // 将void指针转换为dds_domain指针
   struct dds_domain *domain = vdomain;
 
   // 创建一个内置主题的序列化数据，用于查找tkmap实例
-  struct ddsi_serdata *sd = dds_serdata_builtin_from_endpoint(domain->builtin_participant_type, guid, NULL, SDK_KEY);
+  struct ddsi_serdata *sd =
+      dds_serdata_builtin_from_endpoint(domain->builtin_participant_type, guid, NULL, SDK_KEY);
 
   // 在tkmap中查找对应的实例
   struct ddsi_tkmap_instance *tk = ddsi_tkmap_find(domain->gv.m_tkmap, sd, true);
@@ -404,37 +395,38 @@ static struct ddsi_tkmap_instance *dds__builtin_get_tkmap_entry(const struct dds
  * @param[in] alive     实体是否存活
  * @return 返回创建的ddsi_serdata指针
  */
-struct ddsi_serdata *dds__builtin_make_sample_endpoint(const struct ddsi_entity_common *e, ddsrt_wctime_t timestamp, bool alive)
-{
+struct ddsi_serdata *dds__builtin_make_sample_endpoint(const struct ddsi_entity_common *e,
+                                                       ddsrt_wctime_t timestamp,
+                                                       bool alive) {
   // 初始化dom变量，避免C类型系统导致的gcc警告
   struct dds_domain *dom = e->gv->builtin_topic_interface->arg;
   struct ddsi_sertype *type = NULL;
 
   // 根据实体类型选择相应的内置类型
-  switch (e->kind)
-  {
-  case DDSI_EK_PARTICIPANT:
-  case DDSI_EK_PROXY_PARTICIPANT:
-    type = dom->builtin_participant_type;
-    break;
-  case DDSI_EK_WRITER:
-  case DDSI_EK_PROXY_WRITER:
-    type = dom->builtin_writer_type;
-    break;
-  case DDSI_EK_READER:
-  case DDSI_EK_PROXY_READER:
-    type = dom->builtin_reader_type;
-    break;
-  default:
-    abort();
-    break;
+  switch (e->kind) {
+    case DDSI_EK_PARTICIPANT:
+    case DDSI_EK_PROXY_PARTICIPANT:
+      type = dom->builtin_participant_type;
+      break;
+    case DDSI_EK_WRITER:
+    case DDSI_EK_PROXY_WRITER:
+      type = dom->builtin_writer_type;
+      break;
+    case DDSI_EK_READER:
+    case DDSI_EK_PROXY_READER:
+      type = dom->builtin_reader_type;
+      break;
+    default:
+      abort();
+      break;
   }
 
   // 确保类型不为空
   assert(type != NULL);
 
   // 为给定的实体创建一个内置样本
-  struct ddsi_serdata *serdata = dds_serdata_builtin_from_endpoint(type, &e->guid, (struct ddsi_entity_common *)e, alive ? SDK_DATA : SDK_KEY);
+  struct ddsi_serdata *serdata = dds_serdata_builtin_from_endpoint(
+      type, &e->guid, (struct ddsi_entity_common *)e, alive ? SDK_DATA : SDK_KEY);
 
   // 设置样本的时间戳和状态信息
   serdata->timestamp = timestamp;
@@ -454,14 +446,15 @@ struct ddsi_serdata *dds__builtin_make_sample_endpoint(const struct ddsi_entity_
  * @param[in] alive      样本是否存活
  * @return 返回序列化数据样本指针
  */
-static struct ddsi_serdata *dds__builtin_make_sample_topic_impl(const struct ddsi_topic_definition *tpd, ddsrt_wctime_t timestamp, bool alive)
-{
+static struct ddsi_serdata *dds__builtin_make_sample_topic_impl(
+    const struct ddsi_topic_definition *tpd, ddsrt_wctime_t timestamp, bool alive) {
   // 获取域对象
   struct dds_domain *dom = tpd->gv->builtin_topic_interface->arg;
   // 获取内置主题类型
   struct ddsi_sertype *type = dom->builtin_topic_type;
   // 从主题定义创建序列化数据
-  struct ddsi_serdata *serdata = dds_serdata_builtin_from_topic_definition(type, (dds_builtintopic_topic_key_t *)&tpd->key, tpd, alive ? SDK_DATA : SDK_KEY);
+  struct ddsi_serdata *serdata = dds_serdata_builtin_from_topic_definition(
+      type, (dds_builtintopic_topic_key_t *)&tpd->key, tpd, alive ? SDK_DATA : SDK_KEY);
   // 设置序列化数据的时间戳
   serdata->timestamp = timestamp;
   // 设置序列化数据的状态信息
@@ -478,8 +471,9 @@ static struct ddsi_serdata *dds__builtin_make_sample_topic_impl(const struct dds
  * @param[in] alive      样本是否存活
  * @return 返回序列化数据样本指针
  */
-struct ddsi_serdata *dds__builtin_make_sample_topic(const struct ddsi_entity_common *e, ddsrt_wctime_t timestamp, bool alive)
-{
+struct ddsi_serdata *dds__builtin_make_sample_topic(const struct ddsi_entity_common *e,
+                                                    ddsrt_wctime_t timestamp,
+                                                    bool alive) {
   // 获取主题指针
   struct ddsi_topic *tp = (struct ddsi_topic *)e;
   // 锁定QoS锁
@@ -500,8 +494,9 @@ struct ddsi_serdata *dds__builtin_make_sample_topic(const struct ddsi_entity_com
  * @param[in] alive      样本是否存活
  * @return 返回序列化数据样本指针
  */
-struct ddsi_serdata *dds__builtin_make_sample_proxy_topic(const struct ddsi_proxy_topic *proxytp, ddsrt_wctime_t timestamp, bool alive)
-{
+struct ddsi_serdata *dds__builtin_make_sample_proxy_topic(const struct ddsi_proxy_topic *proxytp,
+                                                          ddsrt_wctime_t timestamp,
+                                                          bool alive) {
   // 调用实现函数创建序列化数据样本
   return dds__builtin_make_sample_topic_impl(proxytp->definition, timestamp, alive);
 }
@@ -516,14 +511,15 @@ struct ddsi_serdata *dds__builtin_make_sample_proxy_topic(const struct ddsi_prox
  * @param[in] alive     实体是否存活
  * @param[in] vdomain   域指针
  */
-static void dds__builtin_write_endpoint(const struct ddsi_entity_common *e, ddsrt_wctime_t timestamp, bool alive, void *vdomain)
-{
+static void dds__builtin_write_endpoint(const struct ddsi_entity_common *e,
+                                        ddsrt_wctime_t timestamp,
+                                        bool alive,
+                                        void *vdomain) {
   // 将void指针转换为dds_domain指针
   struct dds_domain *dom = vdomain;
 
   // 检查实体是否可见
-  if (dds__builtin_is_visible(&e->guid, ddsi_get_entity_vendorid(e), dom))
-  {
+  if (dds__builtin_is_visible(&e->guid, ddsi_get_entity_vendorid(e), dom)) {
     // 初始化bwr以避免C类型系统引起的gcc警告
     struct ddsi_local_orphan_writer *bwr = NULL;
 
@@ -534,24 +530,23 @@ static void dds__builtin_write_endpoint(const struct ddsi_entity_common *e, ddsr
     assert(e->tk != NULL);
 
     // 根据实体类型选择相应的内置主题写入器
-    switch (e->kind)
-    {
-    case DDSI_EK_PARTICIPANT:
-    case DDSI_EK_PROXY_PARTICIPANT:
-      bwr = dom->builtintopic_writer_participant;
-      break;
-    case DDSI_EK_WRITER:
-    case DDSI_EK_PROXY_WRITER:
-      bwr = dom->builtintopic_writer_publications;
-      break;
-    case DDSI_EK_READER:
-    case DDSI_EK_PROXY_READER:
-      bwr = dom->builtintopic_writer_subscriptions;
-      break;
-    default:
-      // 遇到未知类型时中止程序
-      abort();
-      break;
+    switch (e->kind) {
+      case DDSI_EK_PARTICIPANT:
+      case DDSI_EK_PROXY_PARTICIPANT:
+        bwr = dom->builtintopic_writer_participant;
+        break;
+      case DDSI_EK_WRITER:
+      case DDSI_EK_PROXY_WRITER:
+        bwr = dom->builtintopic_writer_publications;
+        break;
+      case DDSI_EK_READER:
+      case DDSI_EK_PROXY_READER:
+        bwr = dom->builtintopic_writer_subscriptions;
+        break;
+      default:
+        // 遇到未知类型时中止程序
+        abort();
+        break;
     }
 
     // 使用内置主题写入器将序列化数据写入本地孤立实体
@@ -568,12 +563,15 @@ static void dds__builtin_write_endpoint(const struct ddsi_entity_common *e, ddsr
  * @param[in] alive      标识主题是否存活
  * @param[in] vdomain    域指针
  */
-static void dds__builtin_write_topic(const struct ddsi_topic_definition *tpd, ddsrt_wctime_t timestamp, bool alive, void *vdomain)
-{
-  struct dds_domain *dom = vdomain;                                                          // 将void类型的vdomain转换为dds_domain结构体指针
-  struct ddsi_local_orphan_writer *bwr = dom->builtintopic_writer_topics;                    // 获取内置主题写入器
-  struct ddsi_serdata *serdata = dds__builtin_make_sample_topic_impl(tpd, timestamp, alive); // 创建序列化数据样本
-  dds_writecdr_local_orphan_impl(bwr, serdata);                                              // 将序列化数据样本写入内置主题写入器
+static void dds__builtin_write_topic(const struct ddsi_topic_definition *tpd,
+                                     ddsrt_wctime_t timestamp,
+                                     bool alive,
+                                     void *vdomain) {
+  struct dds_domain *dom = vdomain;  // 将void类型的vdomain转换为dds_domain结构体指针
+  struct ddsi_local_orphan_writer *bwr = dom->builtintopic_writer_topics;  // 获取内置主题写入器
+  struct ddsi_serdata *serdata =
+      dds__builtin_make_sample_topic_impl(tpd, timestamp, alive);  // 创建序列化数据样本
+  dds_writecdr_local_orphan_impl(bwr, serdata);  // 将序列化数据样本写入内置主题写入器
 }
 #endif
 
@@ -582,14 +580,13 @@ static void dds__builtin_write_topic(const struct ddsi_topic_definition *tpd, dd
  *
  * @param[in] dom  域指针
  */
-static void unref_builtin_types(struct dds_domain *dom)
-{
-  ddsi_sertype_unref(dom->builtin_participant_type); // 取消引用内置参与者类型
+static void unref_builtin_types(struct dds_domain *dom) {
+  ddsi_sertype_unref(dom->builtin_participant_type);  // 取消引用内置参与者类型
 #ifdef DDS_HAS_TOPIC_DISCOVERY
-  ddsi_sertype_unref(dom->builtin_topic_type); // 取消引用内置主题类型
+  ddsi_sertype_unref(dom->builtin_topic_type);  // 取消引用内置主题类型
 #endif
-  ddsi_sertype_unref(dom->builtin_reader_type); // 取消引用内置读取器类型
-  ddsi_sertype_unref(dom->builtin_writer_type); // 取消引用内置写入器类型
+  ddsi_sertype_unref(dom->builtin_reader_type);  // 取消引用内置读取器类型
+  ddsi_sertype_unref(dom->builtin_writer_type);  // 取消引用内置写入器类型
 }
 
 /**
@@ -599,8 +596,7 @@ static void unref_builtin_types(struct dds_domain *dom)
  *
  * @param[in] dom 指向dds_domain结构体的指针
  */
-void dds__builtin_init(struct dds_domain *dom)
-{
+void dds__builtin_init(struct dds_domain *dom) {
   // 创建内置QoS
   dds_qos_t *qos = dds__create_builtin_qos();
 
@@ -641,12 +637,24 @@ void dds__builtin_init(struct dds_domain *dom)
   // 唤醒线程状态
   ddsi_thread_state_awake(ddsi_lookup_thread_state(), &dom->gv);
   const struct ddsi_entity_index *gh = dom->gv.entity_index;
-  dom->builtintopic_writer_participant = ddsi_new_local_orphan_writer(&dom->gv, ddsi_to_entityid(DDSI_ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER), DDS_BUILTIN_TOPIC_PARTICIPANT_NAME, dom->builtin_participant_type, qos, dds_builtintopic_whc_new(DSBT_PARTICIPANT, gh));
+  dom->builtintopic_writer_participant = ddsi_new_local_orphan_writer(
+      &dom->gv, ddsi_to_entityid(DDSI_ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER),
+      DDS_BUILTIN_TOPIC_PARTICIPANT_NAME, dom->builtin_participant_type, qos,
+      dds_builtintopic_whc_new(DSBT_PARTICIPANT, gh));
 #ifdef DDS_HAS_TOPIC_DISCOVERY
-  dom->builtintopic_writer_topics = ddsi_new_local_orphan_writer(&dom->gv, ddsi_to_entityid(DDSI_ENTITYID_SEDP_BUILTIN_TOPIC_WRITER), DDS_BUILTIN_TOPIC_TOPIC_NAME, dom->builtin_topic_type, qos, dds_builtintopic_whc_new(DSBT_TOPIC, gh));
+  dom->builtintopic_writer_topics = ddsi_new_local_orphan_writer(
+      &dom->gv, ddsi_to_entityid(DDSI_ENTITYID_SEDP_BUILTIN_TOPIC_WRITER),
+      DDS_BUILTIN_TOPIC_TOPIC_NAME, dom->builtin_topic_type, qos,
+      dds_builtintopic_whc_new(DSBT_TOPIC, gh));
 #endif
-  dom->builtintopic_writer_publications = ddsi_new_local_orphan_writer(&dom->gv, ddsi_to_entityid(DDSI_ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER), DDS_BUILTIN_TOPIC_PUBLICATION_NAME, dom->builtin_writer_type, qos, dds_builtintopic_whc_new(DSBT_WRITER, gh));
-  dom->builtintopic_writer_subscriptions = ddsi_new_local_orphan_writer(&dom->gv, ddsi_to_entityid(DDSI_ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER), DDS_BUILTIN_TOPIC_SUBSCRIPTION_NAME, dom->builtin_reader_type, qos, dds_builtintopic_whc_new(DSBT_READER, gh));
+  dom->builtintopic_writer_publications = ddsi_new_local_orphan_writer(
+      &dom->gv, ddsi_to_entityid(DDSI_ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER),
+      DDS_BUILTIN_TOPIC_PUBLICATION_NAME, dom->builtin_writer_type, qos,
+      dds_builtintopic_whc_new(DSBT_WRITER, gh));
+  dom->builtintopic_writer_subscriptions = ddsi_new_local_orphan_writer(
+      &dom->gv, ddsi_to_entityid(DDSI_ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER),
+      DDS_BUILTIN_TOPIC_SUBSCRIPTION_NAME, dom->builtin_reader_type, qos,
+      dds_builtintopic_whc_new(DSBT_READER, gh));
   // 睡眠线程状态
   ddsi_thread_state_asleep(ddsi_lookup_thread_state());
 
@@ -662,8 +670,7 @@ void dds__builtin_init(struct dds_domain *dom)
  *
  * @param dom 指向要处理的dds_domain结构体的指针
  */
-void dds__builtin_fini(struct dds_domain *dom)
-{
+void dds__builtin_fini(struct dds_domain *dom) {
   // 不再为内置主题样本提供更多来源
   ddsi_thread_state_awake(ddsi_lookup_thread_state(), &dom->gv);
 
