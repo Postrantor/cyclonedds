@@ -12,37 +12,38 @@
 #ifndef DDS__SHM_QOS_H
 #define DDS__SHM_QOS_H
 
-#if defined (__cplusplus)
-extern "C" {
+#if defined(__cplusplus)
+extern "C"
+{
 #endif
 
-struct dds_qos;
-struct dds_topic;
+  struct dds_qos;
+  struct dds_topic;
 
-/**
- * @brief Check whether the DDS QoS settings and topic are compatible with Iceoryx
- * @component iceoryx_support
- *
- * @param[in] qos the QoS for which to check compatibility
- * @param[in] tp topic
- * @param[in] check_durability_service whether to include this one
- *
- * @return true iff compatible
- */
-bool dds_shm_compatible_qos_and_topic (const struct dds_qos *qos, const struct dds_topic *tp, bool check_durability_service);
+  /**
+   * @brief 检查DDS QoS设置和主题是否与Iceoryx兼容
+   * @component iceoryx_support
+   *
+   * @param[in] qos 要检查兼容性的QoS
+   * @param[in] tp 主题
+   * @param[in] check_durability_service 是否包括此项
+   *
+   * @return 如果兼容，则返回true
+   */
+  bool dds_shm_compatible_qos_and_topic(const struct dds_qos *qos, const struct dds_topic *tp, bool check_durability_service);
 
-/**
- * @brief Construct a string representation partition & topic string for use in Iceoryx
- * @component iceoryx_support
- *
- * @param[in] qos the QoS from which to get the partition
- * @param[in] tp the topic
- *
- * @return an allocated, null-terminated string if partition is compatible and sufficent memory is available
- */
-char *dds_shm_partition_topic (const struct dds_qos *qos, const struct dds_topic *tp);
+  /**
+   * @brief 为Iceoryx中的分区和主题字符串构建一个字符串表示形式
+   * @component iceoryx_support
+   *
+   * @param[in] qos 从中获取分区的QoS
+   * @param[in] tp 主题
+   *
+   * @return 如果分区兼容且有足够的内存可用，则返回一个已分配的空终止字符串
+   */
+  char *dds_shm_partition_topic(const struct dds_qos *qos, const struct dds_topic *tp);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

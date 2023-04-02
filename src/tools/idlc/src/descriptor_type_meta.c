@@ -262,13 +262,11 @@ get_plain_typeid (const idl_pstate_t *pstate, struct descriptor_type_meta *dtm, 
     switch (idl_type (type_spec))
     {
       case IDL_BOOL: ti->_d = DDS_XTypes_TK_BOOLEAN; break;
-      case IDL_CHAR: ti->_d = DDS_XTypes_TK_CHAR8; break;
-      case IDL_OCTET: ti->_d = DDS_XTypes_TK_BYTE; break;
-      case IDL_INT8: ti->_d = DDS_XTypes_TK_INT8; break;
+      case IDL_INT8: case IDL_CHAR: ti->_d = DDS_XTypes_TK_CHAR8; break;
+      case IDL_UINT8: case IDL_OCTET: ti->_d = DDS_XTypes_TK_BYTE; break;
       case IDL_INT16: case IDL_SHORT: ti->_d = DDS_XTypes_TK_INT16; break;
       case IDL_INT32: case IDL_LONG: ti->_d = DDS_XTypes_TK_INT32; break;
       case IDL_INT64: case IDL_LLONG: ti->_d = DDS_XTypes_TK_INT64; break;
-      case IDL_UINT8: ti->_d = DDS_XTypes_TK_UINT8; break;
       case IDL_UINT16: case IDL_USHORT: ti->_d = DDS_XTypes_TK_UINT16; break;
       case IDL_UINT32: case IDL_ULONG: ti->_d = DDS_XTypes_TK_UINT32; break;
       case IDL_UINT64: case IDL_ULLONG: ti->_d = DDS_XTypes_TK_UINT64; break;
@@ -546,15 +544,6 @@ get_enum_flags(const idl_enum_t *_enum)
   return flags;
 }
 
-static DDS_XTypes_EnumeratedLiteralFlag
-get_enum_literal_flags(const idl_enum_t *_enum, const idl_enumerator_t *_enumerator)
-{
-  DDS_XTypes_EnumeratedLiteralFlag flags = 0u;
-  if (_enum->default_enumerator == _enumerator)
-    flags |= DDS_XTypes_IS_DEFAULT;
-  return flags;
-}
-
 static idl_retcode_t
 get_typeid(
   const idl_pstate_t *pstate,
@@ -637,21 +626,15 @@ set_xtypes_annotation_parameter_value(
       val->_d = DDS_XTypes_TK_BOOLEAN;
       val->_u.boolean_value = lit->value.bln;
       break;
+    case IDL_INT8:
     case IDL_CHAR:
       val->_d = DDS_XTypes_TK_CHAR8;
       val->_u.char_value = lit->value.chr;
       break;
     case IDL_OCTET:
+    case IDL_UINT8:
       val->_d = DDS_XTypes_TK_BYTE;
       val->_u.byte_value = lit->value.uint8;
-      break;
-    case IDL_INT8:
-      val->_d = DDS_XTypes_TK_INT8;
-      val->_u.int8_value = lit->value.int8;
-      break;
-    case IDL_UINT8:
-      val->_d = DDS_XTypes_TK_UINT8;
-      val->_u.uint8_value = lit->value.uint8;
       break;
     case IDL_SHORT:
     case IDL_INT16:
@@ -1332,7 +1315,6 @@ emit_enumerator (
   struct type_meta *tm = dtm->stack;
 
   assert (idl_is_enum (idl_parent (node)));
-  idl_enum_t *_enum = (idl_enum_t *) idl_parent (node);
   assert (tm->to_minimal->_u.minimal._d == DDS_XTypes_TK_ENUM && tm->to_complete->_u.complete._d == DDS_XTypes_TK_ENUM);
 
   DDS_XTypes_MinimalEnumeratedLiteral m;
@@ -1344,7 +1326,6 @@ emit_enumerator (
   assert (enumerator->value.value <= INT32_MAX);
   m.common.value = c.common.value = (int32_t) enumerator->value.value;
   get_namehash (m.detail.name_hash, idl_identifier (enumerator));
-  m.common.flags = c.common.flags = get_enum_literal_flags (_enum, enumerator);
   if ((ret = get_complete_member_detail (node, &c.detail)) < 0)
     return ret;
 
@@ -1542,7 +1523,7 @@ print_ser_data(FILE *fp, const char *kind, const char *type, unsigned char *data
 {
   char *sep = ", ", *lsep = "\\\n  ", *fmt;
 
-  fmt = "#define %1$s_%2$s (const unsigned char []){ ";
+  fmt = "#define %1$s_%2$s (unsigned char []){ ";
   if (idl_fprintf(fp, fmt, kind, type) < 0)
     return IDL_RETCODE_NO_MEMORY;
 

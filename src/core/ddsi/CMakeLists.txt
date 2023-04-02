@@ -64,9 +64,6 @@ set(srcs_ddsi
   ddsi_guid.c
   ddsi_bswap.c
   ddsi_discovery.c
-  ddsi_discovery_addrset.c
-  ddsi_discovery_spdp.c
-  ddsi_discovery_endpoint.c
   ddsi_debmon.c
   ddsi_init.c
   ddsi_lat_estim.c
@@ -85,7 +82,6 @@ set(srcs_ddsi
   ddsi_xevent.c
   ddsi_xmsg.c
   ddsi_freelist.c
-  ddsi_hbcontrol.c
 )
 
 set(hdrs_ddsi
@@ -192,9 +188,6 @@ set(hdrs_private_ddsi
   ddsi__bitset.h
   ddsi__bswap.h
   ddsi__discovery.h
-  ddsi__discovery_addrset.h
-  ddsi__discovery_spdp.h
-  ddsi__discovery_endpoint.h
   ddsi__debmon.h
   ddsi__hbcontrol.h
   ddsi__inverse_uint32_set.h
@@ -229,14 +222,6 @@ if(ENABLE_DEADLINE_MISSED)
     ddsi_deadline.h
   )
 endif()
-if(ENABLE_TOPIC_DISCOVERY)
-  list(APPEND srcs_ddsi
-    ddsi_discovery_topic.c
-  )
-  list(APPEND hdrs_private_ddsi
-    ddsi__discovery_topic.h
-  )
-endif()
 if(ENABLE_TYPE_DISCOVERY)
   list(APPEND srcs_ddsi
     ddsi_xt_typeinfo.c
@@ -245,7 +230,6 @@ if(ENABLE_TYPE_DISCOVERY)
     ddsi_typelookup.c
     ddsi_typewrap.c
     ddsi_typebuilder.c
-    ddsi_dynamic_type.c
   )
   list(APPEND hdrs_ddsi
     ddsi_xt_typeinfo.h
@@ -253,12 +237,10 @@ if(ENABLE_TYPE_DISCOVERY)
     ddsi_xt_typemap.h
     ddsi_typewrap.h
     ddsi_typebuilder.h
-    ddsi_dynamic_type.h
   )
   list(APPEND hdrs_private_ddsi
     ddsi__xt_impl.h
     ddsi__typelookup.h
-    ddsi__dynamic_type.h
   )
 endif()
 if(ENABLE_SECURITY)

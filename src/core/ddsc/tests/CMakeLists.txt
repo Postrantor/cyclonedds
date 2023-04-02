@@ -88,8 +88,7 @@ set(ddsc_test_sources
     "test_common.c"
     "test_oneliner.c"
     "test_oneliner.h"
-    "cdrstream.c"
-  )
+    "cdrstream.c")
 
 if(ENABLE_LIFESPAN)
   list(APPEND ddsc_test_sources "lifespan.c")
@@ -103,9 +102,7 @@ if(ENABLE_TYPE_DISCOVERY)
   list(APPEND ddsc_test_sources
     "xtypes.c"
     "data_representation.c"
-    "typebuilder.c"
-    "dynamic_type.c"
-  )
+    "typebuilder.c")
 endif()
 
 if(ENABLE_TOPIC_DISCOVERY)

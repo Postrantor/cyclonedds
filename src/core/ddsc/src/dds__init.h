@@ -14,22 +14,23 @@
 
 #include "dds__types.h"
 
-#if defined (__cplusplus)
-extern "C" {
+#if defined(__cplusplus)
+extern "C"
+{
 #endif
 
-/**
- * @component cyclone_root
- *
- * Initializes the library and constructs the global pseudo-entity identified
- * by DDS_CYCLONEDDS_HANDLE with one reference that must (eventually) be
- * released by calling dds_delete on that handle.
- *
- * @return dds_return_t Returns 0 on success or a non-zero error status
- */
-dds_return_t dds_init (void);
+  /**
+   * @component cyclone_root
+   *
+   * 初始化库并构造由 DDS_CYCLONEDDS_HANDLE 标识的全局伪实体，该实体具有一个引用，
+   * 必须（最终）通过在该句柄上调用 dds_delete 来释放。
+   *
+   * @return dds_return_t 成功时返回 0，否则返回非零错误状态
+   */
+  // 函数：初始化库并构造全局伪实体
+  dds_return_t dds_init(void);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif /* DDS__INIT_H */

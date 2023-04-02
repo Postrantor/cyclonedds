@@ -13,16 +13,17 @@
 #define DDS__LOAN_H
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 #ifdef DDS_HAS_SHM
 
-/** @component write_data */
-void dds_register_pub_loan(dds_writer *wr, void *pub_loan);
+  /** @component write_data */
+  void dds_register_pub_loan(dds_writer *wr, void *pub_loan);
 
-/** @component write_data */
-bool dds_deregister_pub_loan(dds_writer *wr, const void *pub_loan);
+  /** @component write_data */
+  bool dds_deregister_pub_loan(dds_writer *wr, const void *pub_loan);
 
 #endif /* DDS_HAS_SHM */
 

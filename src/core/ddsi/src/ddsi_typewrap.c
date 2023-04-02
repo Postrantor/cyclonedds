@@ -36,6 +36,7 @@
 #define MEMBER_FLAG_BITSET_MEMBER 9u
 
 static ddsi_typeid_kind_t ddsi_typeid_kind_impl (const struct DDS_XTypes_TypeIdentifier *type_id);
+static void ddsi_xt_get_typeid_impl (const struct xt_type *xt, struct DDS_XTypes_TypeIdentifier *ti, ddsi_typeid_kind_t kind);
 static bool xt_is_non_hash (const struct xt_type *xt);
 static void xt_applied_member_annotations_fini (struct xt_applied_member_annotations *ann);
 
@@ -157,11 +158,9 @@ const char * ddsi_typekind_descr (unsigned char disc)
     case DDS_XTypes_TK_NONE: return "NONE";
     case DDS_XTypes_TK_BOOLEAN: return "BOOLEAN";
     case DDS_XTypes_TK_BYTE: return "BYTE";
-    case DDS_XTypes_TK_INT8: return "INT8";
     case DDS_XTypes_TK_INT16: return "INT16";
     case DDS_XTypes_TK_INT32: return "INT32";
     case DDS_XTypes_TK_INT64: return "INT64";
-    case DDS_XTypes_TK_UINT8: return "UINT8";
     case DDS_XTypes_TK_UINT16: return "UINT16";
     case DDS_XTypes_TK_UINT32: return "UINT32";
     case DDS_XTypes_TK_UINT64: return "UINT64";
@@ -494,7 +493,7 @@ static void xt_lbounds_dup (struct DDS_XTypes_LBoundSeq *dst, const struct DDS_X
   dst->_buffer = ddsrt_memdup (src->_buffer, dst->_length * sizeof (*dst->_buffer));
 }
 
-void ddsi_xt_get_namehash (DDS_XTypes_NameHash name_hash, const char *name)
+static void get_namehash (DDS_XTypes_NameHash name_hash, const char *name)
 {
   /* FIXME: multi byte utf8 chars? */
   char buf[16];
@@ -510,7 +509,7 @@ static void DDS_XTypes_AppliedAnnotationSeq_copy (struct DDS_XTypes_AppliedAnnot
 static void set_member_detail (struct xt_member_detail *dst, const DDS_XTypes_CompleteMemberDetail *src)
 {
   ddsrt_strlcpy (dst->name, src->name, sizeof (dst->name));
-  ddsi_xt_get_namehash (dst->name_hash, dst->name);
+  get_namehash (dst->name_hash, dst->name);
   if (src->ann_builtin) {
     dst->annotations.ann_builtin = ddsrt_calloc(1, sizeof(struct DDS_XTypes_AppliedBuiltinMemberAnnotations));
     DDS_XTypes_AppliedBuiltinMemberAnnotations_copy (dst->annotations.ann_builtin, src->ann_builtin);
@@ -564,10 +563,9 @@ static dds_return_t xt_valid_union_disc_type (struct ddsi_domaingv *gv, const st
   if (ddsi_xt_is_unresolved (&t->_u.union_type.disc_type->xt))
     return DDS_RETCODE_OK;
   uint8_t d = ddsi_xt_unalias (&t->_u.union_type.disc_type->xt)->_d;
-  if (d != DDS_XTypes_TK_BOOLEAN
-      && d != DDS_XTypes_TK_BYTE && d != DDS_XTypes_TK_CHAR8 && d != DDS_XTypes_TK_CHAR16
-      && d != DDS_XTypes_TK_INT8 && d != DDS_XTypes_TK_INT16 && d != DDS_XTypes_TK_INT32 && d != DDS_XTypes_TK_INT64
-      && d != DDS_XTypes_TK_UINT8 && d != DDS_XTypes_TK_UINT16 && d != DDS_XTypes_TK_UINT32 && d != DDS_XTypes_TK_UINT64
+  if (d != DDS_XTypes_TK_BOOLEAN && d != DDS_XTypes_TK_BYTE && d != DDS_XTypes_TK_CHAR8 && d != DDS_XTypes_TK_CHAR16
+      && d != DDS_XTypes_TK_INT16 && d != DDS_XTypes_TK_INT32 && d != DDS_XTypes_TK_INT64
+      && d != DDS_XTypes_TK_UINT16 && d != DDS_XTypes_TK_UINT32 && d != DDS_XTypes_TK_UINT64
       && d != DDS_XTypes_TK_ENUM && d != DDS_XTypes_TK_BITMASK)
   {
     GVTRACE ("discriminator type for union is invalid\n");
@@ -946,8 +944,8 @@ static dds_return_t xt_validate_impl (struct ddsi_domaingv *gv, const struct xt_
         return ret;
       break;
     case DDS_XTypes_TK_BOOLEAN: case DDS_XTypes_TK_BYTE:
-    case DDS_XTypes_TK_INT8: case DDS_XTypes_TK_INT16: case DDS_XTypes_TK_INT32: case DDS_XTypes_TK_INT64:
-    case DDS_XTypes_TK_UINT8: case DDS_XTypes_TK_UINT16: case DDS_XTypes_TK_UINT32: case DDS_XTypes_TK_UINT64:
+    case DDS_XTypes_TK_INT16: case DDS_XTypes_TK_INT32: case DDS_XTypes_TK_INT64:
+    case DDS_XTypes_TK_UINT16: case DDS_XTypes_TK_UINT32: case DDS_XTypes_TK_UINT64:
     case DDS_XTypes_TK_FLOAT32: case DDS_XTypes_TK_FLOAT64: case DDS_XTypes_TK_FLOAT128:
     case DDS_XTypes_TK_CHAR8: case DDS_XTypes_TK_CHAR16: case DDS_XTypes_TK_STRING8:
       // no validations
@@ -1847,13 +1845,10 @@ static void xt_bitflag_seq_copy (struct xt_bitflag_seq *dst, const struct xt_bit
   }
 }
 
-void ddsi_xt_copy (struct ddsi_domaingv *gv, struct xt_type *dst, const struct xt_type *src)
+static struct xt_type * xt_dup (struct ddsi_domaingv *gv, const struct xt_type *src)
 {
-  if (!ddsi_typeid_is_none (&src->id))
-    ddsi_typeid_copy (&dst->id, &src->id);
-  else
-    dst->id.x._d = DDS_XTypes_TK_NONE;
-
+  struct xt_type *dst = ddsrt_calloc (1, sizeof (*dst));
+  ddsi_typeid_copy (&dst->id, &src->id);
   dst->kind = src->kind;
   dst->_d = src->_d;
   switch (src->_d)
@@ -1922,12 +1917,6 @@ void ddsi_xt_copy (struct ddsi_domaingv *gv, struct xt_type *dst, const struct x
       xt_type_detail_copy (&dst->_u.bitmask.detail, &src->_u.bitmask.detail);
       break;
   }
-}
-
-static struct xt_type * xt_dup (struct ddsi_domaingv *gv, const struct xt_type *src)
-{
-  struct xt_type *dst = ddsrt_calloc (1, sizeof (*dst));
-  ddsi_xt_copy (gv, dst, src);
   return dst;
 }
 
@@ -2742,29 +2731,10 @@ static void ddsi_xt_get_non_hash_id (const struct xt_type *xt, struct DDS_XTypes
     switch (xt->_d)
     {
       case DDS_XTypes_TK_STRING8:
-        if (xt->_u.str8.bound <= 255)
-        {
-          ti->_d = DDS_XTypes_TI_STRING8_SMALL;
-          ti->_u.string_sdefn.bound = (DDS_XTypes_SBound) xt->_u.str8.bound;
-        }
-        else
-        {
-          ti->_d = DDS_XTypes_TI_STRING8_LARGE;
-          ti->_u.string_ldefn.bound = xt->_u.str8.bound;
-        }
-        break;
       case DDS_XTypes_TK_STRING16:
-        if (xt->_u.str16.bound <= 255)
-        {
-          ti->_d = DDS_XTypes_TI_STRING16_SMALL;
-          ti->_u.string_sdefn.bound = (DDS_XTypes_SBound) xt->_u.str16.bound;
-        }
-        else
-        {
-          ti->_d = DDS_XTypes_TI_STRING16_LARGE;
-          ti->_u.string_ldefn.bound = xt->_u.str16.bound;
-        }
+        ddsi_typeid_copy_to_impl (ti, &xt->id);
         break;
+
       case DDS_XTypes_TK_SEQUENCE:
         if (xt->_u.seq.bound <= 255)
         {
@@ -2844,7 +2814,7 @@ static void ddsi_xt_get_non_hash_id (const struct xt_type *xt, struct DDS_XTypes
   }
 }
 
-void ddsi_xt_get_typeid_impl (const struct xt_type *xt, struct DDS_XTypes_TypeIdentifier *ti, ddsi_typeid_kind_t kind)
+static void ddsi_xt_get_typeid_impl (const struct xt_type *xt, struct DDS_XTypes_TypeIdentifier *ti, ddsi_typeid_kind_t kind)
 {
   if (xt_is_non_hash (xt))
   {

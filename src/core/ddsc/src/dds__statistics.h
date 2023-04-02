@@ -14,24 +14,37 @@
 
 #include "dds/ddsc/dds_statistics.h"
 
-#if defined (__cplusplus)
-extern "C" {
+#if defined(__cplusplus)
+extern "C"
+{
 #endif
 
-struct dds_stat_keyvalue_descriptor {
-  const char *name;
-  enum dds_stat_kind kind;
-};
+  // 定义一个结构体，表示键值对描述符
+  struct dds_stat_keyvalue_descriptor
+  {
+    const char *name;        // 键值对的名称
+    enum dds_stat_kind kind; // 键值对的类型（枚举）
+  };
 
-struct dds_stat_descriptor {
-  size_t count;
-  const struct dds_stat_keyvalue_descriptor *kv;
-};
+  // 定义一个结构体，表示统计描述符
+  struct dds_stat_descriptor
+  {
+    size_t count;                                  // 描述符中键值对的数量
+    const struct dds_stat_keyvalue_descriptor *kv; // 指向键值对描述符数组的指针
+  };
 
-/** @component statistics */
-struct dds_statistics *dds_alloc_statistics (const struct dds_entity *e, const struct dds_stat_descriptor *d);
+  /**
+   * @brief 分配一个dds_statistics结构体实例
+   * @component statistics
+   *
+   * @param[in] e 指向dds_entity实例的指针
+   * @param[in] d 指向dds_stat_descriptor实例的指针
+   *
+   * @return 返回一个已分配的dds_statistics实例的指针
+   */
+  struct dds_statistics *dds_alloc_statistics(const struct dds_entity *e, const struct dds_stat_descriptor *d);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif /* DDS__STATISTICS_H */

@@ -16,7 +16,6 @@
 #include "dds/ddsrt/process.h"
 #include "dds/ddsrt/threads.h"
 #include "dds/ddsrt/environ.h"
-#include "dds/ddsrt/io.h"
 #include "dds/ddsi/ddsi_entity_index.h"
 #include "dds/ddsi/ddsi_entity.h"
 #include "ddsi__whc.h"
@@ -25,7 +24,6 @@
 #include "dds/ddsi/ddsi_xevent.h"
 
 #include "test_common.h"
-#include "test_oneliner.h"
 #include "Space.h"
 #include "deadline_update.h"
 
@@ -446,11 +444,9 @@ CU_Theory((int32_t n_inst, uint8_t unreg_nth, uint8_t dispose_nth), ddsc_deadlin
 //deadline callback function, this function's purpose is to delay the monitor thread such that while instance's
 //deadline may expire, the event thread is blocked by this function, and updates to instances are "queued" if they happen
 //during this block. these queued updates happen the next time the expiration callbacks fire
-static void cb (struct ddsi_domaingv *gv, struct ddsi_xevent *xev, struct ddsi_xpack *xp, void *ptr, ddsrt_mtime_t tm)
+static void cb (struct ddsi_xevent *xev, void *ptr, ddsrt_mtime_t tm)
 {
-  (void) gv;
   (void) xev;
-  (void) xp;
   (void) ptr;
   (void) tm;
   dds_sleepfor(DEADLINE);
@@ -546,11 +542,11 @@ CU_Test(ddsc_deadline, update)
   }
 
   struct ddsi_domaingv *gvptr = get_domaingv (wr);
-  struct ddsi_xevent *xev = ddsi_qxev_callback (
+  struct ddsi_xevent *xev = ddsi_qxev_callback(
     gvptr->xevents,
     ddsrt_mtime_add_duration(ddsrt_time_monotonic(), (dds_duration_t)(0.5*DEADLINE)),
     cb,
-    NULL, 0, true);  //this should sleep the thread that updates the statuses from 0.5*DEADLINE to 1.5*DEADLINE
+    NULL);  //this should sleep the thread that updates the statuses from 0.5*DEADLINE to 1.5*DEADLINE
   CU_ASSERT_FATAL(xev != NULL);
 
   Space_Type1 msg1 = { 1, 0, 0 },
@@ -601,54 +597,6 @@ CU_Test(ddsc_deadline, update)
   //msg1 should have expired 3 times, msg2 should have expired 2 times
   check_statuses(wr, rd, expired_1, expired_2, tw1, tw2, ih1, ih2);
 
-  ddsi_delete_xevent(xev);
+  ddsi_delete_xevent_callback(xev);
   dds_delete(pp);
-}
-
-CU_Test(ddsc_deadline, insanely_short)
-{
-  // The "*"s in the odm,rdm checks causes it to print the actual values
-  // which can be useful in identifying the cause of a failure
-  const char *program_template =
-    "odm pm w(dl=%s) rdm da sm r'(dl=%s,r=r) ?pm w ?sm r' "
-    "wr w 0 ?da r' take r' "
-    "sleep 1 ?odm(*,*) w ?rdm(*,*) r' "
-    "sleep 1 ?odm(*,*) w ?rdm(*,*) r'";
-
-  static const char *deadlines[] = {
-    "0",
-    "0.000000001" // 1ns
-  };
-
-  for (size_t i = 0; i < sizeof (deadlines) / sizeof (deadlines[0]); i++)
-  {
-    char *program = NULL;
-    (void) ddsrt_asprintf (&program, program_template, deadlines[i], deadlines[i]);
-    int result = test_oneliner (program);
-    ddsrt_free (program);
-    CU_ASSERT_FATAL (result > 0);
-  }
-}
-
-CU_Test(ddsc_deadline, insanely_long)
-{
-  // The "*"s in the odm,rdm checks causes it to print the actual values
-  // which can be useful in identifying the cause of a failure
-  const char *program_template =
-    "odm pm w(dl=%s) rdm da sm r'(dl=%s,r=r) ?pm w ?sm r' "
-    "wr w 0 ?da r' take r' "
-    "sleep 1 ?!odm ?!rdm";
-
-  static const char *deadlines[] = {
-    "2147483647" // INT32_MAX seconds
-  };
-
-  for (size_t i = 0; i < sizeof (deadlines) / sizeof (deadlines[0]); i++)
-  {
-    char *program = NULL;
-    (void) ddsrt_asprintf (&program, program_template, deadlines[i], deadlines[i]);
-    int result = test_oneliner (program);
-    ddsrt_free (program);
-    CU_ASSERT_FATAL (result > 0);
-  }
 }

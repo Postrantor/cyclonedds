@@ -86,7 +86,7 @@ dds_key_descriptor_t;
  */
 struct dds_type_meta_ser
 {
-  const unsigned char * data;  /**< data pointer */
+  unsigned char * data;  /**< data pointer */
   uint32_t sz;  /**< data size */
 };
 

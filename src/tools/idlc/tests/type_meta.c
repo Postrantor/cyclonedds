@@ -222,15 +222,13 @@ static DDS_XTypes_TypeObject *get_typeobj1 (void)
     "t1::test_struct",
     DDS_XTypes_IS_APPENDABLE,
     (DDS_XTypes_TypeIdentifier) { ._d = DDS_XTypes_TK_NONE },
-    8, (smember_t[]) {
+    6, (smember_t[]) {
       { 0, DDS_XTypes_IS_KEY | DDS_XTypes_IS_MUST_UNDERSTAND | DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TK_INT64 }, "f1" },
       { 1, DDS_XTypes_IS_OPTIONAL | DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TI_STRING8_SMALL, ._u.string_sdefn.bound = 0 }, "f2" },
       { 4, DDS_XTypes_IS_EXTERNAL | DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TK_CHAR8 }, "f3" },
-      { 3, DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TK_INT8 }, "f4" },
+      { 3, DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TK_CHAR8 }, "f4" },
       { 8, DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TK_UINT32 }, "f5" },
-      { 7, DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TK_INT64 }, "f6" },
-      { 10, DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TK_UINT8 }, "f7" },
-      { 11, DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TK_BYTE }, "f8" }
+      { 7, DDS_XTypes_TRY_CONSTRUCT_DISCARD, { ._d = DDS_XTypes_TK_INT64 }, "f6" }
     });
 }
 
@@ -452,7 +450,7 @@ static DDS_XTypes_TypeObject *get_typeobj7 (void)
   {
     struct DDS_XTypes_CompleteEnumeratedLiteral *literal_seq = calloc_no_fail (2, sizeof (*literal_seq));
     literal_seq[0] = (DDS_XTypes_CompleteEnumeratedLiteral) { .common = { .value = 0, .flags = 0 }, .detail.name = "en0" };
-    literal_seq[1] = (DDS_XTypes_CompleteEnumeratedLiteral) { .common = { .value = 3, .flags = DDS_XTypes_IS_DEFAULT }, .detail.name = "en3" };
+    literal_seq[1] = (DDS_XTypes_CompleteEnumeratedLiteral) { .common = { .value = 3, .flags = 0 }, .detail.name = "en3" };
 
     DDS_XTypes_TypeObject *to_enum = calloc_no_fail (1, sizeof (*to_enum));
     to_enum->_d = DDS_XTypes_EK_COMPLETE;
@@ -549,7 +547,7 @@ static DDS_XTypes_TypeObject *get_typeobj10 (void)
   {
     struct DDS_XTypes_CompleteEnumeratedLiteral *literal_seq = calloc_no_fail (2, sizeof (*literal_seq));
     literal_seq[0] = (DDS_XTypes_CompleteEnumeratedLiteral) { .common = { .value = 0, .flags = 0 }, .detail.name = "en0" };
-    literal_seq[1] = (DDS_XTypes_CompleteEnumeratedLiteral) { .common = { .value = 1, .flags = DDS_XTypes_IS_DEFAULT }, .detail.name = "en1" };
+    literal_seq[1] = (DDS_XTypes_CompleteEnumeratedLiteral) { .common = { .value = 1, .flags = 0 }, .detail.name = "en1" };
 
     DDS_XTypes_TypeObject *to_enum = calloc_no_fail (1, sizeof (*to_enum));
     to_enum->_d = DDS_XTypes_EK_COMPLETE;
@@ -802,7 +800,7 @@ CU_Test(idlc_type_meta, type_obj_serdes)
     char idl[256];
     get_typeobj_t get_typeobj_fn;
   } tests[] = {
-    { "module t1 { @appendable struct test_struct { @key long long f1; @optional string f2; @external @id(4) char f3; @id(3) int8 f4; @id(8) uint32 f5; @id(7) int64 f6; @id(10) uint8 f7; octet f8; }; };", get_typeobj1 },
+    { "module t1 { @appendable struct test_struct { @key long long f1; @optional string f2; @external @id(4) char f3; @id(3) int8 f4; @id(8) uint32 f5; @id(7) int64 f6; }; };", get_typeobj1 },
     { "module t2 { @mutable struct test_struct { @optional @external unsigned long f1, f2; }; };", get_typeobj2 },
     { "module t3 { @final union test_union switch (short) { case 1: long f1; case 2: case 3: default: @external string f2; }; };", get_typeobj3 },
     { "module t4 { @mutable @nested struct a { @id(5) long a1; }; @mutable @topic struct test_struct : a { @id(10) long f1; }; };", get_typeobj4 },
@@ -811,7 +809,7 @@ CU_Test(idlc_type_meta, type_obj_serdes)
     { "module t7 { module x { @bit_bound(6) bitmask bm { @position(5) bm5, @position(0) bm0 }; enum en { @value(3) en3, @value(0) en0 }; @topic @final struct test_struct { bm f1; en f2; }; }; };", get_typeobj7 },
     { "module t8 { @topic struct test_struct { unsigned long long f1[1][1]; }; };", get_typeobj8 },
     { "module t9 { @bit_bound(2) bitmask bm { bm0, bm1 }; @topic @final struct test_struct { bm f1; bm f2; }; };", get_typeobj9 },
-    { "module t10 { enum en { en0, @default_literal en1 }; @topic @final struct test_struct { en f1; en f2; }; };", get_typeobj10 },
+    { "module t10 { enum en { en0, en1 }; @topic @final struct test_struct { en f1; en f2; }; };", get_typeobj10 },
     { "module t11 { @final union test_union switch (char) { case 'a': @id(99) long f1; default: @id(5) unsigned short f2; }; };", get_typeobj11 },
     { "module t12 { typedef sequence<long> td_seq; typedef td_seq td_array[2]; struct test_struct { td_array f1; }; };", get_typeobj12 },
     { "module t13 { typedef long td_arr[3]; typedef td_arr td; @topic @final struct test_struct { td f1; }; };", get_typeobj13 },

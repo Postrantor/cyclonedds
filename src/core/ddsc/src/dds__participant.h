@@ -14,15 +14,16 @@
 
 #include "dds__entity.h"
 
-#if defined (__cplusplus)
-extern "C" {
+#if defined(__cplusplus)
+extern "C"
+{
 #endif
 
-DEFINE_ENTITY_LOCK_UNLOCK(dds_participant, DDS_KIND_PARTICIPANT, participant)
+  DEFINE_ENTITY_LOCK_UNLOCK(dds_participant, DDS_KIND_PARTICIPANT, participant)
 
-extern const ddsrt_avl_treedef_t participant_ktopics_treedef;
+  extern const ddsrt_avl_treedef_t participant_ktopics_treedef;
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 

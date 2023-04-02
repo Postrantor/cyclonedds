@@ -33,7 +33,6 @@
 #include "ddsi__typelib.h"
 #include "ddsi__vendor.h"
 #include "ddsi__lat_estim.h"
-#include "ddsi__acknack.h"
 #ifdef DDS_HAS_TYPE_DISCOVERY
 #include "ddsi__typelookup.h"
 #endif
@@ -1077,10 +1076,7 @@ void ddsi_proxy_writer_add_connection (struct ddsi_proxy_writer *pwr, struct dds
     }
 
     const ddsrt_mtime_t tsched = use_iceoryx ? DDSRT_MTIME_NEVER : ddsrt_mtime_add_duration (tnow, pwr->e.gv->config.preemptive_ack_delay);
-    {
-      struct ddsi_acknack_xevent_cb_arg arg = { .pwr_guid = pwr->e.guid, .rd_guid = rd->e.guid };
-      m->acknack_xevent = ddsi_qxev_callback (pwr->evq, tsched, ddsi_acknack_xevent_cb, &arg, sizeof (arg), false);
-    }
+    m->acknack_xevent = ddsi_qxev_acknack (pwr->evq, tsched, &pwr->e.guid, &rd->e.guid);
     m->u.not_in_sync.reorder =
       ddsi_reorder_new (&pwr->e.gv->logconfig, DDSI_REORDER_MODE_NORMAL, secondary_reorder_maxsamples, pwr->e.gv->config.late_ack_mode);
     pwr->n_reliable_readers++;
@@ -1102,7 +1098,7 @@ void ddsi_proxy_writer_add_connection (struct ddsi_proxy_writer *pwr, struct dds
 #endif
 
   ddsrt_mutex_unlock (&pwr->e.lock);
-  ddsi_send_entityid_to_pwr (pwr, &rd->e.guid);
+  ddsi_qxev_pwr_entityid (pwr, &rd->e.guid);
 
   ELOGDISC (pwr, "\n");
   return;
@@ -1141,7 +1137,7 @@ void ddsi_proxy_reader_add_connection (struct ddsi_proxy_reader *prd, struct dds
               PGUID (wr->e.guid), PGUID (prd->e.guid));
     ddsrt_avl_insert_ipath (&ddsi_prd_writers_treedef, &prd->writers, m, &path);
     ddsrt_mutex_unlock (&prd->e.lock);
-    ddsi_send_entityid_to_prd (prd, &wr->e.guid);
+    ddsi_qxev_prd_entityid (prd, &wr->e.guid);
 
   }
 }

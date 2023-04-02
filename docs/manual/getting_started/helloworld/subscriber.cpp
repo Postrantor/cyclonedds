@@ -71,6 +71,7 @@ int main() {
                      * that's the case, only the key value of the sample
                      * is set. The other data parts are not.
                      * Check if this sample has valid data. */
+                    // 有时会读取样本，只是为了指示数据状态更改（可以在信息中找到）。 如果是这种情况，则仅设置示例的键值。 其他数据部分不是。 检查此示例是否具有有效数据。
                     if (info.valid()) {
                         std::cout << "=== [Subscriber] Message received:" << std::endl;
                         std::cout << "    userID  : " << msg.userID() << std::endl;

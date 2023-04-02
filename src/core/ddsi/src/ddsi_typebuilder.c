@@ -379,12 +379,10 @@ static dds_return_t typebuilder_add_type (struct typebuilder_data *tbd, uint32_t
       *align = ALGN (uint8_t, is_ext);
       *size = SZ (uint8_t, is_ext);
       break;
-    case DDS_XTypes_TK_INT8:
-    case DDS_XTypes_TK_UINT8:
     case DDS_XTypes_TK_CHAR8:
     case DDS_XTypes_TK_BYTE:
       tb_type->type_code = DDS_OP_VAL_1BY;
-      tb_type->args.prim_args.is_signed = (type->xt._d == DDS_XTypes_TK_CHAR8 || type->xt._d == DDS_XTypes_TK_INT8);
+      tb_type->args.prim_args.is_signed = (type->xt._d == DDS_XTypes_TK_CHAR8);
       tb_type->cdr_align = 1;
       *align = ALGN (uint8_t, is_ext);
       *size = SZ (uint8_t, is_ext);
@@ -1817,8 +1815,8 @@ static dds_return_t get_topic_descriptor (dds_topic_descriptor_t *desc, struct t
   if (d.m_typename == NULL)
   {
     ddsrt_free ((void *) d.m_typename);
-    ddsrt_free ((void *) d.type_information.data);
-    ddsrt_free ((void *) d.type_mapping.data);
+    ddsrt_free (d.type_information.data);
+    ddsrt_free (d.type_mapping.data);
     ret = DDS_RETCODE_OUT_OF_RESOURCES;
     goto err;
   }

@@ -1,0 +1,1906 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="https://cdds.io/config" xmlns:config="https://cdds.io/config">
+  <xs:element name="CycloneDDS">
+    <xs:annotation>
+      <xs:documentation>
+CycloneDDS configuration</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="config:Domain"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Domain">
+    <xs:annotation>
+      <xs:documentation>
+<!--The General element specifying Domain related settings.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:Compatibility"/>
+        <xs:element minOccurs="0" ref="config:Discovery"/>
+        <xs:element minOccurs="0" ref="config:General"/>
+        <xs:element minOccurs="0" ref="config:Internal"/>
+        <xs:element minOccurs="0" ref="config:Partitioning"/>
+        <xs:element minOccurs="0" ref="config:SSL"/>
+        <xs:element minOccurs="0" ref="config:Security"/>
+        <xs:element minOccurs="0" ref="config:SharedMemory"/>
+        <xs:element minOccurs="0" ref="config:Sizing"/>
+        <xs:element minOccurs="0" ref="config:TCP"/>
+        <xs:element minOccurs="0" ref="config:Threads"/>
+        <xs:element minOccurs="0" ref="config:Tracing"/>
+      </xs:all>
+      <xs:attribute name="Id">
+        <xs:annotation>
+          <xs:documentation>
+<!--Domain id this configuration applies to, or "any" if it applies to all domain ids.-->
+<!--The default value is: "any".--></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Compatibility">
+    <xs:annotation>
+      <xs:documentation>
+<!--The Compatibility elements allows specifying various settings related to compatability with standards and with other DDSI implementations.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:AssumeRtiHasPmdEndpoints"/>
+        <xs:element minOccurs="0" ref="config:ExplicitlyPublishQosSetToDefault"/>
+        <xs:element minOccurs="0" ref="config:ManySocketsMode"/>
+        <xs:element minOccurs="0" ref="config:StandardsConformance"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="AssumeRtiHasPmdEndpoints" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This option assumes ParticipantMessageData endpoints required by the liveliness protocol are present in RTI participants even when not properly advertised by the participant discovery protocol.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ExplicitlyPublishQosSetToDefault" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies whether QoS settings set to default values are explicitly published in the discovery protocol. Implementations are to use the default value for QoS settings not published, which allows a significant reduction of the amount of data that needs to be exchanged for the discovery protocol, but this requires all implementations to adhere to the default values specified by the specifications.-->
+<!--该元素指定设置为默认值的 QoS 设置是否在发现协议中明确发布。 实现将使用未发布的 QoS 设置的默认值，这可以显着减少需要为发现协议交换的数据量，但这需要所有实现都遵守规范指定的默认值。-->
+<!--When interoperability is required with an implementation that does not follow the specifications in this regard, setting this option to true will help.-->
+<!--当不遵循这方面规范的实现需要互操作性时，将此选项设置为 true 将有所帮助。-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ManySocketsMode">
+    <xs:annotation>
+      <xs:documentation>
+<!--This option specifies whether a network socket will be created for each domain participant on a host. The specification seems to assume that each participant has a unique address, and setting this option will ensure this to be the case. This is not the default.-->
+<!--Disabling it slightly improves performance and reduces network traffic somewhat. It also causes the set of port numbers needed by Cyclone DDS to become predictable, which may be useful for firewall and NAT configuration.-->
+<!--该选项指定是否为主机上的每个域参与者创建一个网络套接字。 该规范似乎假设每个参与者都有一个唯一的地址，设置此选项将确保情况如此。 这不是默认值。-->
+<!--禁用它会略微提高性能并稍微减少网络流量。 它还使 Cyclone DDS 所需的端口号集变得可预测，这可能对防火墙和 NAT 配置有用。-->
+<!--The default value is: "single".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="false"/>
+        <xs:enumeration value="true"/>
+        <xs:enumeration value="single"/>
+        <xs:enumeration value="none"/>
+        <xs:enumeration value="many"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="StandardsConformance">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the level of standards conformance of this instance of the Cyclone DDS Service. Stricter conformance typically means less interoperability with other implementations. Currently three modes are defined:
+pedantic: very strictly conform to the specification, ultimately for compliancy testing, but currently of little value because it adheres even to what will most likely turn out to be editing errors in the DDSI standard. Arguably, as long as no errata have been published it is the current text that is in effect, and that is what pedantic currently does.
+strict: a slightly less strict view of the standard than does pedantic: it follows the established behaviour where the standard is obviously in error.
+lax: attempt to provide the smoothest possible interoperability, anticipating future revisions of elements in the standard in areas that other implementations do not adhere to, even though there is no good reason not to.-->
+<!--此元素设置此 Cyclone DDS 服务实例的标准一致性级别。 更严格的一致性通常意味着与其他实现的互操作性更低。 目前定义了三种模式：
+pedantic：非常严格地符合规范，最终用于一致性测试，但目前没有什么价值，因为它甚至遵守了 DDSI 标准中最有可能被证明是编辑错误的内容。 可以说，只要没有发布勘误表，当前的文本就是有效的，而这就是迂腐当前所做的。
+strict：对标准的看法比 pedantic 稍微宽松一些：它遵循标准明显错误的既定行为。
+lax：尝试提供尽可能顺畅的互操作性，预计将来会在其他实现不遵守的领域对标准中的元素进行修订，即使没有充分的理由不这样做。-->
+<!--The default value is: "lax".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="lax"/>
+        <xs:enumeration value="strict"/>
+        <xs:enumeration value="pedantic"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="Discovery">
+    <xs:annotation>
+      <xs:documentation>
+<!--The Discovery element allows specifying various parameters related to the discovery of peers.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:DSGracePeriod"/>
+        <xs:element minOccurs="0" ref="config:DefaultMulticastAddress"/>
+        <xs:element minOccurs="0" ref="config:ExternalDomainId"/>
+        <xs:element minOccurs="0" ref="config:MaxAutoParticipantIndex"/>
+        <xs:element minOccurs="0" ref="config:ParticipantIndex"/>
+        <xs:element minOccurs="0" ref="config:Peers"/>
+        <xs:element minOccurs="0" ref="config:Ports"/>
+        <xs:element minOccurs="0" ref="config:SPDPInterval"/>
+        <xs:element minOccurs="0" ref="config:SPDPMulticastAddress"/>
+        <xs:element minOccurs="0" ref="config:Tag"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="DSGracePeriod" type="config:duration_inf">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls for how long endpoints discovered via a Cloud discovery service will survive after the discovery service disappeared, allowing reconnect without loss of data when the discovery service restarts (or another instance takes over).-->
+<!--Valid values are finite durations with an explicit unit or the keyword 'inf' for infinity. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--此设置控制通过云发现服务发现的端点在发现服务消失后存活多长时间，允许在发现服务重新启动（或另一个实例接管）时重新连接而不会丢失数据。-->
+<!--有效值是有限的持续时间，带有明确的单位或关键字“inf”表示无穷大。 识别单位：ns、us、ms、s、min、hr、day.-->
+<!--The default value is: "30 s".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="DefaultMulticastAddress" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the default multicast address for all traffic other than participant discovery packets. It defaults to Discovery/SPDPMulticastAddress.-->
+<!--The default value is: "auto".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ExternalDomainId" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--An override for the domain id, to be used in discovery and for determining the port number mapping. This allows creating multiple domains in a single process while making them appear as a single domain on the network. The value "default" disables the override.-->
+<!--The default value is: "default".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MaxAutoParticipantIndex" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the maximum DDSI participant index selected by this instance of the Cyclone DDS service if the Discovery/ParticipantIndex is "auto".-->
+<!--The default value is: "9".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ParticipantIndex" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the DDSI participant index used by this instance of the Cyclone DDS service for discovery purposes. Only one such participant id is used, independent of the number of actual DomainParticipants on the node. It is either:
+auto: which will attempt to automatically determine an available participant index (see also Discovery/MaxAutoParticipantIndex), or
+a non-negative integer less than 120, or
+none:, which causes it to use arbitrary port numbers for unicast sockets which entirely removes the constraints on the participant index but makes unicast discovery impossible.-->
+<!--The default is auto. The participant index is part of the port number calculation and if predictable port numbers are needed and fixing the participant index has no adverse effects, it is recommended that the second be option be used.-->
+<!--此元素指定 Cyclone DDS 服务的此实例用于发现目的的 DDSI 参与者索引。 仅使用一个这样的参与者 ID，与节点上实际 DomainParticipants 的数量无关。 它是：
+auto：将尝试自动确定可用的参与者索引（另请参见 Discovery/MaxAutoParticipantIndex），或
+小于 120 的非负整数，或
+none:，这导致它为单播套接字使用任意端口号，这完全消除了对参与者索引的约束，但使单播发现变得不可能。-->
+<!--默认为自动。 参与者索引是端口号计算的一部分，如果需要可预测的端口号并且固定参与者索引没有不利影响，建议使用第二个选项。-->
+<!--The default value is: "none".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Peers">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element statically configures addresses for discovery.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="config:Group"/>
+        <xs:element ref="config:Peer"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Group">
+    <xs:annotation>
+      <xs:documentation>
+<!-- [!NOTE]: 容错地址组 -->
+<!--This element statically configures a fault tolerant group of addresses for discovery. Each member of the group is tried in sequence until one succeeds.--><!--此元素静态配置容错地址组以供发现。 该组的每个成员都按顺序进行尝试，直到有人成功为止。--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:Peer"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Peer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element statically configures an addresses for discovery.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute name="Address" use="required">
+        <xs:annotation>
+          <xs:documentation>
+<!--This element specifies an IP address to which discovery packets must be sent, in addition to the default multicast address (see also General/AllowMulticast). Both a hostnames and a numerical IP address is accepted; the hostname or IP address may be suffixed with :PORT to explicitly set the port to which it must be sent. Multiple Peers may be specified.-->
+<!--除了默认的多播地址之外，该元素还指定了发现数据包必须发送到的 IP 地址（另请参阅 General/AllowMulticast）。 接受主机名和数字 IP 地址； 主机名或 IP 地址可以以 :PORT 为后缀，以明确设置必须将其发送到的端口。 可以指定多个对等点。-->
+<!--The default value is: "".--></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Ports">
+    <xs:annotation>
+      <xs:documentation>
+<!--The Ports element allows specifying various parameters related to the port numbers used for discovery. These all have default values specified by the DDSI 2.1 specification and rarely need to be changed.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:Base"/>
+        <xs:element minOccurs="0" ref="config:DomainGain"/>
+        <xs:element minOccurs="0" ref="config:MulticastDataOffset"/>
+        <xs:element minOccurs="0" ref="config:MulticastMetaOffset"/>
+        <xs:element minOccurs="0" ref="config:ParticipantGain"/>
+        <xs:element minOccurs="0" ref="config:UnicastDataOffset"/>
+        <xs:element minOccurs="0" ref="config:UnicastMetaOffset"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Base" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the base port number (refer to the DDSI 2.1 specification, section 9.6.1, constant PB).-->
+<!--The default value is: "7400".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="DomainGain" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the domain gain, relating domain ids to sets of port numbers (refer to the DDSI 2.1 specification, section 9.6.1, constant DG).-->
+<!--The default value is: "250".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MulticastDataOffset" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the port number for multicast data traffic (refer to the DDSI 2.1 specification, section 9.6.1, constant d2).-->
+<!--The default value is: "1".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MulticastMetaOffset" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the port number for multicast meta traffic (refer to the DDSI 2.1 specification, section 9.6.1, constant d0).-->
+<!--The default value is: "0".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ParticipantGain" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the participant gain, relating p0, participant index to sets of port numbers (refer to the DDSI 2.1 specification, section 9.6.1, constant PG).-->
+<!--The default value is: "2".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="UnicastDataOffset" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the port number for unicast data traffic (refer to the DDSI 2.1 specification, section 9.6.1, constant d3).-->
+<!--The default value is: "11".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="UnicastMetaOffset" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the port number for unicast meta traffic (refer to the DDSI 2.1 specification, section 9.6.1, constant d1).-->
+<!--The default value is: "10".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SPDPInterval" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the interval between spontaneous transmissions of participant discovery packets.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "30 s".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SPDPMulticastAddress" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the multicast address that is used as the destination for the participant discovery packets. In IPv4 mode the default is the (standardised) 239.255.0.1, in IPv6 mode it becomes ff02::ffff:239.255.0.1, which is a non-standardised link-local multicast address.-->
+<!--The default value is: "239.255.0.1".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Tag" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--String extension for domain id that remote participants must match to be discovered.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="General">
+    <xs:annotation>
+      <xs:documentation>
+<!--The General element specifies overall Cyclone DDS service settings.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:AllowMulticast"/>
+        <xs:element minOccurs="0" ref="config:DontRoute"/>
+        <xs:element minOccurs="0" ref="config:EnableMulticastLoopback"/>
+        <xs:element minOccurs="0" ref="config:ExternalNetworkAddress"/>
+        <xs:element minOccurs="0" ref="config:ExternalNetworkMask"/>
+        <xs:element minOccurs="0" ref="config:FragmentSize"/>
+        <xs:element minOccurs="0" ref="config:MaxMessageSize"/>
+        <xs:element minOccurs="0" ref="config:MaxRexmitMessageSize"/>
+        <xs:element minOccurs="0" ref="config:MulticastRecvNetworkInterfaceAddresses"/>
+        <xs:element minOccurs="0" ref="config:MulticastTimeToLive"/>
+        <xs:element minOccurs="0" ref="config:NetworkInterfaceAddress"/>
+        <xs:element minOccurs="0" ref="config:PreferMulticast"/>
+        <xs:element minOccurs="0" ref="config:RedundantNetworking"/>
+        <xs:element minOccurs="0" ref="config:Transport"/>
+        <xs:element minOccurs="0" ref="config:UseIPv6"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="AllowMulticast">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls whether Cyclone DDS uses multicasts for data traffic.-->
+<!--It is a comma-separated list of some of the following keywords: "spdp", "asm", "ssm", or either of "false" or "true", or "default".-->
+<!--spdp: enables the use of ASM (any-source multicast) for participant discovery, joining the multicast group on the discovery socket, transmitting SPDP messages to this group, but never advertising nor using any multicast address in any discovery message, thus forcing unicast communications for all endpoint discovery and user data.
+asm: enables the use of ASM for all traffic, including receiving SPDP but not transmitting SPDP messages via multicast
+ssm: enables the use of SSM (source-specific multicast) for all non-SPDP traffic (if supported)-->
+<!--When set to "false" all multicasting is disabled. The default, "true" enables full use of multicasts. Listening for multicasts can be controlled by General/MulticastRecvNetworkInterfaceAddresses.-->
+<!--"default" maps on spdp if the network is a WiFi network, on true if it is a wired network-->
+<!--The default value is: "default".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:pattern value="default|((false|spdp|asm|ssm|true)(,(false|spdp|asm|ssm|true))*)"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="DontRoute" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element allows setting the SO_DONTROUTE option for outgoing packets, to bypass the local routing tables. This is generally useful only when the routing tables cannot be trusted, which is highly unusual.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="EnableMulticastLoopback" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies whether Cyclone DDS allows IP multicast packets to be visible to all DDSI participants in the same node, including itself. It must be "true" for intra-node multicast communications, but if a node runs only a single Cyclone DDS service and does not host any other DDSI-capable programs, it should be set to "false" for improved performance.-->
+<!--The default value is: "true".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ExternalNetworkAddress" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element allows explicitly overruling the network address Cyclone DDS advertises in the discovery protocol, which by default is the address of the preferred network interface (General/NetworkInterfaceAddress), to allow Cyclone DDS to communicate across a Network Address Translation (NAT) device.-->
+<!--The default value is: "auto".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ExternalNetworkMask" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the network mask of the external network address. This element is relevant only when an external network address (General/ExternalNetworkAddress) is explicitly configured. In this case locators received via the discovery protocol that are within the same external subnet (as defined by this mask) will be translated to an internal address by replacing the network portion of the external address with the corresponding portion of the preferred network interface address. This option is IPv4-only.-->
+<!--The default value is: "0.0.0.0".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="FragmentSize" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the size of DDSI sample fragments generated by Cyclone DDS. Samples larger than FragmentSize are fragmented into fragments of FragmentSize bytes each, except the last one, which may be smaller. The DDSI spec mandates a minimum fragment size of 1025 bytes, but Cyclone DDS will do whatever size is requested, accepting fragments of which the size is at least the minimum of 1025 and FragmentSize.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "1344 B".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MaxMessageSize" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the maximum size of the UDP payload that Cyclone DDS will generate. Cyclone DDS will try to maintain this limit within the bounds of the DDSI specification, which means that in some cases (especially for very low values of MaxMessageSize) larger payloads may sporadically be observed (currently up to 1192 B).-->
+<!--On some networks it may be necessary to set this item to keep the packetsize below the MTU to prevent IP fragmentation.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "14720 B".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MaxRexmitMessageSize" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the maximum size of the UDP payload that Cyclone DDS will generate for a retransmit. Cyclone DDS will try to maintain this limit within the bounds of the DDSI specification, which means that in some cases (especially for very low values) larger payloads may sporadically be observed (currently up to 1192 B).-->
+<!--On some networks it may be necessary to set this item to keep the packetsize below the MTU to prevent IP fragmentation.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "1456 B".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MulticastRecvNetworkInterfaceAddresses" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies on which network interfaces Cyclone DDS listens to multicasts. The following options are available:-->
+<ul>
+<li><i>all</i>: listen for multicasts on all multicast-capable interfaces; or</li>
+<li><i>any</i>: listen for multicasts on the operating system default interface; or</li>
+<li><i>preferred</i>: listen for multicasts on the preferred interface (General/NetworkInterfaceAddress); or</li>
+<li><i>none</i>: does not listen for multicasts on any interface; or</li>
+<li>a comma-separated list of network addresses: configures Cyclone DDS to listen for multicasts on all of the listed addresses.</li>
+</ul>
+<!--If Cyclone DDS is in IPv6 mode and the address of the preferred network interface is a link-local address, "all" is treated as a synonym for "preferred" and a comma-separated list is treated as "preferred" if it contains the preferred interface and as "none" if not.-->
+<!--The default value is: "preferred".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MulticastTimeToLive" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the time-to-live setting for outgoing multicast packets.-->
+<!--The default value is: "32".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="NetworkInterfaceAddress" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the preferred network interface for use by Cyclone DDS. The preferred network interface determines the IP address that Cyclone DDS advertises in the discovery protocol (but see also General/ExternalNetworkAddress), and is also the only interface over which multicasts are transmitted. The interface can be identified by its IP address, network interface name or network portion of the address. If the value "auto" is entered here, Cyclone DDS will select what it considers the most suitable interface.-->
+<!--The default value is: "auto".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PreferMulticast" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--When false (default) Cyclone DDS uses unicast for data whenever there a single unicast suffices. Setting this to true makes it prefer multicasting data, falling back to unicast only when no multicast address is available.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="RedundantNetworking" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--When enabled, use selected network interfaces in parallel for redundancy.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Transport">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element allows selecting the transport to be used (udp, udp6, tcp, tcp6, raweth)-->
+<!--The default value is: "default".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="default"/>
+        <xs:enumeration value="udp"/>
+        <xs:enumeration value="udp6"/>
+        <xs:enumeration value="tcp"/>
+        <xs:enumeration value="tcp6"/>
+        <xs:enumeration value="raweth"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="UseIPv6">
+    <xs:annotation>
+      <xs:documentation>
+<!--Deprecated (use Transport instead)-->
+<!--The default value is: "default".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="false"/>
+        <xs:enumeration value="true"/>
+        <xs:enumeration value="default"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="Internal">
+    <xs:annotation>
+      <xs:documentation>
+<!--The Internal elements deal with a variety of settings that evolving and that are not necessarily fully supported. For the vast majority of the Internal settings, the functionality per-se is supported, but the right to change the way the options control the functionality is reserved. This includes renaming or moving options.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:AccelerateRexmitBlockSize"/>
+        <xs:element minOccurs="0" ref="config:AckDelay"/>
+        <xs:element minOccurs="0" ref="config:AssumeMulticastCapable"/>
+        <xs:element minOccurs="0" ref="config:AutoReschedNackDelay"/>
+        <xs:element minOccurs="0" ref="config:BuiltinEndpointSet"/>
+        <xs:element minOccurs="0" ref="config:BurstSize"/>
+        <xs:element minOccurs="0" ref="config:ControlTopic"/>
+        <xs:element minOccurs="0" ref="config:DDSI2DirectMaxThreads"/>
+        <xs:element minOccurs="0" ref="config:DefragReliableMaxSamples"/>
+        <xs:element minOccurs="0" ref="config:DefragUnreliableMaxSamples"/>
+        <xs:element minOccurs="0" ref="config:DeliveryQueueMaxSamples"/>
+        <xs:element minOccurs="0" ref="config:EnableExpensiveChecks"/>
+        <xs:element minOccurs="0" ref="config:GenerateKeyhash"/>
+        <xs:element minOccurs="0" ref="config:HeartbeatInterval"/>
+        <xs:element minOccurs="0" ref="config:LateAckMode"/>
+        <xs:element minOccurs="0" ref="config:LeaseDuration"/>
+        <xs:element minOccurs="0" ref="config:LivelinessMonitoring"/>
+        <xs:element minOccurs="0" ref="config:MaxParticipants"/>
+        <xs:element minOccurs="0" ref="config:MaxQueuedRexmitBytes"/>
+        <xs:element minOccurs="0" ref="config:MaxQueuedRexmitMessages"/>
+        <xs:element minOccurs="0" ref="config:MaxSampleSize"/>
+        <xs:element minOccurs="0" ref="config:MeasureHbToAckLatency"/>
+        <xs:element minOccurs="0" ref="config:MinimumSocketReceiveBufferSize"/>
+        <xs:element minOccurs="0" ref="config:MinimumSocketSendBufferSize"/>
+        <xs:element minOccurs="0" ref="config:MonitorPort"/>
+        <xs:element minOccurs="0" ref="config:MultipleReceiveThreads"/>
+        <xs:element minOccurs="0" ref="config:NackDelay"/>
+        <xs:element minOccurs="0" ref="config:PreEmptiveAckDelay"/>
+        <xs:element minOccurs="0" ref="config:PrimaryReorderMaxSamples"/>
+        <xs:element minOccurs="0" ref="config:PrioritizeRetransmit"/>
+        <xs:element minOccurs="0" ref="config:RediscoveryBlacklistDuration"/>
+        <xs:element minOccurs="0" ref="config:RetransmitMerging"/>
+        <xs:element minOccurs="0" ref="config:RetransmitMergingPeriod"/>
+        <xs:element minOccurs="0" ref="config:RetryOnRejectBestEffort"/>
+        <xs:element minOccurs="0" ref="config:SPDPResponseMaxDelay"/>
+        <xs:element minOccurs="0" ref="config:ScheduleTimeRounding"/>
+        <xs:element minOccurs="0" ref="config:SecondaryReorderMaxSamples"/>
+        <xs:element minOccurs="0" ref="config:SquashParticipants"/>
+        <xs:element minOccurs="0" ref="config:SynchronousDeliveryLatencyBound"/>
+        <xs:element minOccurs="0" ref="config:SynchronousDeliveryPriorityThreshold"/>
+        <xs:element minOccurs="0" ref="config:Test"/>
+        <xs:element minOccurs="0" ref="config:UnicastResponseToSPDPMessages"/>
+        <xs:element minOccurs="0" ref="config:UseMulticastIfMreqn"/>
+        <xs:element minOccurs="0" ref="config:Watermarks"/>
+        <xs:element minOccurs="0" ref="config:WriteBatch"/>
+        <xs:element minOccurs="0" ref="config:WriterLingerDuration"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="AccelerateRexmitBlockSize" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--Proxy readers that are assumed to sill be retrieving historical data get this many samples retransmitted when they NACK something, even if some of these samples have sequence numbers outside the set covered by the NACK.-->
+<!--The default value is: "0".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="AckDelay" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls the delay between sending identical acknowledgements.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "10 ms".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="AssumeMulticastCapable" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls which network interfaces are assumed to be capable of multicasting even when the interface flags returned by the operating system state it is not (this provides a workaround for some platforms). It is a comma-separated lists of patterns (with ? and * wildcards) against which the interface names are matched.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="AutoReschedNackDelay" type="config:duration_inf">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls the interval with which a reader will continue NACK'ing missing samples in the absence of a response from the writer, as a protection mechanism against writers incorrectly stopping the sending of HEARTBEAT messages.-->
+<!--Valid values are finite durations with an explicit unit or the keyword 'inf' for infinity. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "1 s".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="BuiltinEndpointSet">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls which participants will have which built-in endpoints for the discovery and liveliness protocols. Valid values are:-->
+<ul><li><i>full</i>: all participants have all endpoints;</li>
+<li><i>writers</i>: all participants have the writers, but just one has the readers;</li>
+<li><i>minimal</i>: only one participant has built-in endpoints.</li></ul>
+<!--The default is <i>writers</i>, as this is thought to be compliant and reasonably efficient. <i>Minimal</i> may or may not be compliant but is most efficient, and <i>full</i> is inefficient but certain to be compliant. See also Internal/ConservativeBuiltinReaderStartup.-->
+<!--The default value is: "writers".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="full"/>
+        <xs:enumeration value="writers"/>
+        <xs:enumeration value="minimal"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="BurstSize">
+    <xs:annotation>
+      <xs:documentation>
+<!--Setting for controlling the size of transmit bursts.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:MaxInitTransmit"/>
+        <xs:element minOccurs="0" ref="config:MaxRexmit"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="MaxInitTransmit" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies how much more than the (presumed or discovered) receive buffer size may be sent when transmitting a sample for the first time, expressed as a percentage; the remainder will then be handled via retransmits. Usually the receivers can keep up with transmitter, at least on average, and so generally it is better to hope for the best and recover. Besides, the retransmits will be unicast, and so any multicast advantage will be lost as well.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "4294967295".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MaxRexmit" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the amount of data to be retransmitted in response to one NACK.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "1 MiB".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ControlTopic">
+    <xs:annotation>
+      <xs:documentation>
+<!--The ControlTopic element allows configured whether Cyclone DDS provides a special control interface via a predefined topic or not.<!--</xs:documentation>
+    </xs:annotation>
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="DDSI2DirectMaxThreads" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the maximum number of extra threads for an experimental, undocumented and unsupported direct mode.-->
+<!--The default value is: "1".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="DefragReliableMaxSamples" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the maximum number of samples that can be defragmented simultaneously for a reliable writer. This has to be large enough to handle retransmissions of historical data in addition to new samples.-->
+<!--The default value is: "16".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="DefragUnreliableMaxSamples" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the maximum number of samples that can be defragmented simultaneously for a best-effort writers.-->
+<!--The default value is: "4".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="DeliveryQueueMaxSamples" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls the maximum size of a delivery queue, expressed in samples. Once a delivery queue is full, incoming samples destined for that queue are dropped until space becomes available again.-->
+<!--The default value is: "256".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="EnableExpensiveChecks">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element enables expensive checks in builds with assertions enabled and is ignored otherwise. Recognised categories are:-->
+<ul>
+<li><i>whc</i>: writer history cache checking</li>
+<li><i>rhc</i>: reader history cache checking</li>
+<li><i>xevent</i>: xevent checking</li>
+<!--In addition, there is the keyword <i>all</i> that enables all checks.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:pattern value="((whc|rhc|xevent|all)(,(whc|rhc|xevent|all))*)|"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="GenerateKeyhash" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--When true, include keyhashes in outgoing data for topics with keys.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="HeartbeatInterval">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element allows configuring the base interval for sending writer heartbeats and the bounds within which it can vary.-->
+<!--Valid values are finite durations with an explicit unit or the keyword 'inf' for infinity. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "100 ms".--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="config:duration_inf">
+          <xs:attribute name="max" type="config:duration_inf">
+            <xs:annotation>
+              <xs:documentation>
+<!--This attribute sets the maximum interval for periodic heartbeats.-->
+<!--Valid values are finite durations with an explicit unit or the keyword 'inf' for infinity. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "8 s".--></xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="min" type="config:duration_inf">
+            <xs:annotation>
+              <xs:documentation>
+<!--This attribute sets the minimum interval that must have passed since the most recent heartbeat from a writer, before another asynchronous (not directly related to writing) will be sent.-->
+<!--Valid values are finite durations with an explicit unit or the keyword 'inf' for infinity. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "5 ms".--></xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="minsched" type="config:duration_inf">
+            <xs:annotation>
+              <xs:documentation>
+<!--This attribute sets the minimum interval for periodic heartbeats. Other events may still cause heartbeats to go out.-->
+<!--Valid values are finite durations with an explicit unit or the keyword 'inf' for infinity. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "20 ms".--></xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="LateAckMode" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--Ack a sample only when it has been delivered, instead of when committed to delivering it.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="LeaseDuration" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls the default participant lease duration.<!--
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "10 s".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="LivelinessMonitoring">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls whether or not implementation should internally monitor its own liveliness. If liveliness monitoring is enabled, stack traces can be dumped automatically when some thread appears to have stopped making progress.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:boolean">
+          <xs:attribute name="Interval" type="config:duration">
+            <xs:annotation>
+              <xs:documentation>
+<!--This element controls the interval at which to check whether threads have been making progress.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "1s".--></xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="StackTraces" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>
+<!--This element controls whether or not to write stack traces to the DDSI2 trace when a thread fails to make progress (on select platforms only).-->
+<!--The default value is: "true".--></xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="MaxParticipants" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This elements configures the maximum number of DCPS domain participants this Cyclone DDS instance is willing to service. 0 is unlimited.-->
+<!--The default value is: "0".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MaxQueuedRexmitBytes" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting limits the maximum number of bytes queued for retransmission. The default value of 0 is unlimited unless an AuxiliaryBandwidthLimit has been set, in which case it becomes NackDelay * AuxiliaryBandwidthLimit. It must be large enough to contain the largest sample that may need to be retransmitted.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "512 kB".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MaxQueuedRexmitMessages" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This settings limits the maximum number of samples queued for retransmission.-->
+<!--The default value is: "200".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MaxSampleSize" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls the maximum (CDR) serialised size of samples that Cyclone DDS will forward in either direction. Samples larger than this are discarded with a warning.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "2147483647 B".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MeasureHbToAckLatency" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element enables heartbeat-to-ack latency among Cyclone DDS services by prepending timestamps to Heartbeat and AckNack messages and calculating round trip times. This is non-standard behaviour. The measured latencies are quite noisy and are currently not used anywhere.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MinimumSocketReceiveBufferSize" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls the minimum size of socket receive buffers. The operating system provides some size receive buffer upon creation of the socket, this option can be used to increase the size of the buffer beyond that initially provided by the operating system. If the buffer size cannot be increased to the specified size, an error is reported.-->
+<!--The default setting is the word "default", which means Cyclone DDS will attempt to increase the buffer size to 1MB, but will silently accept a smaller buffer should that attempt fail.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "default".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MinimumSocketSendBufferSize" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls the minimum size of socket send buffers. This setting can only increase the size of the send buffer, if the operating system by default creates a larger buffer, it is left unchanged.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "64 KiB".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MonitorPort" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element allows configuring a service that dumps a text description of part the internal state to TCP clients. By default (-1), this is disabled; specifying 0 means a kernel-allocated port is used; a positive number is used as the TCP port number.-->
+<!--The default value is: "-1".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MultipleReceiveThreads">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls whether all traffic is handled by a single receive thread (false) or whether multiple receive threads may be used to improve latency (true). By default it is disabled on Windows because it appears that one cannot count on being able to send packets to oneself, which is necessary to stop the thread during shutdown. Currently multiple receive threads are only used for connectionless transport (e.g., UDP) and ManySocketsMode not set to single (the default).-->
+<!--The default value is: "default".--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:restriction base="xs:anyType">
+          <xs:simpleType>
+            <xs:restriction base="xs:token">
+              <xs:enumeration value="false"/>
+              <xs:enumeration value="true"/>
+              <xs:enumeration value="default"/>
+            </xs:restriction>
+          </xs:simpleType>
+          <xs:attribute name="maxretries" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>
+<!--Receive threads dedicated to a single socket can only be triggered for termination by sending a packet. Reception of any packet will do, so termination failure due to packet loss is exceedingly unlikely, but to eliminate all risks, it will retry as many times as specified by this attribute before aborting.-->
+<!--The default value is: "4294967295".--></xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+        </xs:restriction>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="NackDelay" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls the delay between receipt of a HEARTBEAT indicating missing samples and a NACK (ignored when the HEARTBEAT requires an answer). However, no NACK is sent if a NACK had been scheduled already for a response earlier than the delay requests: then that NACK will incorporate the latest information.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "100 ms".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PreEmptiveAckDelay" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls the delay between the discovering a remote writer and sending a pre-emptive AckNack to discover the range of data available.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "10 ms".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PrimaryReorderMaxSamples" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the maximum size in samples of a primary re-order administration. Each proxy writer has one primary re-order administration to buffer the packet flow in case some packets arrive out of order. Old samples are forwarded to secondary re-order administrations associated with readers in need of historical data.-->
+<!--The default value is: "128".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PrioritizeRetransmit" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls whether retransmits are prioritized over new data, speeding up recovery.-->
+<!--The default value is: "true".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="RediscoveryBlacklistDuration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls for how long a remote participant that was previously deleted will remain on a blacklist to prevent rediscovery, giving the software on a node time to perform any cleanup actions it needs to do. To some extent this delay is required internally by Cyclone DDS, but in the default configuration with the 'enforce' attribute set to false, Cyclone DDS will reallow rediscovery as soon as it has cleared its internal administration. Setting it to too small a value may result in the entry being pruned from the blacklist before Cyclone DDS is ready, it is therefore recommended to set it to at least several seconds.-->
+<!--Valid values are finite durations with an explicit unit or the keyword 'inf' for infinity. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "0s".--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="config:duration_inf">
+          <xs:attribute name="enforce" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>
+<!--This attribute controls whether the configured time during which recently deleted participants will not be rediscovered (i.e., "black listed") is enforced and following complete removal of the participant in Cyclone DDS, or whether it can be rediscovered earlier provided all traces of that participant have been removed already.-->
+<!--The default value is: "false".--></xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="RetransmitMerging">
+    <xs:annotation>
+      <xs:documentation>
+<!--This elements controls the addressing and timing of retransmits. Possible values are:-->
+<ul><li><i>never</i>: retransmit only to the NACK-ing reader;</li>
+<li><i>adaptive</i>: attempt to combine retransmits needed for reliability, but send historical (transient-local) data to the requesting reader only;</li>
+<li><i>always</i>: do not distinguish between different causes, always try to merge.</li></ul>
+<!--The default is <i>never</i>. See also Internal/RetransmitMergingPeriod.-->
+<!--The default value is: "never".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="never"/>
+        <xs:enumeration value="adaptive"/>
+        <xs:enumeration value="always"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="RetransmitMergingPeriod" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting determines the size of the time window in which a NACK of some sample is ignored because a retransmit of that sample has been multicasted too recently. This setting has no effect on unicasted retransmits.-->
+<!--See also Internal/RetransmitMerging.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "5 ms".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="RetryOnRejectBestEffort" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--Whether or not to locally retry pushing a received best-effort sample into the reader caches when resource limits are reached.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SPDPResponseMaxDelay" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--Maximum pseudo-random delay in milliseconds between discovering aremote participant and responding to it.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "0 ms".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ScheduleTimeRounding" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting allows the timing of scheduled events to be rounded up so that more events can be handled in a single cycle of the event queue. The default is 0 and causes no rounding at all, i.e. are scheduled exactly, whereas a value of 10ms would mean that events are rounded up to the nearest 10 milliseconds.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "0 ms".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SecondaryReorderMaxSamples" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the maximum size in samples of a secondary re-order administration. The secondary re-order administration is per reader in need of historical data.-->
+<!--The default value is: "128".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SquashParticipants" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls whether Cyclone DDS advertises all the domain participants it serves in DDSI (when set to <i>false</i>), or rather only one domain participant (the one corresponding to the Cyclone DDS process; when set to <i>true</i>). In the latter case Cyclone DDS becomes the virtual owner of all readers and writers of all domain participants, dramatically reducing discovery traffic (a similar effect can be obtained by setting Internal/BuiltinEndpointSet to "minimal" but with less loss of information).-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SynchronousDeliveryLatencyBound" type="config:duration_inf">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls whether samples sent by a writer with QoS settings transport_priority >= SynchronousDeliveryPriorityThreshold and a latency_budget at most this element's value will be delivered synchronously from the "recv" thread, all others will be delivered asynchronously through delivery queues. This reduces latency at the expense of aggregate bandwidth.-->
+<!--Valid values are finite durations with an explicit unit or the keyword 'inf' for infinity. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "inf".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SynchronousDeliveryPriorityThreshold" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls whether samples sent by a writer with QoS settings latency_budget <= SynchronousDeliveryLatencyBound and transport_priority greater than or equal to this element's value will be delivered synchronously from the "recv" thread, all others will be delivered asynchronously through delivery queues. This reduces latency at the expense of aggregate bandwidth.-->
+<!--The default value is: "0".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Test">
+    <xs:annotation>
+      <xs:documentation>
+<!--Testing options.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="config:XmitLossiness"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="XmitLossiness" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls the fraction of outgoing packets to drop, specified as samples per thousand.-->
+<!--The default value is: "0".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="UnicastResponseToSPDPMessages" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls whether the response to a newly discovered participant is sent as a unicasted SPDP packet, instead of rescheduling the periodic multicasted one. There is no known benefit to setting this to <i>false</i>.-->
+<!--The default value is: "true".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="UseMulticastIfMreqn" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--Do not use.-->
+<!--The default value is: "0".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Watermarks">
+    <xs:annotation>
+      <xs:documentation>
+<!--Watermarks for flow-control.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:WhcAdaptive"/>
+        <xs:element minOccurs="0" ref="config:WhcHigh"/>
+        <xs:element minOccurs="0" ref="config:WhcHighInit"/>
+        <xs:element minOccurs="0" ref="config:WhcLow"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="WhcAdaptive" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element controls whether Cyclone DDS will adapt the high-water mark to current traffic conditions, based on retransmit requests and transmit pressure.-->
+<!--The default value is: "true".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="WhcHigh" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the maximum allowed high-water mark for the Cyclone DDS WHCs, expressed in bytes. A writer is suspended when the WHC reaches this size.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "500 kB".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="WhcHighInit" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the initial level of the high-water mark for the Cyclone DDS WHCs, expressed in bytes.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "30 kB".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="WhcLow" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the low-water mark for the Cyclone DDS WHCs, expressed in bytes. A suspended writer resumes transmitting when its Cyclone DDS WHC shrinks to this size.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "1 kB".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="WriteBatch" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element enables the batching of write operations. By default each write operation writes through the write cache and out onto the transport. Enabling write batching causes multiple small write operations to be aggregated within the write cache into a single larger write. This gives greater throughput at the expense of latency. Currently there is no mechanism for the write cache to automatically flush itself, so that if write batching is enabled, the application may have to use the dds_write_flush function to ensure that all samples are written.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="WriterLingerDuration" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This setting controls the maximum duration for which actual deletion of a reliable writer with unacknowledged data in its history will be postponed to provide proper reliable transmission.<!--
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "1 s".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Partitioning">
+    <xs:annotation>
+      <xs:documentation>
+<!--The Partitioning element specifies Cyclone DDS network partitions and how DCPS partition/topic combinations are mapped onto the network partitions.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:IgnoredPartitions"/>
+        <xs:element minOccurs="0" ref="config:NetworkPartitions"/>
+        <xs:element minOccurs="0" ref="config:PartitionMappings"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="IgnoredPartitions">
+    <xs:annotation>
+      <xs:documentation>
+<!--The IgnoredPartitions element specifies DCPS partition/topic combinations that are not distributed over the network.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:IgnoredPartition"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="IgnoredPartition">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element can be used to prevent certain combinations of DCPS partition and topic from being transmitted over the network. Cyclone DDS will complete ignore readers and writers for which all DCPS partitions as well as their topic is ignored, not even creating DDSI readers and writers to mirror the DCPS ones.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute name="DCPSPartitionTopic" use="required">
+        <xs:annotation>
+          <xs:documentation>
+<!--This attribute specifies a partition and a topic expression, separated by a single '.', that are used to determine if a given partition and topic will be ignored or not. The expressions may use the usual wildcards '*' and '?'. Cyclone DDS will consider an wildcard DCPS partition to match an expression iff there exists a string that satisfies both expressions.-->
+<!--The default value is: "".--></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="NetworkPartitions">
+    <xs:annotation>
+      <xs:documentation>
+<!--The NetworkPartitions element specifies the Cyclone DDS network partitions.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:NetworkPartition"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="NetworkPartition">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element defines a Cyclone DDS network partition.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute name="Address" use="required">
+        <xs:annotation>
+          <xs:documentation>
+<!--This attribute specifies the multicast addresses associated with the network partition as a comma-separated list. Readers matching this network partition (cf. Partitioning/PartitionMappings) will listen for multicasts on all of these addresses and advertise them in the discovery protocol. The writers will select the most suitable address from the addresses advertised by the readers.-->
+<!--The default value is: "".--></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="Name" use="required">
+        <xs:annotation>
+          <xs:documentation>
+<!--This attribute specifies the name of this Cyclone DDS network partition. Two network partitions cannot have the same name.-->
+<!--The default value is: "".--></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="PartitionMappings">
+    <xs:annotation>
+      <xs:documentation>
+<!--The PartitionMappings element specifies the mapping from DCPS partition/topic combinations to Cyclone DDS network partitions.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:PartitionMapping"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="PartitionMapping">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element defines a mapping from a DCPS partition/topic combination to a Cyclone DDS network partition. This allows partitioning data flows by using special multicast addresses for part of the data and possibly also encrypting the data flow.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute name="DCPSPartitionTopic" use="required">
+        <xs:annotation>
+          <xs:documentation>
+<!--This attribute specifies a partition and a topic expression, separated by a single '.', that are used to determine if a given partition and topic maps to the Cyclone DDS network partition named by the NetworkPartition attribute in this PartitionMapping element. The expressions may use the usual wildcards '*' and '?'. Cyclone DDS will consider a wildcard DCPS partition to match an expression if there exists a string that satisfies both expressions.-->
+<!--The default value is: "".--></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="NetworkPartition" use="required">
+        <xs:annotation>
+          <xs:documentation>
+<!--This attribute specifies which Cyclone DDS network partition is to be used for DCPS partition/topic combinations matching the DCPSPartitionTopic attribute within this PartitionMapping element.-->
+<!--The default value is: "".--></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SSL">
+    <xs:annotation>
+      <xs:documentation>
+<!--The SSL element allows specifying various parameters related to using SSL/TLS for DDSI over TCP.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:CertificateVerification"/>
+        <xs:element minOccurs="0" ref="config:Ciphers"/>
+        <xs:element minOccurs="0" name="Enable" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>
+<!--This enables SSL/TLS for TCP.-->
+<!--The default value is: "false".--></xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element minOccurs="0" ref="config:EntropyFile"/>
+        <xs:element minOccurs="0" ref="config:KeyPassphrase"/>
+        <xs:element minOccurs="0" ref="config:KeystoreFile"/>
+        <xs:element minOccurs="0" ref="config:MinimumTLSVersion"/>
+        <xs:element minOccurs="0" ref="config:SelfSignedCertificates"/>
+        <xs:element minOccurs="0" ref="config:VerifyClient"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="CertificateVerification" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--If disabled this allows SSL connections to occur even if an X509 certificate fails verification.-->
+<!--The default value is: "true".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Ciphers" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--The set of ciphers used by SSL/TLS-->
+<!--The default value is: "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="EntropyFile" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--The SSL/TLS random entropy file name.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="KeyPassphrase" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--The SSL/TLS key pass phrase for encrypted keys.-->
+<!--The default value is: "secret".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="KeystoreFile" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--The SSL/TLS key and certificate store file name. The keystore must be in PEM format.-->
+<!--The default value is: "keystore".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="MinimumTLSVersion" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--The minimum TLS version that may be negotiated, valid values are 1.2 and 1.3.-->
+<!--The default value is: "1.3".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SelfSignedCertificates" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This enables the use of self signed X509 certificates.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="VerifyClient" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This enables an SSL server checking the X509 certificate of a connecting client.-->
+<!--The default value is: "true".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Security">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element is used to configure Cyclone DDS with the DDS Security specification plugins and settings.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:AccessControl"/>
+        <xs:element minOccurs="0" ref="config:Authentication"/>
+        <xs:element minOccurs="0" ref="config:Cryptographic"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="AccessControl">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element configures the Access Control plugin of the DDS Security specification.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:Governance"/>
+        <xs:element minOccurs="0" name="Library">
+          <xs:annotation>
+            <xs:documentation>
+<!--This element specifies the library to be loaded as the DDS Security Access Control plugin.-->
+<!--The default value is: "".--></xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:attribute name="finalizeFunction">
+              <xs:annotation>
+                <xs:documentation>
+<!--This element names the finalization function of Access Control plugin. This function is called to let the plugin release its resources.-->
+<!--The default value is: "finalize_access_control".--></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="initFunction">
+              <xs:annotation>
+                <xs:documentation>
+<!--This element names the initialization function of Access Control plugin. This function is called after loading the plugin library for instantiation purposes. Init function must return an object that implements DDS Security Access Control interface.-->
+<!--The default value is: "init_access_control".--></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="path">
+              <xs:annotation>
+                <xs:documentation>
+<!--This element points to the path of Access Control plugin library.-->
+<!--It can be either absolute path excluding file extension ( /usr/lib/dds_security_ac ) or single file without extension ( dds_security_ac ).-->
+<!--If single file is supplied, the library located by way of the current working directory, or LD_LIBRARY_PATH for Unix systems, and PATH for Windows systems.-->
+<!--The default value is: "dds_security_ac".--></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+          </xs:complexType>
+        </xs:element>
+        <xs:element minOccurs="0" ref="config:Permissions"/>
+        <xs:element minOccurs="0" ref="config:PermissionsCA"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Governance" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--URI to the shared Governance Document signed by the Permissions CA in S/MIME format-->
+<!--URI schemes: file, data--><br>
+<!--Examples file URIs:-->
+<!--<Governance>file:governance.smime</Governance>-->
+<!--<Governance>file:/home/myuser/governance.smime</Governance>--><br>
+<!--<Governance><![CDATA[data:,MIME-Version: 1.0-->
+<!--Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg="sha-256"; boundary="----F9A8A198D6F08E1285A292ADF14DD04F"-->
+<!--This is an S/MIME signed message -->
+<!--------F9A8A198D6F08E1285A292ADF14DD04F-->
+<!--<?xml version="1.0" encoding="UTF-8"?>-->
+<!--<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"-->
+<!--xsi:noNamespaceSchemaLocation="omg_shared_ca_governance.xsd">-->
+<!--<domain_access_rules>-->
+<!-- . . . -->
+<!--</domain_access_rules>-->
+<!--</dds>-->
+<!--...-->
+<!--------F9A8A198D6F08E1285A292ADF14DD04F-->
+<!--Content-Type: application/x-pkcs7-signature; name="smime.p7s"-->
+<!--Content-Transfer-Encoding: base64-->
+<!--Content-Disposition: attachment; filename="smime.p7s"-->
+<!--MIIDuAYJKoZIhv ...al5s=-->
+<!--------F9A8A198D6F08E1285A292ADF14DD04F-]]</Governance>-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Permissions" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--URI to the DomainParticipant permissions document signed by the Permissions CA in S/MIME format-->
+<!--The permissions document specifies the permissions to be applied to a domain.--><br>
+<!--Example file URIs:-->
+<!--<Permissions>file:permissions_document.p7s</Permissions>-->
+<!--<Permissions>file:/path_to/permissions_document.p7s</Permissions>-->
+<!--Example data URI:-->
+<!--<Permissions><![CDATA[data:,.........]]</Permissions>-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PermissionsCA" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--URI to a X509 certificate for the PermissionsCA in PEM format.-->
+<!--Supported URI schemes: file, data-->
+<!--The file and data schemas shall refer to a X.509 v3 certificate (see X.509 v3 ITU-T Recommendation X.509 (2005) [39]) in PEM format.--><br>
+<!--Examples:--><br>
+<!--<PermissionsCA>file:permissions_ca.pem</PermissionsCA>-->
+<!--<PermissionsCA>file:/home/myuser/permissions_ca.pem</PermissionsCA>--><br>
+<!--<PermissionsCA>data:<strong>,</strong>-----BEGIN CERTIFICATE------->
+<!--MIIC3DCCAcQCCQCWE5x+Z ... PhovK0mp2ohhRLYI0ZiyYQ==-->
+<!-------END CERTIFICATE-----</PermissionsCA>-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Authentication">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element configures the Authentication plugin of the DDS Security specification.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:CRL"/>
+        <xs:element ref="config:IdentityCA"/>
+        <xs:element ref="config:IdentityCertificate"/>
+        <xs:element minOccurs="0" ref="config:IncludeOptionalFields"/>
+        <xs:element minOccurs="0" name="Library">
+          <xs:annotation>
+            <xs:documentation>
+<!--This element specifies the library to be loaded as the DDS Security Access Control plugin.-->
+<!--The default value is: "".--></xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:attribute name="finalizeFunction">
+              <xs:annotation>
+                <xs:documentation>
+<!--This element names the finalization function of Authentication plugin. This function is called to let the plugin release its resources.-->
+<!--The default value is: "finalize_authentication".--></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="initFunction">
+              <xs:annotation>
+                <xs:documentation>
+<!--This element names the initialization function of Authentication plugin. This function is called after loading the plugin library for instantiation purposes. Init function must return an object that implements DDS Security Authentication interface.-->
+<!--The default value is: "init_authentication".--></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="path">
+              <xs:annotation>
+                <xs:documentation>
+<!--This element points to the path of Authentication plugin library.-->
+<!--It can be either absolute path excluding file extension ( /usr/lib/dds_security_auth ) or single file without extension ( dds_security_auth ).-->
+<!--If single file is supplied, the library located by way of the current working directory, or LD_LIBRARY_PATH for Unix systems, and PATH for Windows system.-->
+<!--The default value is: "dds_security_auth".--></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+          </xs:complexType>
+        </xs:element>
+        <xs:element minOccurs="0" ref="config:Password"/>
+        <xs:element ref="config:PrivateKey"/>
+        <xs:element minOccurs="0" ref="config:TrustedCADirectory"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="CRL" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--Optional URI to load an X509 Certificate Revocation List-->
+<!--Supported URI schemes: file, data-->
+<!--Examples:-->
+<!--<CRL>file:crl.pem</CRL>-->
+<!--<CRL>data:,-----BEGIN X509 CRL-----<br>
+MIIEpAIBAAKCAQEA3HIh...AOBaaqSV37XBUJg=<br>
+-----END X509 CRL-----</CRL>-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="IdentityCA" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--URI to the X509 certificate [39] of the Identity CA that is the signer of Identity Certificate.-->
+<!--Supported URI schemes: file, data-->
+<!--The file and data schemas shall refer to a X.509 v3 certificate (see X.509 v3 ITU-T Recommendation X.509 (2005) [39]) in PEM format.-->
+<!--Examples:-->
+<!--<IdentityCA>file:identity_ca.pem</IdentityCA>-->
+<!--<IdentityCA>data:,-----BEGIN CERTIFICATE-----<br>
+MIIC3DCCAcQCCQCWE5x+Z...PhovK0mp2ohhRLYI0ZiyYQ==<br>
+-----END CERTIFICATE-----</IdentityCA>-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="IdentityCertificate" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--Identity certificate that will be used for identifying all participants in the OSPL instance.<br>The content is URI to a X509 certificate signed by the IdentityCA in PEM format containing the signed public key.-->
+<!--Supported URI schemes: file, data-->
+<!--Examples:-->
+<!--<IdentityCertificate>file:participant1_identity_cert.pem</IdentityCertificate>-->
+<!--<IdentityCertificate>data:,-----BEGIN CERTIFICATE-----<br>
+MIIDjjCCAnYCCQDCEu9...6rmT87dhTo=<br>
+-----END CERTIFICATE-----</IdentityCertificate>-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="IncludeOptionalFields" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--The authentication handshake tokens may contain optional fields to be included for finding interoperability problems. If this parameter is set to true the optional fields are included in the handshake token exchange.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Password" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--A password used to decrypt the private_key.-->
+<!--The value of the password property shall be interpreted as the Base64 encoding of the AES-128 key that shall be used to decrypt the private_key using AES128-CBC.-->
+<!--If the password property is not present, then the value supplied in the private_key property must contain the unencrypted private key.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PrivateKey" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--URI to access the private Private Key for all of the participants in the OSPL federation.-->
+<!--Supported URI schemes: file, data-->
+<!--Examples:-->
+<!--<PrivateKey>file:identity_ca_private_key.pem</PrivateKey>-->
+<!--<PrivateKey>data:,-----BEGIN RSA PRIVATE KEY-----<br>
+MIIEpAIBAAKCAQEA3HIh...AOBaaqSV37XBUJg==<br>
+-----END RSA PRIVATE KEY-----</PrivateKey>-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="TrustedCADirectory" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--Trusted CA Directory which contains trusted CA certificates as separated files.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Cryptographic">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element configures the Cryptographic plugin of the DDS Security specification.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="Library">
+          <xs:annotation>
+            <xs:documentation>
+<!--This element specifies the library to be loaded as the DDS Security Cryptographic plugin.-->
+<!--The default value is: "".--></xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:attribute name="finalizeFunction">
+              <xs:annotation>
+                <xs:documentation>
+<!--This element names the finalization function of Cryptographic plugin. This function is called to let the plugin release its resources.-->
+<!--The default value is: "finalize_crypto".--></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="initFunction">
+              <xs:annotation>
+                <xs:documentation>
+<!--This element names the initialization function of Cryptographic plugin. This function is called after loading the plugin library for instantiation purposes. Init function must return an object that implements DDS Security Cryptographic interface.-->
+<!--The default value is: "init_crypto".--></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="path">
+              <xs:annotation>
+                <xs:documentation>
+<!--This element points to the path of Cryptographic plugin library.-->
+<!--It can be either absolute path excluding file extension ( /usr/lib/dds_security_crypto ) or single file without extension ( dds_security_crypto ).-->
+<!--If single file is supplied, the library located by way of the current working directory, or LD_LIBRARY_PATH for Unix systems, and PATH for Windows systems.-->
+<!--The default value is: "dds_security_crypto".--></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SharedMemory">
+    <xs:annotation>
+      <xs:documentation>
+<!--The Shared Memory element allows specifying various parameters related to using shared memory.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" name="Enable" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>
+<!--This element allows to enable shared memory in Cyclone DDS.-->
+<!--The default value is: "false".--></xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element minOccurs="0" ref="config:Locator"/>
+        <xs:element minOccurs="0" ref="config:LogLevel"/>
+        <xs:element minOccurs="0" ref="config:Prefix"/>
+        <xs:element minOccurs="0" ref="config:PubHistoryCapacity"/>
+        <xs:element minOccurs="0" ref="config:SubHistoryRequest"/>
+        <xs:element minOccurs="0" ref="config:SubQueueCapacity"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Locator" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--Explicitly set the Iceoryx locator used by Cyclone to check whether a pair of processes is attached to the same Iceoryx shared memory.  The default is to use one of the MAC addresses of the machine, which should work well in most cases.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="LogLevel">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element decides the verbosity level of shared memory message:-->
+<ul><li><i>off</i>: no log</li>
+<li><i>fatal</i>: show fatal log</li>
+<li><i>error</i>: show error log</li>
+<li><i>warn</i>: show warn log</li>
+<li><i>info</i>: show info log</li>
+<li><i>debug</i>: show debug log</li>
+<li><i>verbose</i>: show verbose log</li>
+<!--If you don't want to see any log from shared memory, use <i>off</i> to disable log message.-->
+<!--The default value is: "info".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="off"/>
+        <xs:enumeration value="fatal"/>
+        <xs:enumeration value="error"/>
+        <xs:enumeration value="warn"/>
+        <xs:enumeration value="info"/>
+        <xs:enumeration value="debug"/>
+        <xs:enumeration value="verbose"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="Prefix" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--Override the Iceoryx service name used by Cyclone.-->
+<!--The default value is: "DDS_CYCLONE".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PubHistoryCapacity" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--The number of messages which will be stored on the publisher for late joining subscribers. Should be a value between 0 and 16 and be equal to or larger than SubHistoryRequest.-->
+<!--The default value is: "16".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SubHistoryRequest" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--The number of messages published before subscription which will be requested by a subscriber upon subscription. Should be a value between 0 and 16.-->
+<!--The default value is: "16".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="SubQueueCapacity" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--Size of the history chunk queue, this is the amount of messages stored between taking from the iceoryx subscriber, exceeding this number will cause the oldest to be pushed off the queue. Should be a value between 1 and 256.-->
+<!--The default value is: "256".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Sizing">
+    <xs:annotation>
+      <xs:documentation>
+<!--The Sizing element specifies a variety of configuration settings dealing with expected system sizes, buffer sizes, &amp;c.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:ReceiveBufferChunkSize"/>
+        <xs:element minOccurs="0" ref="config:ReceiveBufferSize"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ReceiveBufferChunkSize" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the size of one allocation unit in the receive buffer. Must be greater than the maximum packet size by a modest amount (too large packets are dropped). Each allocation is shrunk immediately after processing a message, or freed straightaway.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "128 KiB".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ReceiveBufferSize" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element sets the size of a single receive buffer. Many receive buffers may be needed. The minimum workable size a little bit larger than Sizing/ReceiveBufferChunkSize, and the value used is taken as the configured value and the actual minimum workable size.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "1 MiB".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="TCP">
+    <xs:annotation>
+      <xs:documentation>
+<!--The TCP element allows specifying various parameters related to running DDSI over TCP.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:AlwaysUsePeeraddrForUnicast"/>
+        <xs:element minOccurs="0" name="Enable">
+          <xs:annotation>
+            <xs:documentation>
+<!--This element enables the optional TCP transport - deprecated, use General/Transport instead.-->
+<!--The default value is: "default".--></xs:documentation>
+          </xs:annotation>
+          <xs:simpleType>
+            <xs:restriction base="xs:token">
+              <xs:enumeration value="false"/>
+              <xs:enumeration value="true"/>
+              <xs:enumeration value="default"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" ref="config:NoDelay"/>
+        <xs:element minOccurs="0" ref="config:Port"/>
+        <xs:element minOccurs="0" ref="config:ReadTimeout"/>
+        <xs:element minOccurs="0" ref="config:WriteTimeout"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="AlwaysUsePeeraddrForUnicast" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--Setting this to true means the unicast addresses in SPDP packets will be ignored and the peer address from the TCP connection will be used instead. This may help work around incorrectly advertised addresses when using TCP.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="NoDelay" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element enables the TCP_NODELAY socket option, preventing multiple DDSI messages being sent in the same TCP request. Setting this option typically optimises latency over throughput.-->
+<!--The default value is: "true".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Port" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the TCP port number on which Cyclone DDS accepts connections. If the port is set it is used in entity locators, published with DDSI discovery. Dynamically allocated if zero. Disabled if -1 or not configured. If disabled other DDSI services will not be able to establish connections with the service, the service can only communicate by establishing connections to other services.-->
+<!--The default value is: "-1".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="ReadTimeout" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the timeout for blocking TCP read operations. If this timeout expires then the connection is closed.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "2 s".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="WriteTimeout" type="config:duration">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the timeout for blocking TCP write operations. If this timeout expires then the connection is closed.-->
+<!--The unit must be specified explicitly. Recognised units: ns, us, ms, s, min, hr, day.-->
+<!--The default value is: "2 s".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Threads">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element is used to set thread properties.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:Thread"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Thread">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element is used to set thread properties.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:Scheduling"/>
+        <xs:element minOccurs="0" ref="config:StackSize"/>
+      </xs:all>
+      <xs:attribute name="Name" use="required">
+        <xs:annotation>
+          <xs:documentation>
+<!--The Name of the thread for which properties are being set. The following threads exist:-->
+<ul>
+<li><i>gc</i>: garbage collector thread involved in deleting entities;</li>
+<li><i>recv</i>: receive thread, taking data from the network and running the protocol state machine;</li>
+<li><i>dq.builtins</i>: delivery thread for DDSI-builtin data, primarily for discovery;</li>
+<li><i>lease</i>: DDSI liveliness monitoring;</li>
+<li><i>tev</i>: general timed-event handling, retransmits and discovery;</li>
+<li><i>fsm</i>: finite state machine thread for handling security handshake;</li>
+<li><i>xmit.CHAN</i>: transmit thread for channel CHAN;</li>
+<li><i>dq.CHAN</i>: delivery thread for channel CHAN;</li>
+<li><i>tev.CHAN</i>: timed-event thread for channel CHAN.</li></ul>
+<!--The default value is: "".--></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Scheduling">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element configures the scheduling properties of the thread.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:Class"/>
+        <xs:element minOccurs="0" ref="config:Priority"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Class">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the thread scheduling class (<i>realtime</i>, <i>timeshare</i> or <i>default</i>). The user may need special privileges from the underlying operating system to be able to assign some of the privileged scheduling classes.-->
+<!--The default value is: "default".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="realtime"/>
+        <xs:enumeration value="timeshare"/>
+        <xs:enumeration value="default"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="Priority" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element specifies the thread priority (decimal integer or <i>default</i>). Only priorities that are supported by the underlying operating system can be assigned to this element. The user may need special privileges from the underlying operating system to be able to assign some of the privileged priorities.-->
+<!--The default value is: "default".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="StackSize" type="config:memsize">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element configures the stack size for this thread. The default value <i>default</i> leaves the stack size at the operating system default.-->
+<!--The unit must be specified explicitly. Recognised units: B (bytes), kB &amp; KiB (2<sup>10</sup> bytes), MB &amp; MiB (2<sup>20</sup> bytes), GB &amp; GiB (2<sup>30</sup> bytes).-->
+<!--The default value is: "default".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Tracing">
+    <xs:annotation>
+      <xs:documentation>
+<!--The Tracing element controls the amount and type of information that is written into the tracing log by the DDSI service. This is useful to track the DDSI service during application development.--></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:all>
+        <xs:element minOccurs="0" ref="config:AppendToFile"/>
+        <xs:element minOccurs="0" ref="config:Category"/>
+        <xs:element minOccurs="0" ref="config:OutputFile"/>
+        <xs:element minOccurs="0" ref="config:PacketCaptureFile"/>
+        <xs:element minOccurs="0" ref="config:Verbosity"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="AppendToFile" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>
+<!--This option specifies whether the output is to be appended to an existing log file. The default is to create a new log file each time, which is generally the best option if a detailed log is generated.-->
+<!--The default value is: "false".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Category">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element enables individual logging categories. These are enabled in addition to those enabled by Tracing/Verbosity. Recognised categories are:-->
+<ul>
+<li><i>fatal</i>: all fatal errors, errors causing immediate termination</li>
+<li><i>error</i>: failures probably impacting correctness but not necessarily causing immediate termination</li>
+<li><i>warning</i>: abnormal situations that will likely not impact correctness</li>
+<li><i>config</i>: full dump of the configuration</li>
+<li><i>info</i>: general informational notices</li>
+<li><i>discovery</i>: all discovery activity</li>
+<li><i>data</i>: include data content of samples in traces</li>
+<li><i>radmin</i>: receive buffer administration</li>
+<li><i>timing</i>: periodic reporting of CPU loads per thread</li>
+<li><i>traffic</i>: periodic reporting of total outgoing data</li>
+<li><i>whc</i>: tracing of writer history cache changes</li>
+<li><i>tcp</i>: tracing of TCP-specific activity</li>
+<li><i>topic</i>: tracing of topic definitions</li>
+<li><i>plist</i>: tracing of discovery parameter list interpretation</li></ul>
+<!--In addition, there is the keyword <i>trace</i> that enables all but <i>radmin</i>, <i>topic</i>, <i>plist</i> and <i>whc</i>-->.
+<!--The categorisation of tracing output is incomplete and hence most of the verbosity levels and categories are not of much use in the current release. This is an ongoing process and here we describe the target situation rather than the current situation. Currently, the most useful is <i>trace</i>.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:pattern value="((fatal|error|warning|info|config|discovery|data|radmin|timing|traffic|topic|tcp|plist|whc|throttle|rhc|content|shm|trace)(,(fatal|error|warning|info|config|discovery|data|radmin|timing|traffic|topic|tcp|plist|whc|throttle|rhc|content|shm|trace))*)|"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="OutputFile" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This option specifies where the logging is printed to. Note that <i>stdout</i> and <i>stderr</i> are treated as special values, representing "standard out" and "standard error" respectively. No file is created unless logging categories are enabled using the Tracing/Verbosity or Tracing/EnabledCategory settings.-->
+<!--The default value is: "cyclonedds.log".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="PacketCaptureFile" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+<!--This option specifies the file to which received and sent packets will be logged in the "pcap" format suitable for analysis using common networking tools, such as WireShark. IP and UDP headers are fictitious, in particular the destination address of received packets. The TTL may be used to distinguish between sent and received packets: it is 255 for sent packets and 128 for received ones. Currently IPv4 only.-->
+<!--The default value is: "".--></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="Verbosity">
+    <xs:annotation>
+      <xs:documentation>
+<!--This element enables standard groups of categories, based on a desired verbosity level. This is in addition to the categories enabled by the Tracing/Category setting. Recognised verbosity levels and the categories they map to are:-->
+<ul><li><i>none</i>: no Cyclone DDS log</li>
+<li><i>severe</i>: error and fatal</li>
+<li><i>warning</i>: <i>severe</i> + warning</li>
+<li><i>info</i>: <i>warning</i> + info</li>
+<li><i>config</i>: <i>info</i> + config</li>
+<li><i>fine</i>: <i>config</i> + discovery</li>
+<li><i>finer</i>: <i>fine</i> + traffic and timing</li>
+<li><i>finest</i>: <i>finer</i> + trace</li></ul>
+<!--While <i>none</i> prevents any message from being written to a DDSI2 log file.-->
+<!--The categorisation of tracing output is incomplete and hence most of the verbosity levels and categories are not of much use in the current release. This is an ongoing process and here we describe the target situation rather than the current situation. Currently, the most useful verbosity levels are <i>config</i>, <i>fine</i> and <i>finest</i>.-->
+<!--The default value is: "none".--></xs:documentation>
+    </xs:annotation>
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="finest"/>
+        <xs:enumeration value="finer"/>
+        <xs:enumeration value="fine"/>
+        <xs:enumeration value="config"/>
+        <xs:enumeration value="info"/>
+        <xs:enumeration value="warning"/>
+        <xs:enumeration value="severe"/>
+        <xs:enumeration value="none"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:simpleType name="bandwidth">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="0|(\d+(\.\d*)?([Ee][\-+]?\d+)?|\.\d+([Ee][\-+]?\d+)?) *([kMG]i?)?[Bb][p/]s"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="duration">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="0|(\d+(\.\d*)?([Ee][\-+]?\d+)?|\.\d+([Ee][\-+]?\d+)?) *([num]?s|min|hr|day)"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="duration_inf">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="inf|0|(\d+(\.\d*)?([Ee][\-+]?\d+)?|\.\d+([Ee][\-+]?\d+)?) *([num]?s|min|hr|day)"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="memsize">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="0|(\d+(\.\d*)?([Ee][\-+]?\d+)?|\.\d+([Ee][\-+]?\d+)?) *([kMG]i?)?B"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

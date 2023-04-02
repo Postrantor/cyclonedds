@@ -476,10 +476,8 @@ static void hist_print (const char *prefix, struct hist *h, dds_time_t dt, int r
   uint64_t peak = 0, cnt = h->under + h->over;
   size_t p = 0;
 
-  assert(l);
   xsnprintf (l, l_size, &p, "%s", prefix);
 
-  assert(hist);
   hist[h->nbins] = 0;
   for (unsigned i = 0; i < h->nbins; i++)
   {
@@ -762,7 +760,6 @@ static void latencystat_init (struct latencystat *x)
   x->max = INT64_MIN;
   x->sum = x->cnt = 0;
   x->raw = malloc (PINGPONG_RAWSIZE * sizeof (*x->raw));
-  assert(x->raw);
 }
 
 static void latencystat_fini (struct latencystat *x)
@@ -1588,7 +1585,6 @@ static bool print_stats (dds_time_t tref, dds_time_t tnow, dds_time_t tprev, str
   }
 
   int64_t *newraw = malloc (PINGPONG_RAWSIZE * sizeof (*newraw));
-  assert(newraw);
   if (submode != SM_NONE)
   {
     struct eseq_admin * const ea = &eseq_admin;
@@ -1733,7 +1729,7 @@ static void subthread_arg_fini (struct subthread_arg *arg)
   free (arg->iseq);
 }
 
-#if !DDSRT_WITH_FREERTOS && !__ZEPHYR__
+#if !DDSRT_WITH_FREERTOS
 static void signal_handler (int sig)
 {
   (void) sig;
@@ -1742,7 +1738,7 @@ static void signal_handler (int sig)
 }
 #endif
 
-#if !_WIN32 && !DDSRT_WITH_FREERTOS && !__ZEPHYR__
+#if !_WIN32 && !DDSRT_WITH_FREERTOS
 static uint32_t sigthread (void *varg)
 {
   sigset_t *set = varg;
@@ -2125,7 +2121,7 @@ int main (int argc, char *argv[])
   dds_time_t tref = DDS_INFINITY;
   ddsrt_threadattr_t attr;
   ddsrt_thread_t pubtid, subtid, subpingtid, subpongtid;
-#if !_WIN32 && !DDSRT_WITH_FREERTOS && !__ZEPHYR__
+#if !_WIN32 && !DDSRT_WITH_FREERTOS
   sigset_t sigset, osigset;
   ddsrt_thread_t sigtid;
 #endif
@@ -2526,7 +2522,7 @@ int main (int argc, char *argv[])
   /* I hate Unix signals in multi-threaded processes ... */
 #ifdef _WIN32
   signal (SIGINT, signal_handler);
-#elif !DDSRT_WITH_FREERTOS && !__ZEPHYR__
+#elif !DDSRT_WITH_FREERTOS
   sigemptyset (&sigset);
 #ifdef __APPLE__
   DDSRT_WARNING_GNUC_OFF(sign-conversion)
@@ -2651,7 +2647,7 @@ int main (int argc, char *argv[])
 
 #if _WIN32
   signal_handler (SIGINT);
-#elif !DDSRT_WITH_FREERTOS && !__ZEPHYR__
+#elif !DDSRT_WITH_FREERTOS
   {
     /* get the attention of the signal handler thread */
     void (*osigint) (int);

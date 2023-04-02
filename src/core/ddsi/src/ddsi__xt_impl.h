@@ -223,7 +223,6 @@ struct xt_type
     // case TK_NONE:
     // case TK_BOOLEAN:
     // case TK_BYTE:
-    // case TK_INT8:
     // case TK_INT16:
     // case TK_INT32:
     // case TK_INT64:
@@ -277,7 +276,6 @@ struct ddsi_type_dep {
 
 struct ddsi_type {
   struct xt_type xt;                            /* wrapper for XTypes type id/obj */
-  struct ddsi_domaingv *gv;
   ddsrt_avl_node_t avl_node;
   enum ddsi_type_state state;
   ddsi_seqno_t request_seqno;                        /* sequence number of the last type lookup request message */

@@ -12,20 +12,29 @@
 #ifndef DDS__LISTENER_H
 #define DDS__LISTENER_H
 
-#include "dds__types.h"
 #include "dds/ddsc/dds_public_listener.h"
+#include "dds__types.h"
 
-#if defined (__cplusplus)
-extern "C" {
+#if defined(__cplusplus)
+extern "C"
+{
 #endif
 
-/** @component entity_listener */
-void dds_override_inherited_listener (dds_listener_t * __restrict dst, const dds_listener_t * __restrict src);
+  /** @component entity_listener */
+  // 函数：覆盖继承的监听器
+  // 参数：
+  // - dst: 目标监听器指针（非空）
+  // - src: 源监听器指针（非空）
+  void dds_override_inherited_listener(dds_listener_t *__restrict dst, const dds_listener_t *__restrict src);
 
-/** @component entity_listener */
-void dds_inherit_listener (dds_listener_t * __restrict dst, const dds_listener_t * __restrict src);
+  /** @component entity_listener */
+  // 函数：继承监听器
+  // 参数：
+  // - dst: 目标监听器指针（非空）
+  // - src: 源监听器指针（非空）
+  void dds_inherit_listener(dds_listener_t *__restrict dst, const dds_listener_t *__restrict src);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif /* DDS__LISTENER_H */

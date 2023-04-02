@@ -14,17 +14,18 @@
 
 #include "dds__types.h"
 
-#if defined (__cplusplus)
-extern "C" {
+#if defined(__cplusplus)
+extern "C"
+{
 #endif
 
-/** @component domain */
-dds_entity_t dds_domain_create_internal (dds_domain **domain_out, dds_domainid_t id, bool implicit, const char *config) ddsrt_nonnull((1,4));
+  /** @component domain */
+  dds_entity_t dds_domain_create_internal(dds_domain **domain_out, dds_domainid_t id, bool implicit, const char *config) ddsrt_nonnull((1, 4));
 
-/** @component domain */
-dds_domain *dds_domain_find_locked (dds_domainid_t id);
+  /** @component domain */
+  dds_domain *dds_domain_find_locked(dds_domainid_t id);
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 #endif /* DDS__DOMAIN_H */
